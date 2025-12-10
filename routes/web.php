@@ -1,6 +1,11 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\DivisionController;
+use App\Http\Controllers\PositionController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -23,4 +28,60 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard.index');
+
+    // Division Routes
+    Route::prefix('division')->name('division.')->controller(DivisionController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
+        Route::get('/{division}/edit', 'edit')->name('edit');
+        Route::put('/{division}/update', 'update')->name('update');
+        Route::delete('/{division}/delete', 'delete')->name('delete');
+        Route::get('/datatable', 'datatable')->name('datatable');
+        Route::get('/print-excel', 'printExcel')->name('print-excel');
+    });
+
+    // Position Routes
+    Route::prefix('position')->name('position.')->controller(PositionController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
+        Route::get('/{position}/edit', 'edit')->name('edit');
+        Route::put('/{position}/update', 'update')->name('update');
+        Route::delete('/{position}/delete', 'delete')->name('delete');
+        Route::get('/datatable', 'datatable')->name('datatable');
+        Route::get('/print-excel', 'printExcel')->name('print-excel');
+    });
+
+    // User Routes
+    Route::prefix('user')->name('user.')->controller(UserController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
+        Route::get('/{user}/edit', 'edit')->name('edit');
+        Route::put('/{user}/update', 'update')->name('update');
+        Route::delete('/{user}/delete', 'delete')->name('delete');
+        Route::get('/datatable', 'datatable')->name('datatable');
+        Route::get('/print-excel', 'printExcel')->name('print-excel');
+    });
+
+    // Role Routes
+    Route::prefix('role')->name('role.')->controller(RoleController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
+        Route::get('/{role}/edit', 'edit')->name('edit');
+        Route::put('/{role}/update', 'update')->name('update');
+        Route::delete('/{role}/delete', 'delete')->name('delete');
+        Route::get('/datatable', 'datatable')->name('datatable');
+        Route::get('/print-excel', 'printExcel')->name('print-excel');
+    });
+
+    // Profile Routes
+    Route::prefix('profile')->name('profile.')->controller(ProfileController::class)->group(function () {
+        Route::get('/', 'editProfile')->name('edit');
+        Route::put('/update', 'updateProfile')->name('update');
+        Route::get('/password', 'editPassword')->name('password');
+        Route::put('/password/update', 'updatePassword')->name('password.update');
+    });
 });

@@ -18,12 +18,25 @@ class RoleSeeder extends Seeder
         // Superadmin - Full access
         $superadmin = Role::firstOrCreate(['name' => 'Superadmin', 'guard_name' => 'web']);
         $superadmin->syncPermissions([
-            // All permissions
+            // Dashboard
             'view_dashboard',
+            // Users
             'view_users',
+            'delete_users',
             'manage_users',
+            // Roles
             'view_roles',
+            'delete_roles',
             'manage_roles',
+            // Divisions
+            'view_divisions',
+            'delete_divisions',
+            'manage_divisions',
+            // Positions
+            'view_positions',
+            'delete_positions',
+            'manage_positions',
+            // Profile
             'edit_profile',
             'change_password',
         ]);
@@ -33,6 +46,12 @@ class RoleSeeder extends Seeder
         $admin->syncPermissions([
             'view_dashboard',
             'view_users',
+            'manage_users',
+            'view_roles',
+            'view_divisions',
+            'manage_divisions',
+            'view_positions',
+            'manage_positions',
             'edit_profile',
             'change_password',
         ]);

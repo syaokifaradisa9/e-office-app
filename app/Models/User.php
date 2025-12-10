@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -22,6 +23,11 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'division_id',
+        'position_id',
+        'phone',
+        'address',
+        'profile_photo',
         'is_active',
     ];
 
@@ -47,6 +53,22 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Get the division of the user
+     */
+    public function division(): BelongsTo
+    {
+        return $this->belongsTo(Division::class);
+    }
+
+    /**
+     * Get the position of the user
+     */
+    public function position(): BelongsTo
+    {
+        return $this->belongsTo(Position::class);
     }
 
     /**

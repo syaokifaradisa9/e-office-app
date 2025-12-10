@@ -15,27 +15,43 @@ class PermissionSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Dashboard Permissions
-        $dashboardPermissions = [
-            'view_dashboard',               // Melihat Dashboard
-        ];
-
         // User Permissions
         $userPermissions = [
-            'view_users',                   // Melihat Pengguna
-            'manage_users',                 // Mengelola Pengguna
+            'view_users',
+            'delete_users',
+            'manage_users',
         ];
 
         // Role Permissions
         $rolePermissions = [
-            'view_roles',                   // Lihat Role
-            'manage_roles',                 // Mengelola Role
+            'view_roles',
+            'delete_roles',
+            'manage_roles',
+        ];
+
+        // Division Permissions
+        $divisionPermissions = [
+            'view_divisions',
+            'delete_divisions',
+            'manage_divisions',
+        ];
+
+        // Position Permissions
+        $positionPermissions = [
+            'view_positions',
+            'delete_positions',
+            'manage_positions',
         ];
 
         // Profile Permissions
         $profilePermissions = [
-            'edit_profile',                 // Edit Profil
-            'change_password',              // Ubah Password
+            'edit_profile',
+            'change_password',
+        ];
+
+        // Dashboard Permissions
+        $dashboardPermissions = [
+            'view_dashboard',
         ];
 
         // Combine all permissions
@@ -43,6 +59,8 @@ class PermissionSeeder extends Seeder
             $dashboardPermissions,
             $userPermissions,
             $rolePermissions,
+            $divisionPermissions,
+            $positionPermissions,
             $profilePermissions
         );
 
