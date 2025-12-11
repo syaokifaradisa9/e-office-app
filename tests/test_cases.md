@@ -9,8 +9,8 @@ Dokumen ini berisi ringkasan lengkap semua test cases yang tersedia dalam aplika
 | Kategori | Jumlah Tests | Assertions |
 |----------|--------------|------------|
 | Unit Tests | 21 | 40 |
-| Feature Tests | 48 | 222 |
-| **Total** | **69** | **262** |
+| Feature Tests | 65 | 279 |
+| **Total** | **86** | **319** |
 
 ---
 
@@ -154,6 +154,30 @@ Test untuk fitur **CRUD User** (Pengguna).
 
 ---
 
+### 📁 `tests/Feature/Profile/ProfileTest.php`
+
+Test untuk fitur **Profile Management** (Edit Profil & Password).
+
+| No | Test Case | Deskripsi |
+|----|-----------|-----------| 
+| 1 | `it can display edit profile page` | Halaman edit profil bisa diakses oleh user yang sudah login |
+| 2 | `it prevents unauthenticated access to profile page` | Guest tidak bisa akses halaman profil (di-redirect ke login) |
+| 3 | `it can update profile with valid data` | Bisa mengupdate profil (name, email, phone, address) dengan data yang valid |
+| 4 | `it requires name when updating profile` | Validasi: nama wajib diisi saat update profil |
+| 5 | `it requires valid email when updating profile` | Validasi: email harus format yang valid |
+| 6 | `it requires unique email when updating profile` | Validasi: email harus unik (tidak boleh duplikat dengan user lain) |
+| 7 | `it allows user to keep their own email when updating profile` | User boleh tetap menggunakan email yang sama saat update |
+| 8 | `it validates phone max length when updating profile` | Validasi: nomor telepon maksimal 20 karakter |
+| 9 | `it validates address max length when updating profile` | Validasi: alamat maksimal 500 karakter |
+| 10 | `it can display edit password page` | Halaman ganti password bisa diakses oleh user yang sudah login |
+| 11 | `it prevents unauthenticated access to password page` | Guest tidak bisa akses halaman ganti password (di-redirect ke login) |
+| 12 | `it can update password with valid data` | Bisa mengubah password dengan data yang valid |
+| 13 | `it requires current password when updating password` | Validasi: password saat ini wajib diisi |
+| 14 | `it validates current password is correct when updating password` | Validasi: password saat ini harus benar |
+| 15 | `it requires password confirmation when updating password` | Validasi: konfirmasi password harus cocok |
+| 16 | `it requires new password when updating password` | Validasi: password baru wajib diisi |
+| 17 | `it prevents unauthenticated access to update password` | Guest tidak bisa akses endpoint update password (di-redirect ke login) |
+
 ## 🚀 Cara Menjalankan Tests
 
 ### Menjalankan Semua Tests
@@ -177,6 +201,7 @@ php artisan test tests/Feature/Auth/AuthenticationTest.php
 php artisan test tests/Feature/Division/DivisionTest.php
 php artisan test tests/Feature/Position/PositionTest.php
 php artisan test tests/Feature/User/UserTest.php
+php artisan test tests/Feature/Profile/ProfileTest.php
 ```
 
 ### Menjalankan Test dengan Filter Nama
