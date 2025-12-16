@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 
 interface ContentCardProps {
     title?: string;
+    subtitle?: string;
     children: ReactNode;
     className?: string;
     backPath?: string;
@@ -11,7 +12,7 @@ interface ContentCardProps {
     mobileFullWidth?: boolean;
 }
 
-export default function ContentCard({ title, children, className = '', backPath, additionalButton, mobileFullWidth }: ContentCardProps) {
+export default function ContentCard({ title, subtitle, children, className = '', backPath, additionalButton, mobileFullWidth }: ContentCardProps) {
     const { component } = usePage();
     const isMobileFullWidth = mobileFullWidth ?? true;
 
@@ -41,7 +42,10 @@ export default function ContentCard({ title, children, className = '', backPath,
                                 <ChevronLeft className="size-4 md:size-5" />
                             </Link>
                         )}
-                        {title && <h2 className="truncate text-base font-semibold text-gray-900 md:text-lg dark:text-white">{title}</h2>}
+                        <div>
+                            {title && <h2 className="truncate text-base font-semibold text-gray-900 md:text-lg dark:text-white">{title}</h2>}
+                            {subtitle && <p className="text-xs text-gray-500 md:text-sm dark:text-slate-400">{subtitle}</p>}
+                        </div>
                     </div>
                     {/* additionalButton only visible on desktop */}
                     {additionalButton && <div className="hidden md:block">{additionalButton}</div>}

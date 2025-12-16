@@ -15,53 +15,57 @@ class PermissionSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // User Permissions
-        $userPermissions = [
-            'view_users',
-            'delete_users',
-            'manage_users',
+        // ===================================
+        // DATA MASTER MODULE
+        // ===================================
+
+        // Pengguna
+        $penggunaPermissions = [
+            'lihat_pengguna',
+            'kelola_pengguna',
+            'hapus_pengguna',
         ];
 
-        // Role Permissions
+        // Role
         $rolePermissions = [
-            'view_roles',
-            'delete_roles',
-            'manage_roles',
+            'lihat_role',
+            'kelola_role',
+            'hapus_role',
         ];
 
-        // Division Permissions
-        $divisionPermissions = [
-            'view_divisions',
-            'delete_divisions',
-            'manage_divisions',
+        // Divisi
+        $divisiPermissions = [
+            'lihat_divisi',
+            'kelola_divisi',
+            'hapus_divisi',
         ];
 
-        // Position Permissions
-        $positionPermissions = [
-            'view_positions',
-            'delete_positions',
-            'manage_positions',
+        // Jabatan
+        $jabatanPermissions = [
+            'lihat_jabatan',
+            'kelola_jabatan',
+            'hapus_jabatan',
         ];
 
-        // Profile Permissions
-        $profilePermissions = [
-            'edit_profile',
-            'change_password',
+        // Profil
+        $profilPermissions = [
+            'edit_profil',
+            'ubah_password',
         ];
 
-        // Dashboard Permissions
+        // Dashboard
         $dashboardPermissions = [
-            'view_dashboard',
+            'lihat_dashboard',
         ];
 
         // Combine all permissions
         $allPermissions = array_merge(
             $dashboardPermissions,
-            $userPermissions,
+            $penggunaPermissions,
             $rolePermissions,
-            $divisionPermissions,
-            $positionPermissions,
-            $profilePermissions
+            $divisiPermissions,
+            $jabatanPermissions,
+            $profilPermissions
         );
 
         // Create permissions

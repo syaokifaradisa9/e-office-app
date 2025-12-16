@@ -32,19 +32,176 @@ class RoleService
         $permissions = $this->getAllPermissions();
         $grouped = [];
 
-        foreach ($permissions as $permission) {
-            $parts = explode('_', $permission->name);
-            $groupKey = end($parts); // e.g., 'users', 'divisions', 'roles'
+        // Define grouping rules for permissions with module separation
+        $groupingRules = [
+            // ===================================
+            // DATA MASTER MODULE
+            // ===================================
+            'dashboard' => [
+                'module' => 'Data Master',
+                'label' => 'Dashboard',
+                'keywords' => ['lihat_dashboard'],
+                'exclude' => ['gudang'],
+            ],
+            'pengguna' => [
+                'module' => 'Data Master',
+                'label' => 'Pengguna',
+                'keywords' => ['_pengguna'],
+            ],
+            'role' => [
+                'module' => 'Data Master',
+                'label' => 'Role & Permission',
+                'keywords' => ['_role'],
+            ],
+            'divisi' => [
+                'module' => 'Data Master',
+                'label' => 'Divisi',
+                'keywords' => ['_divisi'],
+                'exclude' => ['gudang', 'stock_opname', 'laporan'],
+            ],
+            'jabatan' => [
+                'module' => 'Data Master',
+                'label' => 'Jabatan',
+                'keywords' => ['_jabatan'],
+            ],
+            'profil' => [
+                'module' => 'Data Master',
+                'label' => 'Profil',
+                'keywords' => ['edit_profil', 'ubah_password'],
+            ],
 
-            if (! isset($grouped[$groupKey])) {
-                $grouped[$groupKey] = [
-                    'label' => ucfirst($groupKey),
-                    'permissions' => [],
-                ];
+            // ===================================
+            // SISTEM MANAJEMEN GUDANG MODULE
+            // ===================================
+            'dashboard_gudang' => [
+                'module' => 'Sistem Manajemen Gudang',
+                'label' => 'Dashboard Gudang',
+                'keywords' => ['dashboard_gudang'],
+            ],
+            'kategori_barang' => [
+                'module' => 'Sistem Manajemen Gudang',
+                'label' => 'Kategori Barang',
+                'keywords' => ['kategori_barang'],
+            ],
+            'barang' => [
+                'module' => 'Sistem Manajemen Gudang',
+                'label' => 'Barang',
+                'keywords' => ['_barang', 'keluarkan_stok'],
+                'exclude' => ['kategori', 'permintaan', 'transaksi', 'serah_terima', 'terima'],
+            ],
+            'permintaan_barang' => [
+                'module' => 'Sistem Manajemen Gudang',
+                'label' => 'Permintaan Barang',
+                'keywords' => ['permintaan_barang', 'serah_terima', 'terima_barang', 'konfirmasi_permintaan'],
+            ],
+            'stock_opname' => [
+                'module' => 'Sistem Manajemen Gudang',
+                'label' => 'Stock Opname',
+                'keywords' => ['stock_opname'],
+            ],
+            'monitoring_stok' => [
+                'module' => 'Sistem Manajemen Gudang',
+                'label' => 'Monitoring Stok',
+                'keywords' => ['monitor_stok', 'monitor_semua_stok'],
+            ],
+            'monitoring_transaksi' => [
+                'module' => 'Sistem Manajemen Gudang',
+                'label' => 'Monitoring Transaksi Barang',
+                'keywords' => ['monitor_transaksi_barang', 'monitor_semua_transaksi'],
+            ],
+            'laporan_gudang' => [
+                'module' => 'Sistem Manajemen Gudang',
+                'label' => 'Laporan Gudang',
+                'keywords' => ['laporan_gudang'],
+            ],
+        ];
+
+        foreach ($permissions as $permission) {
+            $assigned = false;
+
+            foreach ($groupingRules as $groupKey => $rule) {
+                $hasKeyword = false;
+                $hasExclude = false;
+
+                foreach ($rule['keywords'] as $keyword) {
+                    if (str_contains($permission->name, $keyword)) {
+                        $hasKeyword = true;
+                        break;
+                    }
+                }
+
+                if (! empty($rule['exclude'])) {
+                    foreach ($rule['exclude'] as $exclude) {
+                        if (str_contains($permission->name, $exclude)) {
+                            $hasExclude = true;
+                            break;
+                        }
+                    }
+                }
+
+                if ($hasKeyword && ! $hasExclude) {
+                    if (! isset($grouped[$groupKey])) {
+                        $grouped[$groupKey] = [
+                            'module' => $rule['module'],
+                            'label' => $rule['label'],
+                            'permissions' => [],
+                        ];
+                    }
+                    $grouped[$groupKey]['permissions'][] = $permission->name;
+                    $assigned = true;
+                    break;
+                }
             }
 
-            $grouped[$groupKey]['permissions'][] = $permission->name;
+            // Fallback: assign to "Lainnya" group
+            if (! $assigned) {
+                $groupKey = 'lainnya';
+                if (! isset($grouped[$groupKey])) {
+                    $grouped[$groupKey] = [
+                        'module' => 'Lainnya',
+                        'label' => 'Lainnya',
+                        'permissions' => [],
+                    ];
+                }
+                $grouped[$groupKey]['permissions'][] = $permission->name;
+            }
         }
+
+        // Sort permissions within each group
+        foreach ($grouped as &$group) {
+            usort($group['permissions'], function ($a, $b) {
+                // Priority: Lihat (1), Kelola (2), Konfirmasi (3), Others (99)
+                $getPriority = function ($perm) {
+                    if (str_contains($perm, 'lihat')) return 1;
+                    if (str_contains($perm, 'kelola') || str_contains($perm, 'buat') || str_contains($perm, 'edit') || str_contains($perm, 'hapus')) return 2;
+                    if (str_contains($perm, 'konfirmasi')) return 3;
+                    return 99;
+                };
+
+                $pA = $getPriority($a);
+                $pB = $getPriority($b);
+
+                if ($pA !== $pB) {
+                    return $pA - $pB;
+                }
+
+                return strcmp($a, $b);
+            });
+        }
+        unset($group); // Break reference
+
+        // Sort groups by module then by label
+        uasort($grouped, function ($a, $b) {
+            $moduleOrder = ['Data Master' => 1, 'Sistem Manajemen Gudang' => 2, 'Lainnya' => 99];
+            $aOrder = $moduleOrder[$a['module']] ?? 50;
+            $bOrder = $moduleOrder[$b['module']] ?? 50;
+
+            if ($aOrder !== $bOrder) {
+                return $aOrder - $bOrder;
+            }
+
+            return strcmp($a['label'], $b['label']);
+        });
 
         return $grouped;
     }

@@ -36,6 +36,12 @@ class InventoryServiceProvider extends ServiceProvider
     {
         $this->app->register(EventServiceProvider::class);
         $this->app->register(RouteServiceProvider::class);
+
+        // Repository Bindings
+        $this->app->singleton(
+            \Modules\Inventory\Repositories\CategoryItem\CategoryItemRepository::class,
+            \Modules\Inventory\Repositories\CategoryItem\EloquentCategoryItemRepository::class
+        );
     }
 
     /**
@@ -129,7 +135,7 @@ class InventoryServiceProvider extends ServiceProvider
 
         $this->loadViewsFrom(array_merge($this->getPublishableViewPaths(), [$sourcePath]), $this->nameLower);
 
-        Blade::componentNamespace(config('modules.namespace').'\\' . $this->name . '\\View\\Components', $this->nameLower);
+        Blade::componentNamespace(config('modules.namespace').'\\'.$this->name.'\\View\\Components', $this->nameLower);
     }
 
     /**

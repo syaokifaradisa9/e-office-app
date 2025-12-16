@@ -180,7 +180,7 @@ export default function PositionIndex() {
                 title="Jabatan"
                 mobileFullWidth
                 additionalButton={
-                    <CheckPermissions permissions={['manajemen-jabatan']}>
+                    <CheckPermissions permissions={['kelola_jabatan']}>
                         <Button className="hidden w-full md:flex" label="Tambah Jabatan" href="/position/create" icon={<Plus className="size-4" />} />
                     </CheckPermissions>
                 }
@@ -253,7 +253,7 @@ export default function PositionIndex() {
                                 </span>
                             ),
                         },
-                        ...(usePage<PageProps>().props.permissions?.includes('manajemen-jabatan')
+                        ...(usePage<PageProps>().props.permissions?.includes('kelola_jabatan')
                             ? [
                                 {
                                     header: 'Aksi',
@@ -286,7 +286,7 @@ export default function PositionIndex() {
             </ContentCard>
 
             {/* FAB for mobile */}
-            <CheckPermissions permissions={['manajemen-jabatan']}>
+            <CheckPermissions permissions={['kelola_jabatan']}>
                 <FloatingActionButton href="/position/create" label="Tambah Jabatan" />
             </CheckPermissions>
         </RootLayout>

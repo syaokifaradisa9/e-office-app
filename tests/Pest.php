@@ -1,5 +1,7 @@
 <?php
 
+// Browser tests removed - Dusk uninstalled
+
 /*
 |--------------------------------------------------------------------------
 | Test Case

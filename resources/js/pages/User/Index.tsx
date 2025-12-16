@@ -188,7 +188,7 @@ export default function UserIndex() {
                 title="Pengguna"
                 mobileFullWidth
                 additionalButton={
-                    <CheckPermissions permissions={['manajemen-pengguna']}>
+                    <CheckPermissions permissions={['kelola_pengguna']}>
                         <Button className="hidden w-full md:flex" label="Tambah Pengguna" href="/user/create" icon={<Plus className="size-4" />} />
                     </CheckPermissions>
                 }
@@ -267,7 +267,7 @@ export default function UserIndex() {
                                 </span>
                             ),
                         },
-                        ...(usePage<PageProps>().props.permissions?.includes('manajemen-pengguna')
+                        ...(usePage<PageProps>().props.permissions?.includes('kelola_pengguna')
                             ? [
                                 {
                                     header: 'Aksi',
@@ -300,7 +300,7 @@ export default function UserIndex() {
             </ContentCard>
 
             {/* FAB for mobile */}
-            <CheckPermissions permissions={['manajemen-pengguna']}>
+            <CheckPermissions permissions={['kelola_pengguna']}>
                 <FloatingActionButton href="/user/create" label="Tambah Pengguna" />
             </CheckPermissions>
         </RootLayout>

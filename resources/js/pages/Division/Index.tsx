@@ -180,7 +180,7 @@ export default function DivisionIndex() {
                 title="Divisi"
                 mobileFullWidth
                 additionalButton={
-                    <CheckPermissions permissions={['manajemen-divisi']}>
+                    <CheckPermissions permissions={['kelola_divisi']}>
                         <Button className="hidden w-full md:flex" label="Tambah Divisi" href="/division/create" icon={<Plus className="size-4" />} />
                     </CheckPermissions>
                 }
@@ -253,7 +253,7 @@ export default function DivisionIndex() {
                                 </span>
                             ),
                         },
-                        ...(usePage<PageProps>().props.permissions?.includes('manajemen-divisi')
+                        ...(usePage<PageProps>().props.permissions?.includes('kelola_divisi')
                             ? [
                                 {
                                     header: 'Aksi',
@@ -286,7 +286,7 @@ export default function DivisionIndex() {
             </ContentCard>
 
             {/* FAB for mobile */}
-            <CheckPermissions permissions={['manajemen-divisi']}>
+            <CheckPermissions permissions={['kelola_divisi']}>
                 <FloatingActionButton href="/division/create" label="Tambah Divisi" />
             </CheckPermissions>
         </RootLayout>

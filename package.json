@@ -9,7 +9,11 @@
         "format": "prettier --write resources/",
         "format:check": "prettier --check resources/",
         "lint": "eslint . --fix",
-        "types": "tsc --noEmit"
+        "types": "tsc --noEmit",
+        "cy:open": "cypress open",
+        "cy:run": "cypress run",
+        "cy:run:headed": "cypress run --headed",
+        "test:e2e": "cypress run --browser chrome"
     },
     "devDependencies": {
         "@eslint/js": "^9.19.0",
@@ -31,6 +35,8 @@
         "@types/react": "^19.2.0",
         "@types/react-dom": "^19.2.0",
         "@vitejs/plugin-react": "^5.0.0",
+        "chart.js": "^4.5.1",
+        "chartjs-plugin-datalabels": "^2.2.0",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "concurrently": "^9.0.1",
@@ -38,6 +44,7 @@
         "laravel-vite-plugin": "^2.0",
         "lucide-react": "^0.556.0",
         "react": "^19.2.0",
+        "react-chartjs-2": "^5.3.1",
         "react-dom": "^19.2.0",
         "react-hot-toast": "^2.6.0",
         "tailwind-merge": "^3.0.1",

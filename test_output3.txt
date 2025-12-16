@@ -1,0 +1,77 @@
+
+   FAIL  Tests\Feature\Inventory\CategoryItemTest
+  ✓ Permissio… 2.20s  
+  ✓ Permissio… 0.25s  
+  ✓ Permissio… 0.20s  
+  ✓ Permissio… 0.89s  
+  ✓ Permissio… 0.22s  
+  ✓ Permissio… 0.15s  
+  ✓ CRUD Oper… 0.38s  
+  ⨯ CRUD Oper… 0.18s  
+  ✓ CRUD Oper… 0.13s  
+  ✓ CRUD Oper… 0.14s  
+  ⨯ CRUD Oper… 0.40s  
+  ✓ Validasi…  0.18s  
+  ✓ Validasi…  0.40s  
+  ⨯ Validasi…  0.80s  
+  ✓ Validasi…  0.17s  
+  ✓ Datatable… 0.33s  
+  ✓ Datatable… 1.57s  
+  ✓ Datatable… 0.58s  
+  ✓ Export Ex… 0.22s  
+  ✓ Export Ex… 0.36s  
+  ──────────────────  
+   FAILED  Tests\F…   
+  Session is missing expected key [errors].
+Failed asserting that false is true.
+
+  at tests\Feature\Inventory\CategoryItemTest.php:148
+    144▕             'description' => 'Deskripsi',
+    145▕             'is_active' => true
+    146▕         ]);
+    147▕         
+  ➜ 148▕         $response->assertSessionHasErrors('name');
+    149▕     });
+    150▕     
+    151▕     it('dapat mengupdate kategori yang ada', function () {
+    152▕         $category = CategoryItem::factory()->create([
+
+  ──────────────────  
+   FAILED  Tests\F…   
+  Failed asserting that a row in the table [category_items] matches the attributes {
+    "id": 1
+}.
+
+The table is empty.
+
+  at tests\Feature\Inventory\CategoryItemTest.php:197
+    193▕         // Note: Route is /{categoryItem}/delete
+    194▕         $response = $this->actingAs($this->testUser)->delete("/inventory/categories/{$category->id}/delete");
+    195▕         
+    196▕         // Kategori masih ada di database (should fail or show error)
+  ➜ 197▕         $this->assertDatabaseHas('category_items', [
+    198▕             'id' => $category->id
+    199▕         ]);
+    200▕     });
+    201▕ });
+
+  ──────────────────  
+   FAILED  Tests\F…   
+  Session is missing expected key [errors].
+Failed asserting that false is true.
+
+  at tests\Feature\Inventory\CategoryItemTest.php:243
+    239▕             'description' => 'New Description',
+    240▕             'is_active' => true
+    241▕         ]);
+    242▕         
+  ➜ 243▕         $response->assertSessionHasErrors('name');
+    244▕     });
+    245▕     
+    246▕     it('dapat membuat kategori tanpa deskripsi (optional)', function () {
+    247▕         // Note: Route is /store
+
+
+  Tests:    3 failed, 17 passed (42 assertions)
+  Duration: 11.56s
+

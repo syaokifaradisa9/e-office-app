@@ -21,7 +21,7 @@ interface PositionCardItemProps {
 
 export default function PositionCardItem({ item, onDelete }: PositionCardItemProps) {
     const { permissions } = usePage<PageProps>().props;
-    const hasManagePermission = permissions?.includes('manajemen-jabatan');
+    const hasManagePermission = permissions?.includes('kelola_jabatan');
 
     return (
         <div className="transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/30">

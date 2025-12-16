@@ -136,3 +136,120 @@ export function RoleCardSkeleton() {
         </div>
     );
 }
+
+// WarehouseOrder Skeleton - matches WarehouseOrderCardItem layout
+export function WarehouseOrderCardSkeleton() {
+    return (
+        <div className="animate-pulse">
+            <div className="flex flex-col gap-1 px-4 py-4">
+                {/* Header: Order Number + Status */}
+                <div className="flex items-center justify-between gap-2">
+                    <div className="h-5 w-1/2 rounded bg-gray-200 dark:bg-slate-700"></div>
+                    <div className="h-5 w-16 rounded-full bg-gray-200 dark:bg-slate-700"></div>
+                </div>
+
+                {/* Subtitle: User & Division */}
+                <div className="mb-2 h-4 w-2/3 rounded bg-gray-200 dark:bg-slate-700"></div>
+
+                {/* Footer: Actions */}
+                <div className="mt-2 flex flex-wrap items-center justify-end gap-2 pt-2">
+                    <div className="h-8 w-16 rounded-lg bg-gray-200 dark:bg-slate-700"></div>
+                    <div className="h-8 w-20 rounded-lg bg-gray-200 dark:bg-slate-700"></div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// Item Skeleton - matches ItemCardItem layout
+export function ItemCardSkeleton() {
+    return (
+        <div className="animate-pulse">
+            <div className="flex flex-col gap-1 px-4 py-4">
+                <div className="h-5 w-1/2 rounded bg-gray-200 dark:bg-slate-700"></div>
+                <div className="h-4 w-1/3 rounded bg-gray-200 dark:bg-slate-700"></div>
+                <div className="mb-2 flex items-center gap-2">
+                    <div className="h-4 w-20 rounded bg-gray-200 dark:bg-slate-700"></div>
+                </div>
+                <div className="mt-2 flex items-center justify-end gap-2 pt-2">
+                    <div className="h-8 w-16 rounded-lg bg-gray-200 dark:bg-slate-700"></div>
+                    <div className="h-8 w-16 rounded-lg bg-gray-200 dark:bg-slate-700"></div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// StockOpname Skeleton - matches StockOpnameCardItem layout
+export function StockOpnameCardSkeleton() {
+    return (
+        <div className="animate-pulse">
+            <div className="flex flex-col gap-1 px-4 py-4">
+                <div className="flex items-center justify-between gap-2">
+                    <div className="h-5 w-1/2 rounded bg-gray-200 dark:bg-slate-700"></div>
+                    <div className="h-5 w-16 rounded-full bg-gray-200 dark:bg-slate-700"></div>
+                </div>
+                <div className="mb-2 h-4 w-2/3 rounded bg-gray-200 dark:bg-slate-700"></div>
+                <div className="mt-2 flex items-center justify-end gap-2 pt-2">
+                    <div className="h-8 w-16 rounded-lg bg-gray-200 dark:bg-slate-700"></div>
+                    <div className="h-8 w-20 rounded-lg bg-gray-200 dark:bg-slate-700"></div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// StockMonitoring Skeleton - matches StockMonitoringCardItem layout
+export function StockMonitoringCardSkeleton() {
+    return (
+        <div className="animate-pulse">
+            <div className="flex flex-col gap-1 px-4 py-4">
+                <div className="h-5 w-1/2 rounded bg-gray-200 dark:bg-slate-700"></div>
+                <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-slate-700"></div>
+                <div className="mb-2 flex items-center gap-2">
+                    <div className="h-4 w-20 rounded bg-gray-200 dark:bg-slate-700"></div>
+                </div>
+                <div className="mt-2 flex items-center justify-end gap-2 pt-2">
+                    <div className="h-8 w-16 rounded-lg bg-gray-200 dark:bg-slate-700"></div>
+                    <div className="h-8 w-20 rounded-lg bg-gray-200 dark:bg-slate-700"></div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ItemTransaction Skeleton - matches ItemTransactionCardItem layout
+export function ItemTransactionCardSkeleton() {
+    return (
+        <div className="animate-pulse">
+            <div className="flex items-center gap-3 px-4 py-3">
+                <div className="h-9 w-9 flex-shrink-0 rounded-lg bg-gray-200 dark:bg-slate-700"></div>
+                <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="h-5 w-1/2 rounded bg-gray-200 dark:bg-slate-700"></div>
+                        <div className="h-5 w-10 rounded bg-gray-200 dark:bg-slate-700"></div>
+                    </div>
+                    <div className="mt-1 h-4 w-2/3 rounded bg-gray-200 dark:bg-slate-700"></div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// CategoryItem Skeleton - matches CategoryItemCardItem layout
+export function CategoryItemCardSkeleton() {
+    return (
+        <div className="animate-pulse">
+            <div className="flex flex-col gap-1 px-4 py-4">
+                <div className="h-5 w-1/2 rounded bg-gray-200 dark:bg-slate-700"></div>
+                <div className="mb-2 h-4 w-2/3 rounded bg-gray-200 dark:bg-slate-700"></div>
+                <div className="mt-2 flex items-center justify-end gap-2 pt-2">
+                    <div className="h-8 w-16 rounded-lg bg-gray-200 dark:bg-slate-700"></div>
+                    <div className="h-8 w-16 rounded-lg bg-gray-200 dark:bg-slate-700"></div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+
