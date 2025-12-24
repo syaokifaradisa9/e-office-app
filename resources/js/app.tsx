@@ -6,15 +6,17 @@ import { createRoot } from 'react-dom/client';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
-createInertiaApp({
-    title: (title) => title ? `${title} - ${appName}` : appName,
-    resolve: (name) => {
-        const pages = import.meta.glob([
-            './pages/**/*.tsx',
-            '../../Modules/*/resources/assets/js/Pages/**/*.tsx',
-        ]);
+const pages = import.meta.glob([
+    './pages/**/*.tsx',
+    '../../Modules/*/resources/assets/js/Pages/**/*.tsx',
+]);
 
-        if (pages[`./pages/${name}.tsx`]) {
+createInertiaApp({
+    title: (title) => (title ? `${title} - ${appName}` : appName),
+    resolve: (name) => {
+        const page = pages[`./pages/${name}.tsx`];
+
+        if (page) {
             return resolvePageComponent(`./pages/${name}.tsx`, pages);
         }
 
@@ -22,7 +24,10 @@ createInertiaApp({
         const module = parts[0];
         const pagePath = parts.slice(1).join('/');
 
-        return resolvePageComponent(`../../Modules/${module}/resources/assets/js/Pages/${pagePath}.tsx`, pages);
+        return resolvePageComponent(
+            `../../Modules/${module}/resources/assets/js/Pages/${pagePath}.tsx`,
+            pages
+        );
     },
     setup({ el, App, props }) {
         const root = createRoot(el);
