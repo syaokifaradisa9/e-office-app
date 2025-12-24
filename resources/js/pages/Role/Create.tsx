@@ -183,7 +183,20 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
 
     const formatPermissionLabel = (permission: string) => {
         const overrides: Record<string, string> = {
-            'lihat_semua_stock_opname': 'Lihat Stock Opname Keseluruhan',
+            lihat_divisi: 'Lihat Data Divisi',
+            kelola_divisi: 'Kelola Data Divisi',
+            lihat_jabatan: 'Lihat Data Jabatan',
+            kelola_jabatan: 'Kelola Data Jabatan',
+            lihat_pengguna: 'Lihat Data Pengguna',
+            kelola_pengguna: 'Kelola Data Pengguna',
+            lihat_role: 'Lihat Data Role',
+            kelola_role: 'Kelola Data Role',
+            lihat_kategori: 'Lihat Data Kategori Barang Gudang',
+            kelola_kategori: 'Kelola Data Kategori Barang Gudang',
+            lihat_barang: 'Lihat Data Barang Gudang',
+            kelola_barang: 'Kelola Data Barang Gudang',
+            konversi_barang: 'Konversi Data Barang Gudang',
+            keluarkan_stok: 'Keluarkan Data Stok Gudang',
         };
 
         if (overrides[permission]) {
