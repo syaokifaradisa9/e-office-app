@@ -24,10 +24,9 @@ createInertiaApp({
         const module = parts[0];
         const pagePath = parts.slice(1).join('/');
 
-        return resolvePageComponent(
-            `../../Modules/${module}/resources/assets/js/Pages/${pagePath}.tsx`,
-            pages
-        );
+        const fullModulePath = `../../Modules/${module}/resources/assets/js/Pages/${pagePath}.tsx`;
+
+        return resolvePageComponent(fullModulePath, pages);
     },
     setup({ el, App, props }) {
         const root = createRoot(el);
