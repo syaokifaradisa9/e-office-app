@@ -31,8 +31,11 @@ Route::middleware(['auth'])->group(function () {
 
     // Division Routes
     Route::prefix('division')->name('division.')->controller(DivisionController::class)->group(function () {
-        Route::middleware('permission:lihat_divisi')->group(function () {
+        Route::middleware('role_or_permission:lihat_divisi|kelola_divisi')->group(function () {
             Route::get('/', 'index')->name('index');
+        });
+
+        Route::middleware('permission:lihat_divisi')->group(function () {
             Route::get('/datatable', 'datatable')->name('datatable');
             Route::get('/print-excel', 'printExcel')->name('print-excel');
         });
@@ -48,14 +51,22 @@ Route::middleware(['auth'])->group(function () {
 
     // Position Routes
     Route::prefix('position')->name('position.')->controller(PositionController::class)->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/create', 'create')->name('create');
-        Route::post('/store', 'store')->name('store');
-        Route::get('/{position}/edit', 'edit')->name('edit');
-        Route::put('/{position}/update', 'update')->name('update');
-        Route::delete('/{position}/delete', 'delete')->name('delete');
-        Route::get('/datatable', 'datatable')->name('datatable');
-        Route::get('/print-excel', 'printExcel')->name('print-excel');
+        Route::middleware('role_or_permission:lihat_jabatan|kelola_jabatan')->group(function () {
+            Route::get('/', 'index')->name('index');
+        });
+
+        Route::middleware('permission:lihat_jabatan')->group(function () {
+            Route::get('/datatable', 'datatable')->name('datatable');
+            Route::get('/print-excel', 'printExcel')->name('print-excel');
+        });
+
+        Route::middleware('permission:kelola_jabatan')->group(function () {
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/{position}/edit', 'edit')->name('edit');
+            Route::put('/{position}/update', 'update')->name('update');
+            Route::delete('/{position}/delete', 'delete')->name('delete');
+        });
     });
 
     // User Routes
