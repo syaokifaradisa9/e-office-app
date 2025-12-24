@@ -3,7 +3,7 @@ import RootLayout from '@/components/layouts/RootLayout';
 import DataTable from '@/components/tables/Datatable';
 import { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
-import { Folder, Edit, Plus, Trash2, FileSpreadsheet, AlertCircle } from 'lucide-react';
+import { Folder, Edit, Plus, Trash2, FileSpreadsheet, Shield } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import ConfirmationAlert from '@/components/alerts/ConfirmationAlert';
 import FormSearch from '@/components/forms/FormSearch';
@@ -48,8 +48,8 @@ interface Params {
 
 export default function CategoryItemIndex() {
     const { permissions } = usePage<PageProps>().props;
-    const hasViewPermission = permissions?.includes('lihat_kategori_barang');
-    const hasManagePermission = permissions?.includes('kelola_kategori_barang');
+    const hasViewPermission = permissions?.includes('lihat_kategori');
+    const hasManagePermission = permissions?.includes('kelola_kategori');
 
     const [dataTable, setDataTable] = useState<PaginationData>({
         data: [],
@@ -162,16 +162,18 @@ export default function CategoryItemIndex() {
                 title="Kategori Barang"
                 mobileFullWidth
                 additionalButton={
-                    <CheckPermissions permissions={['kelola_kategori_barang']}>
+                    <CheckPermissions permissions={['kelola_kategori']}>
                         <Button className="hidden w-full md:flex" label="Tambah Kategori" href="/inventory/categories/create" icon={<Plus className="size-4" />} />
                     </CheckPermissions>
                 }
             >
                 {!hasViewPermission ? (
-                    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 py-16 dark:border-slate-700" data-testid="no-access-message">
-                        <AlertCircle className="mb-3 size-12 text-slate-400" />
-                        <h3 className="mb-1 text-lg font-semibold text-slate-700 dark:text-slate-300">Akses Ditolak</h3>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">Anda tidak memiliki akses untuk melihat data kategori</p>
+                    <div className="flex flex-col items-center justify-center py-12 text-center" data-testid="no-access-message">
+                        <div className="mb-4 rounded-full bg-red-100 p-3 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                            <Shield className="size-8" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Akses Ditolak</h3>
+                        <p className="mt-1 text-slate-500 dark:text-slate-400">Anda tidak memiliki akses untuk melihat data kategori</p>
                     </div>
                 ) : (
                     <DataTable
@@ -223,7 +225,7 @@ export default function CategoryItemIndex() {
                                     </span>
                                 ),
                             },
-                            ...(usePage<PageProps>().props.permissions?.includes('kelola_kategori_barang')
+                            ...(usePage<PageProps>().props.permissions?.includes('kelola_kategori')
                                 ? [
                                     {
                                         header: 'Aksi',
@@ -256,7 +258,7 @@ export default function CategoryItemIndex() {
                 )}
             </ContentCard>
 
-            <CheckPermissions permissions={['kelola_kategori_barang']}>
+            <CheckPermissions permissions={['kelola_kategori']}>
                 <FloatingActionButton href="/inventory/categories/create" label="Tambah Kategori" />
             </CheckPermissions>
         </RootLayout>

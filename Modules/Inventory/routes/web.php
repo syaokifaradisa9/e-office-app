@@ -21,18 +21,18 @@ Route::prefix('inventory')->name('inventory.')->middleware(['auth'])->group(func
     // Categories
     Route::prefix('categories')->name('categories.')->controller(CategoryItemController::class)->group(function () {
         // Index - can be accessed with lihat OR kelola
-        Route::middleware('permission:lihat_kategori_barang|kelola_kategori_barang')->group(function () {
+        Route::middleware('role_or_permission:lihat_kategori|kelola_kategori')->group(function () {
             Route::get('/', 'index')->name('index');
         });
 
         // Datatable and Print Excel - ONLY with lihat permission
-        Route::middleware('permission:lihat_kategori_barang')->group(function () {
+        Route::middleware('permission:lihat_kategori')->group(function () {
             Route::get('/datatable', 'datatable')->name('datatable');
             Route::get('/print-excel', 'printExcel')->name('print-excel');
         });
 
         // CRUD operations - with kelola permission
-        Route::middleware('permission:kelola_kategori_barang')->group(function () {
+        Route::middleware('permission:kelola_kategori')->group(function () {
             Route::get('/create', 'create')->name('create');
             Route::post('/store', 'store')->name('store');
             Route::get('/{categoryItem}/edit', 'edit')->name('edit');

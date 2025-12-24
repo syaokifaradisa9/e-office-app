@@ -2,8 +2,9 @@ import { ArrowLeftRight, BarChart3, Briefcase, Building2, ClipboardCheck, Folder
 import { usePage } from '@inertiajs/react';
 import { useLayoutEffect, useRef } from 'react';
 
+import InventorySidebar from '../../../../Modules/Inventory/resources/assets/js/components/layouts/InventorySidebar';
 import { SidebarCollapseContext } from './SidebarContext';
-import SidebarLink from './SideBarLink';
+import SidebarLink from '@/components/layouts/SideBarLink';
 
 interface SideBarProps {
     isOpen: boolean;
@@ -81,143 +82,8 @@ export default function SideBar({ isOpen, setIsOpen, isCollapsed, hasMobileSearc
                                         );
                                     })()}
 
-                                    {/* Inventory - only show if user has at least one inventory permission */}
-                                    {(() => {
-                                        const { permissions } = usePage<{ permissions: string[] }>().props;
-                                        const hasAnyInventoryPermission =
-                                            // Kategori
-                                            permissions?.includes('lihat_kategori_barang') || permissions?.includes('kelola_kategori_barang') ||
-                                            // Barang
-                                            permissions?.includes('lihat_barang') || permissions?.includes('kelola_barang') ||
-                                            // Monitoring Stok
-                                            permissions?.includes('monitor_stok') || permissions?.includes('monitor_semua_stok') ||
-                                            // Permintaan Barang
-                                            permissions?.includes('lihat_permintaan_barang') || permissions?.includes('lihat_semua_permintaan_barang') ||
-                                            permissions?.includes('buat_permintaan_barang') || permissions?.includes('konfirmasi_permintaan_barang') ||
-                                            permissions?.includes('serah_terima_barang') || permissions?.includes('terima_barang') ||
-                                            // Transaksi
-                                            permissions?.includes('monitor_transaksi_barang') || permissions?.includes('monitor_semua_transaksi_barang') ||
-                                            // Stock Opname
-                                            permissions?.includes('lihat_stock_opname_gudang') || permissions?.includes('lihat_stock_opname_divisi') ||
-                                            permissions?.includes('lihat_semua_stock_opname');
-
-                                        if (!hasAnyInventoryPermission) return null;
-
-                                        return (
-                                            <div className="mb-6">
-                                                <div className="py-2">
-                                                    <h3 className={`text-xs font-medium tracking-wider text-slate-500 dark:text-slate-400 ${isCollapsed ? 'hidden' : ''}`}>Inventory</h3>
-                                                </div>
-                                                <div className="space-y-1">
-                                                    {/* Kategori Barang - only show if has view or manage permission */}
-                                                    {(() => {
-                                                        const { permissions } = usePage<{ permissions: string[] }>().props;
-                                                        const hasKategoriPermission = permissions?.includes('lihat_kategori_barang') || permissions?.includes('kelola_kategori_barang');
-                                                        if (!hasKategoriPermission) return null;
-                                                        return <SidebarLink name="Kategori Barang" href="/inventory/categories" icon={Folder} />;
-                                                    })()}
-                                                    {/* Barang */}
-                                                    {(() => {
-                                                        const { permissions } = usePage<{ permissions: string[] }>().props;
-                                                        const hasBarangPermission = permissions?.includes('lihat_barang') || permissions?.includes('kelola_barang');
-                                                        if (!hasBarangPermission) return null;
-                                                        return <SidebarLink name="Barang" href="/inventory/items" icon={Package} />;
-                                                    })()}
-                                                    {/* Monitoring Stok */}
-                                                    {(() => {
-                                                        const { permissions } = usePage<{ permissions: string[] }>().props;
-                                                        const hasMonitoringPermission = permissions?.includes('monitor_stok') || permissions?.includes('monitor_semua_stok');
-                                                        if (!hasMonitoringPermission) return null;
-                                                        return <SidebarLink name="Monitoring Stok" href="/inventory/stock-monitoring" icon={BarChart3} />;
-                                                    })()}
-                                                    {/* Permintaan Barang */}
-                                                    {(() => {
-                                                        const { permissions } = usePage<{ permissions: string[] }>().props;
-                                                        const hasPermintaanPermission =
-                                                            permissions?.includes('lihat_permintaan_barang') ||
-                                                            permissions?.includes('lihat_semua_permintaan_barang') ||
-                                                            permissions?.includes('buat_permintaan_barang') ||
-                                                            permissions?.includes('konfirmasi_permintaan_barang') ||
-                                                            permissions?.includes('serah_terima_barang') ||
-                                                            permissions?.includes('terima_barang');
-                                                        if (!hasPermintaanPermission) return null;
-                                                        return <SidebarLink name="Permintaan Barang" href="/inventory/warehouse-orders" icon={ShoppingCart} />;
-                                                    })()}
-                                                    {/* Transaksi Barang */}
-                                                    {(() => {
-                                                        const { permissions } = usePage<{ permissions: string[] }>().props;
-                                                        const hasTransaksiPermission = permissions?.includes('monitor_transaksi_barang') || permissions?.includes('monitor_semua_transaksi_barang');
-                                                        if (!hasTransaksiPermission) return null;
-                                                        return <SidebarLink name="Transaksi Barang" href="/inventory/transactions" icon={ArrowLeftRight} />;
-                                                    })()}
-                                                    {/* Stock Opname Logic */}
-                                                    {(() => {
-                                                        const { permissions } = usePage<{ permissions: string[] }>().props;
-
-                                                        const hasWarehouse = permissions?.includes('lihat_stock_opname_gudang') || permissions?.includes('lihat_semua_stock_opname');
-                                                        const hasDivision = permissions?.includes('lihat_stock_opname_divisi') || permissions?.includes('lihat_semua_stock_opname');
-                                                        const hasAll = permissions?.includes('lihat_semua_stock_opname');
-
-                                                        // If we strictly follow Inventoria's logic of counting "view types":
-                                                        const viewOptions = [];
-                                                        if (permissions?.includes('lihat_stock_opname_divisi')) viewOptions.push('division');
-                                                        if (permissions?.includes('lihat_stock_opname_gudang')) viewOptions.push('warehouse');
-                                                        if (permissions?.includes('lihat_semua_stock_opname')) viewOptions.push('all');
-
-                                                        const uniqueViews = new Set(viewOptions).size;
-                                                        const simpleView = uniqueViews <= 1;
-
-                                                        // Complex logic simply:
-                                                        // If user can see BOTH warehouse and division, show dropdown.
-                                                        // If user can see only one, show single link.
-                                                        // If user sees ALL, show dropdown with All, Warehouse, Division (if relevant).
-
-                                                        // Let's stick to a robust check:
-                                                        const showWarehouse = permissions?.includes('lihat_stock_opname_gudang') || hasAll;
-                                                        const showDivision = permissions?.includes('lihat_stock_opname_divisi') || hasAll;
-
-                                                        // If both are visible, or hasAll is true (implies likely both or at least All + something), use dropdown
-                                                        // Actually Inventoria logic: viewCount = [hasWarehouse, hasDivision, hasAll].filter(Boolean).length.
-                                                        // But hasAll usually implies hasWarehouse and hasDivision in many logical models, but permissions might be separate.
-                                                        // Let's follow Inventoria explicit logic:
-
-                                                        const pWarehouse = permissions?.includes('lihat_stock_opname_gudang');
-                                                        const pDivision = permissions?.includes('lihat_stock_opname_divisi');
-                                                        const pAll = permissions?.includes('lihat_semua_stock_opname');
-
-                                                        const count = [pWarehouse, pDivision, pAll].filter(Boolean).length;
-
-                                                        if (count === 0) return null;
-
-                                                        if (count === 1) {
-                                                            let href = '/inventory/stock-opname'; // default
-                                                            if (pWarehouse) href = '/inventory/stock-opname/warehouse';
-                                                            if (pDivision) href = '/inventory/stock-opname/division';
-                                                            if (pAll) href = '/inventory/stock-opname/all';
-
-                                                            return (
-                                                                <SidebarLink name="Stock Opname" href={href} icon={ClipboardCheck} />
-                                                            );
-                                                        }
-
-                                                        // Multiple
-                                                        return (
-                                                            <SidebarLink
-                                                                name="Stock Opname"
-                                                                href="/inventory/stock-opname"
-                                                                icon={ClipboardCheck}
-                                                                children={[
-                                                                    pDivision && { name: 'Divisi', href: '/inventory/stock-opname/division' },
-                                                                    pWarehouse && { name: 'Gudang', href: '/inventory/stock-opname/warehouse' },
-                                                                    pAll && { name: 'Keseluruhan', href: '/inventory/stock-opname/all' }
-                                                                ].filter(Boolean) as any}
-                                                            />
-                                                        );
-                                                    })()}
-                                                </div>
-                                            </div>
-                                        );
-                                    })()}
+                                    {/* Inventory */}
+                                    <InventorySidebar />
                                 </div>
                             </div>
                         </div>

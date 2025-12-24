@@ -34,15 +34,6 @@ class RoleService
 
         // Define grouping rules for permissions with module separation
         $groupingRules = [
-            // ===================================
-            // DATA MASTER MODULE
-            // ===================================
-            'dashboard' => [
-                'module' => 'Data Master',
-                'label' => 'Dashboard',
-                'keywords' => ['lihat_dashboard'],
-                'exclude' => ['gudang'],
-            ],
             'pengguna' => [
                 'module' => 'Data Master',
                 'label' => 'Pengguna',
@@ -57,62 +48,16 @@ class RoleService
                 'module' => 'Data Master',
                 'label' => 'Divisi',
                 'keywords' => ['_divisi'],
-                'exclude' => ['gudang', 'stock_opname', 'laporan'],
             ],
             'jabatan' => [
                 'module' => 'Data Master',
                 'label' => 'Jabatan',
                 'keywords' => ['_jabatan'],
             ],
-            'profil' => [
-                'module' => 'Data Master',
-                'label' => 'Profil',
-                'keywords' => ['edit_profil', 'ubah_password'],
-            ],
-
-            // ===================================
-            // SISTEM MANAJEMEN GUDANG MODULE
-            // ===================================
-            'dashboard_gudang' => [
-                'module' => 'Sistem Manajemen Gudang',
-                'label' => 'Dashboard Gudang',
-                'keywords' => ['dashboard_gudang'],
-            ],
-            'kategori_barang' => [
-                'module' => 'Sistem Manajemen Gudang',
+            'kategori' => [
+                'module' => 'Sistem Gudang',
                 'label' => 'Kategori Barang',
-                'keywords' => ['kategori_barang'],
-            ],
-            'barang' => [
-                'module' => 'Sistem Manajemen Gudang',
-                'label' => 'Barang',
-                'keywords' => ['_barang', 'keluarkan_stok'],
-                'exclude' => ['kategori', 'permintaan', 'transaksi', 'serah_terima', 'terima'],
-            ],
-            'permintaan_barang' => [
-                'module' => 'Sistem Manajemen Gudang',
-                'label' => 'Permintaan Barang',
-                'keywords' => ['permintaan_barang', 'serah_terima', 'terima_barang', 'konfirmasi_permintaan'],
-            ],
-            'stock_opname' => [
-                'module' => 'Sistem Manajemen Gudang',
-                'label' => 'Stock Opname',
-                'keywords' => ['stock_opname'],
-            ],
-            'monitoring_stok' => [
-                'module' => 'Sistem Manajemen Gudang',
-                'label' => 'Monitoring Stok',
-                'keywords' => ['monitor_stok', 'monitor_semua_stok'],
-            ],
-            'monitoring_transaksi' => [
-                'module' => 'Sistem Manajemen Gudang',
-                'label' => 'Monitoring Transaksi Barang',
-                'keywords' => ['monitor_transaksi_barang', 'monitor_semua_transaksi'],
-            ],
-            'laporan_gudang' => [
-                'module' => 'Sistem Manajemen Gudang',
-                'label' => 'Laporan Gudang',
-                'keywords' => ['laporan_gudang'],
+                'keywords' => ['_kategori'],
             ],
         ];
 
@@ -192,7 +137,7 @@ class RoleService
 
         // Sort groups by module then by label
         uasort($grouped, function ($a, $b) {
-            $moduleOrder = ['Data Master' => 1, 'Sistem Manajemen Gudang' => 2, 'Lainnya' => 99];
+            $moduleOrder = ['Data Master' => 1, 'Sistem Gudang' => 2, 'Lainnya' => 99];
             $aOrder = $moduleOrder[$a['module']] ?? 50;
             $bOrder = $moduleOrder[$b['module']] ?? 50;
 
