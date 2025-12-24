@@ -80,6 +80,7 @@ export default function WarehouseOrderIndex({ users = [], divisions = [] }: { us
     const hasConfirmPermission = permissions?.includes('konfirmasi_permintaan_barang');
     const hasHandoverPermission = permissions?.includes('serah_terima_barang');
     const hasReceivePermission = permissions?.includes('terima_barang');
+    const canViewList = permissions?.includes('lihat_permintaan_barang_divisi') || permissions?.includes('lihat_semua_permintaan_barang');
 
     // Show action column if user has any action permission
     const showActionColumn = hasConfirmPermission || hasHandoverPermission || hasReceivePermission || hasCreatePermission;
@@ -270,20 +271,24 @@ export default function WarehouseOrderIndex({ users = [], divisions = [] }: { us
                     placeholder="Cari permintaan..."
                     actionButton={
                         <div className="flex items-center gap-1">
-                            <button
-                                onClick={() => setOpenFilter(true)}
-                                className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                            >
-                                <Filter className="size-4" />
-                            </button>
-                            <a
-                                href={getPrintUrl()}
-                                target="_blank"
-                                className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                                rel="noreferrer"
-                            >
-                                <FileSpreadsheet className="size-4" />
-                            </a>
+                            {canViewList && (
+                                <button
+                                    onClick={() => setOpenFilter(true)}
+                                    className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                                >
+                                    <Filter className="size-4" />
+                                </button>
+                            )}
+                            {canViewList && (
+                                <a
+                                    href={getPrintUrl()}
+                                    target="_blank"
+                                    className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                                    rel="noreferrer"
+                                >
+                                    <FileSpreadsheet className="size-4" />
+                                </a>
+                            )}
                         </div>
                     }
                 />
@@ -405,211 +410,225 @@ export default function WarehouseOrderIndex({ users = [], divisions = [] }: { us
                     ) : null
                 }
             >
-                <DataTable
-                    additionalHeaderElements={
-                        <div className="flex gap-2">
-                            <Button
-                                href={getPrintUrl()}
-                                className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white"
-                                icon={<FileSpreadsheet className="size-4" />}
-                                target="_blank"
+                {canViewList ? (
+                    <DataTable
+                        additionalHeaderElements={
+                            <div className="flex gap-2">
+                                {canViewList && (
+                                    <Button
+                                        href={getPrintUrl()}
+                                        className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white"
+                                        icon={<FileSpreadsheet className="size-4" />}
+                                        target="_blank"
+                                    />
+                                )}
+                            </div>
+                        }
+                        onChangePage={onChangePage}
+                        onParamsChange={onParamsChange}
+                        limit={params.limit}
+                        searchValue={params.search}
+                        dataTable={dataTable}
+                        isLoading={isLoading}
+                        SkeletonComponent={WarehouseOrderCardSkeleton}
+                        sortBy={params.sort_by}
+                        sortDirection={params.sort_direction}
+                        onHeaderClick={(columnName) => {
+                            const newSortDirection = params.sort_by === columnName && params.sort_direction === 'asc' ? 'desc' : 'asc';
+                            setParams((prevParams) => ({
+                                ...prevParams,
+                                sort_by: columnName,
+                                sort_direction: newSortDirection,
+                            }));
+                        }}
+                        cardItem={(item: WarehouseOrderItem) => (
+                            <WarehouseOrderCardItem
+                                item={item}
+                                onConfirm={(item) => {
+                                    setSelectedItem(item);
+                                    setConfirmType('confirm');
+                                    setOpenConfirm(true);
+                                }}
+                                onDelete={(item) => {
+                                    setSelectedItem(item);
+                                    setConfirmType('delete');
+                                    setOpenConfirm(true);
+                                }}
+                                onReject={(item) => {
+                                    setSelectedItem(item);
+                                    setOpenReject(true);
+                                }}
                             />
-                        </div>
-                    }
-                    onChangePage={onChangePage}
-                    onParamsChange={onParamsChange}
-                    limit={params.limit}
-                    searchValue={params.search}
-                    dataTable={dataTable}
-                    isLoading={isLoading}
-                    SkeletonComponent={WarehouseOrderCardSkeleton}
-                    sortBy={params.sort_by}
-                    sortDirection={params.sort_direction}
-                    onHeaderClick={(columnName) => {
-                        const newSortDirection = params.sort_by === columnName && params.sort_direction === 'asc' ? 'desc' : 'asc';
-                        setParams((prevParams) => ({
-                            ...prevParams,
-                            sort_by: columnName,
-                            sort_direction: newSortDirection,
-                        }));
-                    }}
-                    cardItem={(item: WarehouseOrderItem) => (
-                        <WarehouseOrderCardItem
-                            item={item}
-                            onConfirm={(item) => {
-                                setSelectedItem(item);
-                                setConfirmType('confirm');
-                                setOpenConfirm(true);
-                            }}
-                            onDelete={(item) => {
-                                setSelectedItem(item);
-                                setConfirmType('delete');
-                                setOpenConfirm(true);
-                            }}
-                            onReject={(item) => {
-                                setSelectedItem(item);
-                                setOpenReject(true);
-                            }}
-                        />
-                    )}
-                    columns={[
-                        {
-                            name: 'order_number',
-                            header: 'Nomor Order',
-                            render: (item: WarehouseOrderItem) => (
-                                <span className="font-medium text-gray-900 dark:text-white">{item.order_number || '-'}</span>
-                            ),
-                            footer: (
-                                <FormSearch
-                                    name="order_number"
-                                    value={params.order_number}
-                                    onChange={onParamsChange}
-                                    placeholder="Filter No. Order"
-                                />
-                            ),
-                        },
-                        {
-                            name: 'user_id',
-                            header: 'Pemohon',
-                            render: (item: WarehouseOrderItem) => item.user?.name ?? '-',
-                            footer: (
-                                <FormSearch name="user_id" value={params.user_id} onChange={onParamsChange} placeholder="Filter Pemohon" />
-                            ),
-                        },
-                        {
-                            name: 'division_id',
-                            header: 'Divisi',
-                            render: (item: WarehouseOrderItem) => item.division?.name ?? '-',
-                            footer: (
-                                <FormSearchSelect
-                                    name="division_id"
-                                    onChange={onParamsChange}
-                                    options={divisionOptions}
-                                    value={params.division_id}
-                                />
-                            ),
-                        },
-                        {
-                            name: 'status',
-                            header: 'Status',
-                            render: (item: WarehouseOrderItem) => <Badge color={getStatusColor(item.status)}>{statusLabels[item.status] || item.status}</Badge>,
-                            footer: (
-                                <FormSearchSelect name="status" value={params.status} onChange={onParamsChange} options={statusOptions} />
-                            ),
-                        },
-                        {
-                            name: 'created_at',
-                            header: 'Tanggal Dibuat',
-                            render: (item: WarehouseOrderItem) => formatDate(item.created_at),
-                            footer: (
-                                <FormSearch
-                                    name="created_at"
-                                    type="month"
-                                    value={params.created_at}
-                                    onChange={onParamsChange}
-                                    placeholder="Filter Tanggal"
-                                />
-                            ),
-                        },
-                        {
-                            header: 'Aksi',
-                            render: (item: WarehouseOrderItem) => (
-                                <div className="flex justify-end gap-1">
-                                    {/* Detail - always show */}
-                                    <Tooltip text="Detail">
-                                        <Button
-                                            href={`/inventory/warehouse-orders/${item.id}`}
-                                            className="!bg-transparent !p-1 !text-blue-600 hover:bg-blue-50 dark:!text-blue-400 dark:hover:bg-blue-900/20"
-                                            icon={<Eye className="size-4" />}
-                                        />
-                                    </Tooltip>
-
-                                    {/* Konfirmasi & Tolak */}
-                                    {hasConfirmPermission && (item.status === 'Pending' || item.status === 'Revision') && (
-                                        <>
-                                            <Tooltip text="Konfirmasi">
-                                                <Button
-                                                    onClick={() => {
-                                                        setSelectedItem(item);
-                                                        setConfirmType('confirm');
-                                                        setOpenConfirm(true);
-                                                    }}
-                                                    className="!bg-transparent !p-1 !text-green-600 hover:bg-green-50 dark:!text-green-400 dark:hover:bg-green-900/20"
-                                                    icon={<Check className="size-4" />}
-                                                />
-                                            </Tooltip>
-                                            <Tooltip text="Tolak">
-                                                <Button
-                                                    onClick={() => {
-                                                        setSelectedItem(item);
-                                                        setOpenReject(true);
-                                                    }}
-                                                    className="!bg-transparent !p-1 !text-red-600 hover:bg-red-50 dark:!text-red-400 dark:hover:bg-red-900/20"
-                                                    icon={<X className="size-4" />}
-                                                />
-                                            </Tooltip>
-                                        </>
-                                    )}
-
-                                    {/* Penyerahan */}
-                                    {hasHandoverPermission && item.status === 'Confirmed' && (
-                                        <Tooltip text="Serahkan Barang">
+                        )}
+                        columns={[
+                            {
+                                name: 'order_number',
+                                header: 'Nomor Order',
+                                render: (item: WarehouseOrderItem) => (
+                                    <span className="font-medium text-gray-900 dark:text-white">{item.order_number || '-'}</span>
+                                ),
+                                footer: (
+                                    <FormSearch
+                                        name="order_number"
+                                        value={params.order_number}
+                                        onChange={onParamsChange}
+                                        placeholder="Filter No. Order"
+                                    />
+                                ),
+                            },
+                            {
+                                name: 'user_id',
+                                header: 'Pemohon',
+                                render: (item: WarehouseOrderItem) => item.user?.name ?? '-',
+                                footer: (
+                                    <FormSearch name="user_id" value={params.user_id} onChange={onParamsChange} placeholder="Filter Pemohon" />
+                                ),
+                            },
+                            {
+                                name: 'division_id',
+                                header: 'Divisi',
+                                render: (item: WarehouseOrderItem) => item.division?.name ?? '-',
+                                footer: (
+                                    <FormSearchSelect
+                                        name="division_id"
+                                        onChange={onParamsChange}
+                                        options={divisionOptions}
+                                        value={params.division_id}
+                                    />
+                                ),
+                            },
+                            {
+                                name: 'status',
+                                header: 'Status',
+                                render: (item: WarehouseOrderItem) => <Badge color={getStatusColor(item.status)}>{statusLabels[item.status] || item.status}</Badge>,
+                                footer: (
+                                    <FormSearchSelect name="status" value={params.status} onChange={onParamsChange} options={statusOptions} />
+                                ),
+                            },
+                            {
+                                name: 'created_at',
+                                header: 'Tanggal Dibuat',
+                                render: (item: WarehouseOrderItem) => formatDate(item.created_at),
+                                footer: (
+                                    <FormSearch
+                                        name="created_at"
+                                        type="month"
+                                        value={params.created_at}
+                                        onChange={onParamsChange}
+                                        placeholder="Filter Tanggal"
+                                    />
+                                ),
+                            },
+                            {
+                                header: 'Aksi',
+                                render: (item: WarehouseOrderItem) => (
+                                    <div className="flex justify-end gap-1">
+                                        {/* Detail - always show */}
+                                        <Tooltip text="Detail">
                                             <Button
-                                                href={`/inventory/warehouse-orders/${item.id}/delivery`}
+                                                href={`/inventory/warehouse-orders/${item.id}`}
                                                 className="!bg-transparent !p-1 !text-blue-600 hover:bg-blue-50 dark:!text-blue-400 dark:hover:bg-blue-900/20"
-                                                icon={<PackageCheck className="size-4" />}
+                                                icon={<Eye className="size-4" />}
                                             />
                                         </Tooltip>
-                                    )}
 
-                                    {/* Penerimaan */}
-                                    {hasReceivePermission &&
-                                        item.status === 'Delivered' &&
-                                        (currentUser?.id === item.user_id || currentUser?.division_id === item.division_id) && (
-                                            <Tooltip text="Terima Barang">
-                                                <Button
-                                                    href={`/inventory/warehouse-orders/${item.id}/receive`}
-                                                    className="!bg-transparent !p-1 !text-green-600 hover:bg-green-50 dark:!text-green-400 dark:hover:bg-green-900/20"
-                                                    icon={<ClipboardCheck className="size-4" />}
-                                                />
-                                            </Tooltip>
-                                        )}
-
-                                    {/* Edit & Delete */}
-                                    {(item.status === 'Pending' || item.status === 'Rejected') &&
-                                        currentUser?.id === item.user_id &&
-                                        hasCreatePermission && (
+                                        {/* Konfirmasi & Tolak */}
+                                        {hasConfirmPermission && (item.status === 'Pending' || item.status === 'Revision') && (
                                             <>
-                                                <Tooltip text="Edit">
-                                                    <Button
-                                                        href={`/inventory/warehouse-orders/${item.id}/edit`}
-                                                        className="!bg-transparent !p-1 !text-yellow-600 hover:bg-yellow-50 dark:!text-yellow-400 dark:hover:bg-yellow-900/20"
-                                                        icon={<Edit className="size-4" />}
-                                                    />
-                                                </Tooltip>
-                                                <Tooltip text="Hapus">
+                                                <Tooltip text="Konfirmasi">
                                                     <Button
                                                         onClick={() => {
                                                             setSelectedItem(item);
-                                                            setConfirmType('delete');
+                                                            setConfirmType('confirm');
                                                             setOpenConfirm(true);
                                                         }}
+                                                        className="!bg-transparent !p-1 !text-green-600 hover:bg-green-50 dark:!text-green-400 dark:hover:bg-green-900/20"
+                                                        icon={<Check className="size-4" />}
+                                                    />
+                                                </Tooltip>
+                                                <Tooltip text="Tolak">
+                                                    <Button
+                                                        onClick={() => {
+                                                            setSelectedItem(item);
+                                                            setOpenReject(true);
+                                                        }}
                                                         className="!bg-transparent !p-1 !text-red-600 hover:bg-red-50 dark:!text-red-400 dark:hover:bg-red-900/20"
-                                                        icon={<Trash2 className="size-4" />}
+                                                        icon={<X className="size-4" />}
                                                     />
                                                 </Tooltip>
                                             </>
                                         )}
-                                </div>
-                            ),
-                        },
-                    ].filter((column) => {
-                        if (column.header === 'Aksi') {
-                            return showActionColumn;
-                        }
-                        return true;
-                    })}
-                />
+
+                                        {/* Penyerahan */}
+                                        {hasHandoverPermission && item.status === 'Confirmed' && (
+                                            <Tooltip text="Serahkan Barang">
+                                                <Button
+                                                    href={`/inventory/warehouse-orders/${item.id}/delivery`}
+                                                    className="!bg-transparent !p-1 !text-blue-600 hover:bg-blue-50 dark:!text-blue-400 dark:hover:bg-blue-900/20"
+                                                    icon={<PackageCheck className="size-4" />}
+                                                />
+                                            </Tooltip>
+                                        )}
+
+                                        {/* Penerimaan */}
+                                        {hasReceivePermission &&
+                                            item.status === 'Delivered' &&
+                                            (currentUser?.id === item.user_id || currentUser?.division_id === item.division_id) && (
+                                                <Tooltip text="Terima Barang">
+                                                    <Button
+                                                        href={`/inventory/warehouse-orders/${item.id}/receive`}
+                                                        className="!bg-transparent !p-1 !text-green-600 hover:bg-green-50 dark:!text-green-400 dark:hover:bg-green-900/20"
+                                                        icon={<ClipboardCheck className="size-4" />}
+                                                    />
+                                                </Tooltip>
+                                            )}
+
+                                        {/* Edit & Delete */}
+                                        {(item.status === 'Pending' || item.status === 'Revision' || item.status === 'Rejected') &&
+                                            currentUser?.id === item.user_id &&
+                                            hasCreatePermission && (
+                                                <>
+                                                    <Tooltip text="Edit">
+                                                        <Button
+                                                            href={`/inventory/warehouse-orders/${item.id}/edit`}
+                                                            className="!bg-transparent !p-1 !text-yellow-600 hover:bg-yellow-50 dark:!text-yellow-400 dark:hover:bg-yellow-900/20"
+                                                            icon={<Edit className="size-4" />}
+                                                        />
+                                                    </Tooltip>
+                                                    <Tooltip text="Hapus">
+                                                        <Button
+                                                            onClick={() => {
+                                                                setSelectedItem(item);
+                                                                setConfirmType('delete');
+                                                                setOpenConfirm(true);
+                                                            }}
+                                                            className="!bg-transparent !p-1 !text-red-600 hover:bg-red-50 dark:!text-red-400 dark:hover:bg-red-900/20"
+                                                            icon={<Trash2 className="size-4" />}
+                                                        />
+                                                    </Tooltip>
+                                                </>
+                                            )}
+                                    </div>
+                                ),
+                            },
+                        ].filter((column) => {
+                            if (column.header === 'Aksi') {
+                                return showActionColumn;
+                            }
+                            return true;
+                        })}
+                    />
+                ) : (
+                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                        <div className="rounded-full bg-red-50 p-4 dark:bg-red-900/10">
+                            <X className="size-10 text-red-500" />
+                        </div>
+                        <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">Akses Ditolak</h3>
+                        <p className="mt-2 text-sm text-gray-500 dark:text-slate-400">
+                            Anda tidak memiliki izin untuk melihat daftar permintaan barang.
+                        </p>
+                    </div>
+                )}
             </ContentCard>
 
             {/* FAB for mobile */}

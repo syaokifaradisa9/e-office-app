@@ -48,7 +48,6 @@ class ItemController extends Controller
             'unit_of_measure' => 'required|string|max:50',
             'stock' => 'required|integer|min:0',
             'description' => 'nullable|string|max:500',
-            'image_url' => 'nullable|string',
             'multiplier' => 'nullable|integer|min:1',
             'reference_item_id' => 'nullable|exists:items,id',
         ]);
@@ -86,7 +85,6 @@ class ItemController extends Controller
             'unit_of_measure' => 'required|string|max:50',
             'stock' => 'required|integer|min:0',
             'description' => 'nullable|string|max:500',
-            'image_url' => 'nullable|string',
             'multiplier' => 'nullable|integer|min:1',
             'reference_item_id' => 'nullable|exists:items,id',
         ]);

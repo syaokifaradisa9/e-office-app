@@ -197,6 +197,12 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
             kelola_barang: 'Kelola Data Barang Gudang',
             konversi_barang: 'Konversi Data Barang Gudang',
             keluarkan_stok: 'Keluarkan Data Stok Gudang',
+            lihat_permintaan_barang_divisi: 'Lihat Data Permintaan Barang Divisi',
+            lihat_semua_permintaan_barang: 'Lihat Data Permintaan Barang Keseluruhan',
+            buat_permintaan_barang: 'Pengajuan Permintaan Barang',
+            konfirmasi_permintaan_barang: 'Konfirmasi Permintaan Barang',
+            serah_terima_barang: 'Penyerahan Barang',
+            terima_barang: 'Penerimaan Barang',
         };
 
         if (overrides[permission]) {

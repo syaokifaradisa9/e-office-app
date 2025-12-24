@@ -34,6 +34,11 @@ class RoleService
 
         // Define grouping rules for permissions with module separation
         $groupingRules = [
+            'permintaan' => [
+                'module' => 'Sistem Manajemen Gudang',
+                'label' => 'Permintaan Barang',
+                'keywords' => ['permintaan', 'serah_terima_barang', 'terima_barang'],
+            ],
             'divisi' => [
                 'module' => 'Data Master',
                 'label' => 'Divisi',

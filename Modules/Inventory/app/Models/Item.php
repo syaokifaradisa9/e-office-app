@@ -21,7 +21,6 @@ class Item extends Model
     protected $fillable = [
         'division_id',
         'category_id',
-        'image_url',
         'name',
         'unit_of_measure',
         'stock',

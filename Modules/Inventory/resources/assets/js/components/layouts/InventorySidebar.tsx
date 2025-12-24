@@ -1,4 +1,4 @@
-import { BarChart3, Folder, Package } from 'lucide-react';
+import { BarChart3, Folder, Package, ShoppingCart } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
 import SidebarLink from '@/components/layouts/SideBarLink';
 
@@ -11,7 +11,9 @@ export default function InventorySidebar() {
         // Barang
         permissions?.includes('lihat_barang') || permissions?.includes('kelola_barang') || permissions?.includes('konversi_barang') || permissions?.includes('keluarkan_stok') ||
         // Monitoring Stok
-        permissions?.includes('monitor_stok') || permissions?.includes('monitor_semua_stok');
+        permissions?.includes('monitor_stok') || permissions?.includes('monitor_semua_stok') ||
+        // Permintaan Barang
+        permissions?.includes('lihat_permintaan_barang_divisi') || permissions?.includes('lihat_semua_permintaan_barang') || permissions?.includes('buat_permintaan_barang');
 
     if (!hasAnyInventoryPermission) return null;
 
@@ -34,6 +36,11 @@ export default function InventorySidebar() {
                 {/* Monitoring Stok */}
                 {(permissions?.includes('monitor_stok') || permissions?.includes('monitor_semua_stok')) && (
                     <SidebarLink name="Monitoring Stok" href="/inventory/stock-monitoring" icon={BarChart3} />
+                )}
+
+                {/* Permintaan Barang */}
+                {(permissions?.includes('lihat_permintaan_barang_divisi') || permissions?.includes('lihat_semua_permintaan_barang') || permissions?.includes('buat_permintaan_barang')) && (
+                    <SidebarLink name="Permintaan Barang" href="/inventory/warehouse-orders" icon={ShoppingCart} />
                 )}
             </div>
         </div>

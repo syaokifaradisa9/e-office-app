@@ -19,7 +19,7 @@ enum InventoryPermission: string
     case ConvertItem = 'konversi_barang';
 
     // Warehouse Order
-    case ViewWarehouseOrder = 'lihat_permintaan_barang';
+    case ViewWarehouseOrderDivisi = 'lihat_permintaan_barang_divisi';
     case ViewAllWarehouseOrder = 'lihat_semua_permintaan_barang';
     case CreateWarehouseOrder = 'buat_permintaan_barang';
     case ConfirmWarehouseOrder = 'konfirmasi_permintaan_barang';

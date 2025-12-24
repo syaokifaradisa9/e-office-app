@@ -46,7 +46,8 @@ class WarehouseOrderService
     public function update(WarehouseOrder $order, array $data): WarehouseOrder
     {
         return DB::transaction(function () use ($order, $data) {
-            // Restore stock for old items
+            // Restore stock for old items (only for Pending/Revision, NOT Rejected)
+            // Rejected orders already have their stock returned during rejection
             if (in_array($order->status, [WarehouseOrderStatus::Pending, WarehouseOrderStatus::Revision])) {
                 foreach ($order->carts as $cart) {
                     $item = $cart->item;
@@ -56,11 +57,17 @@ class WarehouseOrderService
                 }
             }
 
-            $order->update([
-                'division_id' => $data['division_id'],
+            // If order was rejected, change status to Revision
+            $updateData = [
                 'description' => $data['description'] ?? null,
                 'notes' => $data['notes'] ?? null,
-            ]);
+            ];
+
+            if ($order->status === WarehouseOrderStatus::Rejected) {
+                $updateData['status'] = WarehouseOrderStatus::Revision;
+            }
+
+            $order->update($updateData);
 
             $order->carts()->delete();
             foreach ($data['items'] as $item) {
@@ -264,6 +271,7 @@ class WarehouseOrderService
     {
         return in_array($order->status, [
             WarehouseOrderStatus::Pending,
+            WarehouseOrderStatus::Revision,
             WarehouseOrderStatus::Rejected,
         ]);
     }
@@ -294,6 +302,10 @@ class WarehouseOrderService
     {
         if ($user->can(InventoryPermission::ViewAllWarehouseOrder->value)) {
             return true;
+        }
+
+        if ($user->can(InventoryPermission::ViewWarehouseOrderDivisi->value)) {
+            return $order->division_id === $user->division_id;
         }
 
         return $order->user_id === $user->id;

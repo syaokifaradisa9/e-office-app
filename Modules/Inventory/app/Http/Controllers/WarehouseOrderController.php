@@ -37,7 +37,7 @@ class WarehouseOrderController extends Controller
         }
 
         return Inertia::render('Inventory/WarehouseOrder/Create', [
-            'items' => Item::whereNull('division_id')->where('stock', '>', 0)->get(['id', 'name', 'stock', 'unit_of_measure', 'category_id', 'description', 'image']),
+            'items' => Item::whereNull('division_id')->where('stock', '>', 0)->get(['id', 'name', 'stock', 'unit_of_measure', 'category_id', 'description']),
             'categories' => \Modules\Inventory\Models\CategoryItem::all(['id', 'name']),
             'userDivision' => Division::find($user->division_id, ['id', 'name']),
         ]);
@@ -87,9 +87,40 @@ class WarehouseOrderController extends Controller
             abort(403, 'Permintaan barang yang sudah diproses tidak dapat diedit.');
         }
 
+        // Transform carts to include item_id directly for frontend
+        $warehouseOrder->load(['carts.item', 'latestReject']);
+        $warehouseOrder->carts->transform(function ($cart) {
+            $cart->item_id = $cart->item_id ?? $cart->item->id;
+            return $cart;
+        });
+
+        // Get ordered quantities from current order
+        $orderedQuantities = $warehouseOrder->carts->pluck('quantity', 'item_id')->toArray();
+
+        // Check if order is rejected - if so, stock was already returned
+        $isRejected = $warehouseOrder->status->value === 'Rejected';
+
+        // Get items and adjust stock for edit mode
+        // In edit mode (except rejected): max quantity = current stock + already ordered quantity
+        // In rejected mode: max quantity = current stock (stock was already returned)
+        $items = Item::whereNull('division_id')
+            ->where(function ($query) use ($orderedQuantities) {
+                $query->where('stock', '>', 0)
+                    ->orWhereIn('id', array_keys($orderedQuantities));
+            })
+            ->get(['id', 'name', 'stock', 'unit_of_measure', 'category_id', 'description'])
+            ->map(function ($item) use ($orderedQuantities, $isRejected) {
+                // Only add back the ordered quantity if NOT rejected
+                // Rejected orders already have their stock returned
+                if (!$isRejected && isset($orderedQuantities[$item->id])) {
+                    $item->stock += $orderedQuantities[$item->id];
+                }
+                return $item;
+            });
+
         return Inertia::render('Inventory/WarehouseOrder/Create', [
-            'order' => $warehouseOrder->load('carts.item'),
-            'items' => Item::whereNull('division_id')->where('stock', '>', 0)->get(['id', 'name', 'stock', 'unit_of_measure', 'category_id', 'description', 'image']),
+            'warehouseOrder' => $warehouseOrder,
+            'items' => $items,
             'categories' => \Modules\Inventory\Models\CategoryItem::all(['id', 'name']),
             'divisions' => Division::where('is_active', true)->get(['id', 'name']),
         ]);
@@ -102,7 +133,6 @@ class WarehouseOrderController extends Controller
         }
 
         $validated = $request->validate([
-            'division_id' => 'required|exists:divisions,id',
             'description' => 'nullable|string|max:500',
             'notes' => 'nullable|string|max:500',
             'items' => 'required|array|min:1',

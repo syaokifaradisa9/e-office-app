@@ -61,7 +61,7 @@ export default function WarehouseOrderCardItem({ item, onConfirm, onDelete, onRe
         item.status === 'Delivered' &&
         (currentUser?.id === item.user_id || currentUser?.division_id === item.division_id);
     const showEditDelete =
-        (item.status === 'Pending' || item.status === 'Rejected') && currentUser?.id === item.user_id && hasCreatePermission;
+        (item.status === 'Pending' || item.status === 'Revision' || item.status === 'Rejected') && currentUser?.id === item.user_id && hasCreatePermission;
     const hasAnyAction = showConfirm || showHandover || showReceive || showEditDelete;
 
     return (

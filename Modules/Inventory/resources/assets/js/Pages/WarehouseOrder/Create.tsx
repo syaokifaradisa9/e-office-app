@@ -37,7 +37,7 @@ interface WarehouseOrder {
         quantity: number;
     }[];
     latest_reject?: {
-        description: string;
+        reason: string;
     };
 }
 
@@ -430,7 +430,7 @@ export default function WarehouseOrderCreate({ items, categories, warehouseOrder
                             {warehouseOrder?.latest_reject && (
                                 <div className="rounded-lg border border-red-100 bg-red-50 p-3 dark:border-red-800/30 dark:bg-red-900/20">
                                     <p className="mb-1 text-xs font-semibold text-red-600 dark:text-red-400">Alasan Penolakan:</p>
-                                    <p className="text-sm text-red-700 dark:text-red-300">{warehouseOrder.latest_reject.description}</p>
+                                    <p className="text-sm text-red-700 dark:text-red-300">{warehouseOrder.latest_reject.reason}</p>
                                 </div>
                             )}
                             <div className="space-y-3">

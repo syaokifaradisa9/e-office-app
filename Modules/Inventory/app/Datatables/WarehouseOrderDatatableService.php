@@ -16,11 +16,9 @@ class WarehouseOrderDatatableService
 
         if ($loggedUser->can(InventoryPermission::ViewAllWarehouseOrder->value)) {
             // User can view all warehouse orders
-        } elseif ($loggedUser->can(InventoryPermission::ViewWarehouseOrder->value)) {
-            $query->where('division_id', $loggedUser->division_id)
-                ->where('user_id', $loggedUser->id);
+        } elseif ($loggedUser->can(InventoryPermission::ViewWarehouseOrderDivisi->value)) {
+            $query->where('division_id', $loggedUser->division_id);
         } else {
-            // User has no permission to view warehouse orders
             $query->whereRaw('1 = 0');
         }
 

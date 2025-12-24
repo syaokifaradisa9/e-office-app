@@ -61,6 +61,41 @@ Route::prefix('inventory')->name('inventory.')->middleware(['auth'])->group(func
             Route::post('/{item}/issue', 'issue')->name('issue');
         });
     });
+    // Warehouse Orders
+    Route::prefix('warehouse-orders')->name('warehouse-orders.')->controller(WarehouseOrderController::class)->group(function () {
+        Route::middleware('permission:buat_permintaan_barang')->group(function () {
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/{warehouseOrder}/edit', 'edit')->name('edit');
+            Route::put('/{warehouseOrder}/update', 'update')->name('update');
+            Route::delete('/{warehouseOrder}/delete', 'delete')->name('delete');
+        });
+
+        Route::middleware('permission:lihat_permintaan_barang_divisi|lihat_semua_permintaan_barang')->group(function () {
+            Route::get('/datatable', 'datatable')->name('datatable');
+            Route::get('/print-excel', 'printExcel')->name('print-excel');
+        });
+
+        Route::middleware('permission:lihat_permintaan_barang_divisi|lihat_semua_permintaan_barang|buat_permintaan_barang|konfirmasi_permintaan_barang|serah_terima_barang|terima_barang')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/{warehouseOrder}', 'show')->name('show');
+        });
+
+        Route::middleware('permission:konfirmasi_permintaan_barang')->group(function () {
+            Route::patch('/{warehouseOrder}/confirm', 'confirm')->name('confirm');
+            Route::post('/{warehouseOrder}/reject', 'reject')->name('reject');
+        });
+
+        Route::middleware('permission:serah_terima_barang')->group(function () {
+            Route::get('/{warehouseOrder}/delivery', 'delivery')->name('delivery');
+            Route::post('/{warehouseOrder}/delivery', 'deliver')->name('deliver');
+        });
+
+        Route::middleware('permission:terima_barang')->group(function () {
+            Route::get('/{warehouseOrder}/receive', 'received')->name('received');
+            Route::post('/{warehouseOrder}/receive', 'receive')->name('receive');
+        });
+    });
 
 
     // Stock Monitoring
