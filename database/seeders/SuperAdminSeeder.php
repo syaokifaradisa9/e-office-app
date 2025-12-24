@@ -27,6 +27,10 @@ class SuperAdminSeeder extends Seeder
             'kelola_role',
             'lihat_kategori',
             'kelola_kategori',
+            'lihat_barang',
+            'kelola_barang',
+            'konversi_barang',
+            'keluarkan_stok',
         ];
 
         foreach ($permissions as $permission) {

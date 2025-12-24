@@ -122,6 +122,7 @@ export default function ItemIndex() {
     const pageProps = usePage<PageProps>().props;
     const canManage = pageProps.permissions?.includes('kelola_barang');
     const canIssue = pageProps.permissions?.includes('keluarkan_stok');
+    const canConvert = pageProps.permissions?.includes('konversi_barang');
 
     return (
         <RootLayout
@@ -139,104 +140,169 @@ export default function ItemIndex() {
                 />
             }
         >
-            <ConfirmationAlert
-                isOpen={openConfirm}
-                setOpenModalStatus={setOpenConfirm}
-                title="Konfirmasi Hapus"
-                message={`Hapus barang ${selectedItem?.name}? Tindakan ini tidak dapat dibatalkan.`}
-                confirmText="Ya, Hapus"
-                cancelText="Batal"
-                type="danger"
-                onConfirm={() => {
-                    if (selectedItem?.id) {
-                        router.delete(`/inventory/items/${selectedItem.id}/delete`, {
-                            onSuccess: () => loadDatatable(),
-                        });
-                    }
-                }}
-            />
-            <ContentCard
-                title="Barang Gudang Utama"
-                mobileFullWidth
-                additionalButton={
-                    <CheckPermissions permissions={['kelola_barang']}>
-                        <Button className="hidden w-full md:flex" label="Tambah Barang" href="/inventory/items/create" icon={<Plus className="size-4" />} />
-                    </CheckPermissions>
-                }
-            >
-                <p className="mb-4 text-sm text-gray-500 dark:text-slate-400">Daftar barang di gudang utama. Untuk melihat stok di seluruh divisi, gunakan menu <a href="/inventory/stock-monitoring" className="text-primary hover:underline">Monitoring Stok</a>.</p>
-                <DataTable
-                    onChangePage={onChangePage}
-                    onParamsChange={onParamsChange}
-                    limit={params.limit}
-                    searchValue={params.search}
-                    dataTable={dataTable}
-                    isLoading={isLoading}
-                    SkeletonComponent={DivisionCardSkeleton}
-                    sortBy={params.sort_by}
-                    sortDirection={params.sort_direction}
-                    additionalHeaderElements={
-                        <div className="flex gap-2">
-                            <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
-                        </div>
-                    }
-                    onHeaderClick={(columnName) => {
-                        const newSortDirection = params.sort_by === columnName && params.sort_direction === 'asc' ? 'desc' : 'asc';
-                        setParams((prevParams) => ({
-                            ...prevParams,
-                            sort_by: columnName,
-                            sort_direction: newSortDirection,
-                        }));
-                    }}
-                    columns={[
-                        {
-                            name: 'name',
-                            header: 'Nama Barang',
-                            render: (item: Item) => (
-                                <div className="flex items-center gap-2">
-                                    <Package className="size-4 text-primary" />
-                                    <span className="font-medium">{item.name}</span>
-                                </div>
-                            ),
-                            footer: <FormSearch name="name" onChange={onParamsChange} placeholder="Filter Nama" />,
-                        },
-                        {
-                            name: 'category',
-                            header: 'Kategori',
-                            render: (item: Item) => <span className="text-gray-500 dark:text-slate-400">{item.category || '-'}</span>,
-                        },
-                        {
-                            name: 'unit_of_measure',
-                            header: 'Satuan',
-                            render: (item: Item) => (
-                                <div>
-                                    <span className="text-gray-700 dark:text-slate-300">{item.unit_of_measure}</span>
-                                    {item.multiplier && item.multiplier > 1 && (
-                                        <span className="ml-1 text-xs text-blue-600 dark:text-blue-400">
-                                            ({item.multiplier}x → {item.reference_item || 'unit'})
+            {!(pageProps.permissions?.includes('lihat_barang') || pageProps.permissions?.includes('kelola_barang') || pageProps.permissions?.includes('keluarkan_stok') || pageProps.permissions?.includes('konversi_barang')) ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="mb-4 rounded-full bg-red-100 p-3 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                        <Package className="size-8" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Akses Ditolak</h3>
+                    <p className="mt-1 text-slate-500 dark:text-slate-400">Anda tidak memiliki akses untuk melihat data barang</p>
+                </div>
+            ) : (
+                <>
+                    <ConfirmationAlert
+                        isOpen={openConfirm}
+                        setOpenModalStatus={setOpenConfirm}
+                        title="Konfirmasi Hapus"
+                        message={`Hapus barang ${selectedItem?.name}? Tindakan ini tidak dapat dibatalkan.`}
+                        confirmText="Ya, Hapus"
+                        cancelText="Batal"
+                        type="danger"
+                        onConfirm={() => {
+                            if (selectedItem?.id) {
+                                router.delete(`/inventory/items/${selectedItem.id}/delete`, {
+                                    onSuccess: () => loadDatatable(),
+                                });
+                            }
+                        }}
+                    />
+                    <ContentCard
+                        title="Barang Gudang Utama"
+                        mobileFullWidth
+                        additionalButton={
+                            <CheckPermissions permissions={['kelola_barang']}>
+                                <Button className="hidden w-full md:flex" label="Tambah Barang" href="/inventory/items/create" icon={<Plus className="size-4" />} />
+                            </CheckPermissions>
+                        }
+                    >
+                        <p className="mb-4 text-sm text-gray-500 dark:text-slate-400">Daftar barang di gudang utama. Untuk melihat stok di seluruh divisi, gunakan menu <a href="/inventory/stock-monitoring" className="text-primary hover:underline">Monitoring Stok</a>.</p>
+                        <DataTable
+                            onChangePage={onChangePage}
+                            onParamsChange={onParamsChange}
+                            limit={params.limit}
+                            searchValue={params.search}
+                            dataTable={dataTable}
+                            isLoading={isLoading}
+                            SkeletonComponent={DivisionCardSkeleton}
+                            sortBy={params.sort_by}
+                            sortDirection={params.sort_direction}
+                            cardItem={(item: Item) => (
+                                <div className="p-4 border-b dark:border-slate-700 last:border-0 hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <Package className="size-4 text-primary" />
+                                            <span className="font-semibold text-gray-900 dark:text-white">{item.name}</span>
+                                        </div>
+                                        <span className={`text-sm font-bold ${item.stock <= 10 ? 'text-red-600' : 'text-green-600'}`}>
+                                            {item.stock} {item.unit_of_measure}
                                         </span>
+                                    </div>
+                                    <div className="text-sm text-gray-500 dark:text-slate-400 mb-3">
+                                        {item.category || '-'}
+                                    </div>
+                                    {(canManage || canIssue || canConvert) && (
+                                        <div className="flex justify-end gap-2">
+                                            {canConvert && item.multiplier && item.multiplier > 1 && item.stock > 0 && (
+                                                <Button
+                                                    href={`/inventory/items/${item.id}/convert`}
+                                                    className="!px-3 !py-1 text-xs"
+                                                    label="Konversi"
+                                                    variant="secondary"
+                                                    icon={<ArrowRightLeft className="size-3" />}
+                                                />
+                                            )}
+                                            {canManage && (
+                                                <Button
+                                                    href={`/inventory/items/${item.id}/edit`}
+                                                    className="!px-3 !py-1 text-xs !bg-yellow-500 hover:!bg-yellow-600 border-none text-white"
+                                                    label="Edit"
+                                                    icon={<Edit className="size-3" />}
+                                                />
+                                            )}
+                                            {canIssue && (
+                                                <Button
+                                                    href={`/inventory/items/${item.id}/issue`}
+                                                    className="!px-3 !py-1 text-xs !bg-orange-500 hover:!bg-orange-600 border-none text-white"
+                                                    label="Keluar"
+                                                    icon={<LogOut className="size-3" />}
+                                                />
+                                            )}
+                                            {canManage && (
+                                                <Button
+                                                    onClick={() => {
+                                                        setSelectedItem(item);
+                                                        setOpenConfirm(true);
+                                                    }}
+                                                    className="!px-3 !py-1 text-xs"
+                                                    label="Hapus"
+                                                    variant="danger"
+                                                    icon={<Trash2 className="size-3" />}
+                                                />
+                                            )}
+                                        </div>
                                     )}
                                 </div>
-                            ),
-                        },
-                        {
-                            name: 'stock',
-                            header: 'Stok',
-                            render: (item: Item) => (
-                                <span className={`font-semibold ${item.stock <= 10 ? 'text-red-600' : 'text-green-600'}`}>
-                                    {item.stock}
-                                </span>
-                            ),
-                        },
-                        ...((canManage || canIssue)
-                            ? [
+                            )}
+                            additionalHeaderElements={
+                                <div className="flex gap-2">
+                                    <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                                </div>
+                            }
+                            onHeaderClick={(columnName: string) => {
+                                const newSortDirection = params.sort_by === columnName && params.sort_direction === 'asc' ? 'desc' : 'asc';
+                                setParams((prevParams) => ({
+                                    ...prevParams,
+                                    sort_by: columnName,
+                                    sort_direction: newSortDirection,
+                                }));
+                            }}
+                            columns={[
                                 {
-                                    header: 'Aksi',
+                                    name: 'name',
+                                    header: 'Nama Barang',
                                     render: (item: Item) => (
-                                        <div className="flex justify-end gap-1">
-                                            {canManage && (
-                                                <>
-                                                    {item.multiplier && item.multiplier > 1 && item.stock > 0 && (
+                                        <div className="flex items-center gap-2">
+                                            <Package className="size-4 text-primary" />
+                                            <span className="font-medium">{item.name}</span>
+                                        </div>
+                                    ),
+                                    footer: <FormSearch name="name" onChange={onParamsChange} placeholder="Filter Nama" />,
+                                },
+                                {
+                                    name: 'category',
+                                    header: 'Kategori',
+                                    render: (item: Item) => <span className="text-gray-500 dark:text-slate-400">{item.category || '-'}</span>,
+                                },
+                                {
+                                    name: 'unit_of_measure',
+                                    header: 'Satuan',
+                                    render: (item: Item) => (
+                                        <div>
+                                            <span className="text-gray-700 dark:text-slate-300">{item.unit_of_measure}</span>
+                                            {item.multiplier && item.multiplier > 1 && (
+                                                <span className="ml-1 text-xs text-blue-600 dark:text-blue-400">
+                                                    ({item.multiplier}x → {item.reference_item || 'unit'})
+                                                </span>
+                                            )}
+                                        </div>
+                                    ),
+                                },
+                                {
+                                    name: 'stock',
+                                    header: 'Stok',
+                                    render: (item: Item) => (
+                                        <span className={`font-semibold ${item.stock <= 10 ? 'text-red-600' : 'text-green-600'}`}>
+                                            {item.stock}
+                                        </span>
+                                    ),
+                                },
+                                ...((canManage || canIssue || canConvert)
+                                    ? [
+                                        {
+                                            header: 'Aksi',
+                                            render: (item: Item) => (
+                                                <div className="flex justify-end gap-1">
+                                                    {canConvert && item.multiplier && item.multiplier > 1 && item.stock > 0 && (
                                                         <Tooltip text="Konversi">
                                                             <Button
                                                                 href={`/inventory/items/${item.id}/convert`}
@@ -245,49 +311,52 @@ export default function ItemIndex() {
                                                             />
                                                         </Tooltip>
                                                     )}
-                                                    <Tooltip text="Edit">
-                                                        <Button
-                                                            href={`/inventory/items/${item.id}/edit`}
-                                                            className="!bg-transparent !p-1 text-yellow-600 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
-                                                            icon={<Edit className="size-4" />}
-                                                        />
-                                                    </Tooltip>
-                                                </>
-                                            )}
-                                            {canIssue && (
-                                                <Tooltip text="Keluarkan Stok">
-                                                    <Button
-                                                        href={`/inventory/items/${item.id}/issue`}
-                                                        className="!bg-transparent !p-1 text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20"
-                                                        icon={<LogOut className="size-4" />}
-                                                    />
-                                                </Tooltip>
-                                            )}
-                                            {canManage && (
-                                                <Tooltip text="Hapus">
-                                                    <Button
-                                                        onClick={() => {
-                                                            setSelectedItem(item);
-                                                            setOpenConfirm(true);
-                                                        }}
-                                                        className="!bg-transparent !p-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                                                        icon={<Trash2 className="size-4" />}
-                                                    />
-                                                </Tooltip>
-                                            )}
-                                        </div>
-                                    ),
-                                },
-                            ]
-                            : []),
-                    ]}
-                />
-            </ContentCard>
+                                                    {canManage && (
+                                                        <Tooltip text="Edit">
+                                                            <Button
+                                                                href={`/inventory/items/${item.id}/edit`}
+                                                                className="!bg-transparent !p-1 text-yellow-600 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
+                                                                icon={<Edit className="size-4" />}
+                                                            />
+                                                        </Tooltip>
+                                                    )}
+                                                    {canIssue && (
+                                                        <Tooltip text="Keluarkan Stok">
+                                                            <Button
+                                                                href={`/inventory/items/${item.id}/issue`}
+                                                                className="!bg-transparent !p-1 text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20"
+                                                                icon={<LogOut className="size-4" />}
+                                                            />
+                                                        </Tooltip>
+                                                    )}
+                                                    {canManage && (
+                                                        <Tooltip text="Hapus">
+                                                            <Button
+                                                                onClick={() => {
+                                                                    setSelectedItem(item);
+                                                                    setOpenConfirm(true);
+                                                                }}
+                                                                className="!bg-transparent !p-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                                                                icon={<Trash2 className="size-4" />}
+                                                            />
+                                                        </Tooltip>
+                                                    )}
+                                                </div>
+                                            ),
+                                        },
+                                    ]
+                                    : []),
+                            ]}
+                        />
+                    </ContentCard>
 
-            <CheckPermissions permissions={['kelola_barang']}>
-                <FloatingActionButton href="/inventory/items/create" label="Tambah Barang" />
-            </CheckPermissions>
+                    <CheckPermissions permissions={['kelola_barang']}>
+                        <FloatingActionButton href="/inventory/items/create" label="Tambah Barang" />
+                    </CheckPermissions>
+                </>
+            )}
         </RootLayout>
+
     );
 }
 

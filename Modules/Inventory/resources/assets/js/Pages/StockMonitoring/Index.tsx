@@ -71,6 +71,7 @@ export default function StockMonitoringIndex() {
     const { categories = [], divisions = [], loggeduser } = pageProps;
     const canIssue = pageProps.permissions?.includes('keluarkan_stok');
     const canMonitorAll = pageProps.permissions?.includes('monitor_semua_stok');
+    const canConvertPermission = pageProps.permissions?.includes('konversi_barang');
 
     const [dataTable, setDataTable] = useState<PaginationData>({
         data: [],
@@ -196,7 +197,7 @@ export default function StockMonitoringIndex() {
                             target="_blank"
                         />
                     }
-                    onHeaderClick={(columnName) => {
+                    onHeaderClick={(columnName: string) => {
                         const newSortDirection = params.sort_by === columnName && params.sort_direction === 'asc' ? 'desc' : 'asc';
                         setParams((prevParams) => ({
                             ...prevParams,
@@ -274,7 +275,7 @@ export default function StockMonitoringIndex() {
                         {
                             header: 'Aksi',
                             render: (item: Item) => {
-                                const canConvert = item.multiplier > 1 && item.division_id === loggeduser?.division_id && item.stock > 0;
+                                const canConvert = canConvertPermission && item.multiplier > 1 && item.division_id === loggeduser?.division_id && item.stock > 0;
                                 const canIssueItem = canIssue && item.stock > 0;
 
                                 if (!canConvert && !canIssueItem) return null;

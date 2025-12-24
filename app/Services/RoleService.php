@@ -34,30 +34,35 @@ class RoleService
 
         // Define grouping rules for permissions with module separation
         $groupingRules = [
-            'pengguna' => [
-                'module' => 'Data Master',
-                'label' => 'Pengguna',
-                'keywords' => ['_pengguna'],
-            ],
-            'role' => [
-                'module' => 'Data Master',
-                'label' => 'Role & Permission',
-                'keywords' => ['_role'],
-            ],
             'divisi' => [
                 'module' => 'Data Master',
                 'label' => 'Divisi',
-                'keywords' => ['_divisi'],
+                'keywords' => ['divisi'],
             ],
             'jabatan' => [
                 'module' => 'Data Master',
                 'label' => 'Jabatan',
-                'keywords' => ['_jabatan'],
+                'keywords' => ['jabatan'],
+            ],
+            'pengguna' => [
+                'module' => 'Data Master',
+                'label' => 'Pengguna',
+                'keywords' => ['pengguna'],
+            ],
+            'role' => [
+                'module' => 'Data Master',
+                'label' => 'Role & Permission',
+                'keywords' => ['role'],
             ],
             'kategori' => [
-                'module' => 'Sistem Gudang',
+                'module' => 'Sistem Manajemen Gudang',
                 'label' => 'Kategori Barang',
-                'keywords' => ['_kategori'],
+                'keywords' => ['kategori'],
+            ],
+            'barang' => [
+                'module' => 'Sistem Manajemen Gudang',
+                'label' => 'Barang',
+                'keywords' => ['barang', 'keluarkan_stok'],
             ],
         ];
 
@@ -66,7 +71,6 @@ class RoleService
 
             foreach ($groupingRules as $groupKey => $rule) {
                 $hasKeyword = false;
-                $hasExclude = false;
 
                 foreach ($rule['keywords'] as $keyword) {
                     if (str_contains($permission->name, $keyword)) {
@@ -75,16 +79,7 @@ class RoleService
                     }
                 }
 
-                if (! empty($rule['exclude'])) {
-                    foreach ($rule['exclude'] as $exclude) {
-                        if (str_contains($permission->name, $exclude)) {
-                            $hasExclude = true;
-                            break;
-                        }
-                    }
-                }
-
-                if ($hasKeyword && ! $hasExclude) {
+                if ($hasKeyword) {
                     if (! isset($grouped[$groupKey])) {
                         $grouped[$groupKey] = [
                             'module' => $rule['module'],
@@ -115,11 +110,10 @@ class RoleService
         // Sort permissions within each group
         foreach ($grouped as &$group) {
             usort($group['permissions'], function ($a, $b) {
-                // Priority: Lihat (1), Kelola (2), Konfirmasi (3), Others (99)
+                // Priority: Lihat (1), Kelola (2), Others (99)
                 $getPriority = function ($perm) {
                     if (str_contains($perm, 'lihat')) return 1;
-                    if (str_contains($perm, 'kelola') || str_contains($perm, 'buat') || str_contains($perm, 'edit') || str_contains($perm, 'hapus')) return 2;
-                    if (str_contains($perm, 'konfirmasi')) return 3;
+                    if (str_contains($perm, 'kelola')) return 2;
                     return 99;
                 };
 
@@ -133,11 +127,11 @@ class RoleService
                 return strcmp($a, $b);
             });
         }
-        unset($group); // Break reference
+        unset($group);
 
         // Sort groups by module then by label
         uasort($grouped, function ($a, $b) {
-            $moduleOrder = ['Data Master' => 1, 'Sistem Gudang' => 2, 'Lainnya' => 99];
+            $moduleOrder = ['Data Master' => 1, 'Sistem Manajemen Gudang' => 2, 'Lainnya' => 99];
             $aOrder = $moduleOrder[$a['module']] ?? 50;
             $bOrder = $moduleOrder[$b['module']] ?? 50;
 

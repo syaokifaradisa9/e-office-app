@@ -16,6 +16,7 @@ enum InventoryPermission: string
     case ViewItem = 'lihat_barang';
     case ManageItem = 'kelola_barang';
     case IssueStock = 'keluarkan_stok';
+    case ConvertItem = 'konversi_barang';
 
     // Warehouse Order
     case ViewWarehouseOrder = 'lihat_permintaan_barang';
