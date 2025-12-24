@@ -31,14 +31,19 @@ Route::middleware(['auth'])->group(function () {
 
     // Division Routes
     Route::prefix('division')->name('division.')->controller(DivisionController::class)->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/create', 'create')->name('create');
-        Route::post('/store', 'store')->name('store');
-        Route::get('/{division}/edit', 'edit')->name('edit');
-        Route::put('/{division}/update', 'update')->name('update');
-        Route::delete('/{division}/delete', 'delete')->name('delete');
-        Route::get('/datatable', 'datatable')->name('datatable');
-        Route::get('/print-excel', 'printExcel')->name('print-excel');
+        Route::middleware('permission:lihat_divisi')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/datatable', 'datatable')->name('datatable');
+            Route::get('/print-excel', 'printExcel')->name('print-excel');
+        });
+
+        Route::middleware('permission:kelola_divisi')->group(function () {
+            Route::get('/create', 'create')->name('create');
+            Route::post('/store', 'store')->name('store');
+            Route::get('/{division}/edit', 'edit')->name('edit');
+            Route::put('/{division}/update', 'update')->name('update');
+            Route::delete('/{division}/delete', 'delete')->name('delete');
+        });
     });
 
     // Position Routes

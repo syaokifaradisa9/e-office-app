@@ -37,6 +37,8 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
+        $successMessage = $request->session()->pull('success');
+        $errorMessage = $request->session()->pull('error');
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -57,9 +59,9 @@ class HandleInertiaRequests extends Middleware
             ] : null,
             'permissions' => $user ? $user->getAllPermissions()->pluck('name')->toArray() : [],
             'flash' => [
-                'type' => fn () => $request->session()->get('type'),
-                'message' => fn () => $request->session()->get('message'),
-            ],
+                'message' => $successMessage ?? $errorMessage ?? null,
+                'type' => $successMessage ? 'success' : ($errorMessage ? 'error' : null),
+            ]
         ];
     }
 }

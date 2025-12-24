@@ -57,17 +57,29 @@ export default function SideBar({ isOpen, setIsOpen, isCollapsed, hasMobileSearc
                                     </div>
 
                                     {/* Data Master */}
-                                    <div className="mb-6">
-                                        <div className="py-2">
-                                            <h3 className={`text-xs font-medium tracking-wider text-slate-500 dark:text-slate-400 ${isCollapsed ? 'hidden' : ''}`}>Data Master</h3>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <SidebarLink name="Divisi" href="/division" icon={Building2} />
-                                            <SidebarLink name="Jabatan" href="/position" icon={Briefcase} />
-                                            <SidebarLink name="Pegawai" href="/user" icon={Users} />
-                                            <SidebarLink name="Role & Permission" href="/role" icon={Shield} />
-                                        </div>
-                                    </div>
+                                    {(() => {
+                                        const { permissions } = usePage<{ permissions: string[] }>().props;
+                                        const showDivisi = permissions?.includes('lihat_divisi') || permissions?.includes('kelola_divisi');
+                                        const showJabatan = permissions?.includes('lihat_jabatan') || permissions?.includes('kelola_jabatan');
+                                        const showPegawai = permissions?.includes('lihat_pengguna') || permissions?.includes('kelola_pengguna');
+                                        const showRole = permissions?.includes('lihat_role') || permissions?.includes('kelola_role');
+
+                                        if (!showDivisi && !showJabatan && !showPegawai && !showRole) return null;
+
+                                        return (
+                                            <div className="mb-6">
+                                                <div className="py-2">
+                                                    <h3 className={`text-xs font-medium tracking-wider text-slate-500 dark:text-slate-400 ${isCollapsed ? 'hidden' : ''}`}>Data Master</h3>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    {showDivisi && <SidebarLink name="Divisi" href="/division" icon={Building2} />}
+                                                    {showJabatan && <SidebarLink name="Jabatan" href="/position" icon={Briefcase} />}
+                                                    {showPegawai && <SidebarLink name="Pegawai" href="/user" icon={Users} />}
+                                                    {showRole && <SidebarLink name="Role & Permission" href="/role" icon={Shield} />}
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
 
                                     {/* Inventory - only show if user has at least one inventory permission */}
                                     {(() => {
