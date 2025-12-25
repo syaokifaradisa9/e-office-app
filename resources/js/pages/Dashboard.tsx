@@ -1,6 +1,6 @@
 import RootLayout from '@/components/layouts/RootLayout';
 import DashboardStats from '@/components/dashboard/DashboardStats';
-import InventoryDashboard from '@/components/dashboard/InventoryDashboard';
+import InventoryDashboard from '../../../Modules/Inventory/resources/assets/js/components/dashboard/InventoryDashboard';
 
 export default function Dashboard() {
     return (

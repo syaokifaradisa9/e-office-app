@@ -338,21 +338,22 @@ export default function InventoryDashboard() {
     return (
         <div className="space-y-5">
             {inventoryTabs.length > 1 && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex gap-6 border-b border-slate-200 dark:border-slate-700">
                     {inventoryTabs.map((tab, index) => {
-                        const Icon = getIcon(tab.icon);
                         const isActive = activeTabIndex === index;
                         return (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTabIndex(index)}
-                                className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${isActive
-                                        ? 'bg-primary text-white shadow-sm'
-                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'
+                                className={`relative pb-3 text-sm font-medium transition-colors ${isActive
+                                        ? 'text-white'
+                                        : 'text-slate-400 hover:text-slate-300'
                                     }`}
                             >
-                                <Icon className="size-4" />
                                 {tab.label}
+                                {isActive && (
+                                    <span className="absolute bottom-0 left-0 h-0.5 w-full bg-white" />
+                                )}
                             </button>
                         );
                     })}

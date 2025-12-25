@@ -1,4 +1,4 @@
-import { BarChart3, Folder, Package, ShoppingCart, History, ClipboardCheck, FileBarChart, LayoutDashboard } from 'lucide-react';
+import { BarChart3, Folder, Package, ShoppingCart, History, ClipboardCheck, FileBarChart } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
 import SidebarLink from '@/components/layouts/SideBarLink';
 
@@ -27,12 +27,6 @@ export default function InventorySidebar() {
 
     return (
         <div className="mb-6 space-y-6">
-            {/* Dashboard Group */}
-            <div className="space-y-1">
-                {(permissions?.includes('lihat_dashboard_gudang_utama') || permissions?.includes('lihat_dashboard_gudang_divisi')) && (
-                    <SidebarLink name="Dashboard" href="/inventory/dashboard" icon={LayoutDashboard} />
-                )}
-            </div>
 
             {/* Group 1: Data Master Gudang */}
             <div className="space-y-1">

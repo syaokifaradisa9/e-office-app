@@ -203,18 +203,20 @@ export default function ReportIndex() {
                 }
             >
                 {/* Tabs */}
-                <div className="mb-8 flex flex-wrap gap-2 border-b border-slate-200 pb-4 dark:border-slate-700">
+                <div className="mb-8 flex gap-6 border-b border-slate-200 dark:border-slate-700">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                            className={`flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-bold transition-all ${activeTab === tab.id
-                                ? 'bg-primary text-white shadow-lg shadow-primary/25'
-                                : 'bg-slate-50 text-slate-500 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'
+                            className={`relative pb-3 text-sm font-medium transition-colors ${activeTab === tab.id
+                                ? 'text-white'
+                                : 'text-slate-400 hover:text-slate-300'
                                 }`}
                         >
-                            {tab.icon}
                             {tab.label}
+                            {activeTab === tab.id && (
+                                <span className="absolute bottom-0 left-0 h-0.5 w-full bg-white" />
+                            )}
                         </button>
                     ))}
                 </div>
