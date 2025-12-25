@@ -14,14 +14,7 @@ uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function () {
     // Create all permissions
-    $permissions = [
-        'lihat_stock_opname_gudang',
-        'lihat_stock_opname_divisi',
-        'lihat_semua_stock_opname',
-        'kelola_stock_opname_gudang',
-        'kelola_stock_opname_divisi',
-        'konfirmasi_stock_opname',
-    ];
+    $permissions = InventoryPermission::values();
     
     foreach ($permissions as $permission) {
         Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
@@ -65,7 +58,7 @@ describe('Permission Index', function () {
     });
     
     it('mengizinkan akses index dengan permission lihat_stock_opname_gudang', function () {
-        $this->fullRole->syncPermissions(['lihat_stock_opname_gudang']);
+        $this->fullRole->syncPermissions([InventoryPermission::ViewWarehouseStockOpname->value]);
         
         $response = $this->actingAs($this->testUser)->get('/inventory/stock-opname/warehouse');
         
@@ -73,7 +66,7 @@ describe('Permission Index', function () {
     });
     
     it('mengizinkan akses index dengan permission lihat_semua_stock_opname', function () {
-        $this->fullRole->syncPermissions(['lihat_semua_stock_opname']);
+        $this->fullRole->syncPermissions([InventoryPermission::ViewAllStockOpname->value]);
         
         $response = $this->actingAs($this->testUser)->get('/inventory/stock-opname/all');
         
@@ -88,7 +81,7 @@ describe('Permission Index', function () {
 describe('Permission CRUD Gudang', function () {
     
     it('menolak create gudang tanpa permission kelola_gudang', function () {
-        $this->fullRole->syncPermissions(['lihat_stock_opname_gudang']);
+        $this->fullRole->syncPermissions([InventoryPermission::ViewWarehouseStockOpname->value]);
         
         $response = $this->actingAs($this->testUser)->get('/inventory/stock-opname/warehouse/create');
         
@@ -96,7 +89,7 @@ describe('Permission CRUD Gudang', function () {
     });
     
     it('mengizinkan create gudang dengan permission kelola_gudang', function () {
-        $this->fullRole->syncPermissions(['kelola_stock_opname_gudang']);
+        $this->fullRole->syncPermissions([InventoryPermission::ManageWarehouseStockOpname->value]);
         
         $response = $this->actingAs($this->testUser)->get('/inventory/stock-opname/warehouse/create');
         
@@ -104,7 +97,7 @@ describe('Permission CRUD Gudang', function () {
     });
     
     it('menolak store gudang tanpa permission kelola_gudang', function () {
-        $this->fullRole->syncPermissions(['lihat_stock_opname_gudang']);
+        $this->fullRole->syncPermissions([InventoryPermission::ViewWarehouseStockOpname->value]);
         
         $response = $this->actingAs($this->testUser)->post('/inventory/stock-opname/warehouse/store', [
             'opname_date' => now()->format('Y-m-d'),
@@ -117,7 +110,7 @@ describe('Permission CRUD Gudang', function () {
     });
     
     it('mengizinkan store gudang dengan permission kelola_gudang', function () {
-        $this->fullRole->syncPermissions(['kelola_stock_opname_gudang']);
+        $this->fullRole->syncPermissions([InventoryPermission::ManageWarehouseStockOpname->value]);
         
         $response = $this->actingAs($this->testUser)->post('/inventory/stock-opname/warehouse/store', [
             'opname_date' => now()->format('Y-m-d'),
@@ -143,7 +136,7 @@ describe('Permission CRUD Gudang', function () {
 describe('Permission CRUD Divisi', function () {
     
     it('menolak create divisi tanpa permission kelola_divisi', function () {
-        $this->fullRole->syncPermissions(['lihat_stock_opname_divisi']);
+        $this->fullRole->syncPermissions([InventoryPermission::ViewDivisionStockOpname->value]);
         
         $response = $this->actingAs($this->testUser)->get('/inventory/stock-opname/division/create');
         
@@ -151,7 +144,7 @@ describe('Permission CRUD Divisi', function () {
     });
     
     it('mengizinkan create divisi dengan permission kelola_divisi', function () {
-        $this->fullRole->syncPermissions(['kelola_stock_opname_divisi']);
+        $this->fullRole->syncPermissions([InventoryPermission::ManageDivisionStockOpname->value]);
         
         $response = $this->actingAs($this->testUser)->get('/inventory/stock-opname/division/create');
         
@@ -166,7 +159,7 @@ describe('Permission CRUD Divisi', function () {
 describe('Permission Konfirmasi', function () {
     
     it('menolak konfirmasi tanpa permission konfirmasi_stock_opname', function () {
-        $this->fullRole->syncPermissions(['kelola_stock_opname_gudang']);
+        $this->fullRole->syncPermissions([InventoryPermission::ManageWarehouseStockOpname->value]);
         
         $opname = StockOpname::factory()->create([
             'user_id' => $this->testUser->id,
@@ -180,7 +173,7 @@ describe('Permission Konfirmasi', function () {
     });
     
     it('mengizinkan konfirmasi dengan permission konfirmasi_stock_opname', function () {
-        $this->fullRole->syncPermissions(['konfirmasi_stock_opname', 'lihat_stock_opname_gudang']);
+        $this->fullRole->syncPermissions([InventoryPermission::ConfirmStockOpname->value, InventoryPermission::ViewWarehouseStockOpname->value]);
         
         $opname = StockOpname::factory()->create([
             'user_id' => $this->testUser->id,
@@ -295,7 +288,7 @@ describe('CRUD Operations', function () {
 describe('Konfirmasi dan Stok Update', function () {
     
     it('konfirmasi mengupdate stok item ke physical_stock', function () {
-        $this->fullRole->syncPermissions(['konfirmasi_stock_opname', 'lihat_stock_opname_gudang']);
+        $this->fullRole->syncPermissions([InventoryPermission::ConfirmStockOpname->value, InventoryPermission::ViewWarehouseStockOpname->value]);
         
         $opname = StockOpname::factory()->create([
             'user_id' => $this->testUser->id,
@@ -316,7 +309,7 @@ describe('Konfirmasi dan Stok Update', function () {
     });
     
     it('konfirmasi membuat transaksi untuk perbedaan stok', function () {
-        $this->fullRole->syncPermissions(['konfirmasi_stock_opname', 'lihat_stock_opname_gudang']);
+        $this->fullRole->syncPermissions([InventoryPermission::ConfirmStockOpname->value, InventoryPermission::ViewWarehouseStockOpname->value]);
         
         $opname = StockOpname::factory()->create([
             'user_id' => $this->testUser->id,
@@ -338,7 +331,7 @@ describe('Konfirmasi dan Stok Update', function () {
     });
     
     it('gagal konfirmasi ulang opname yang sudah Confirmed', function () {
-        $this->fullRole->syncPermissions(['konfirmasi_stock_opname', 'lihat_stock_opname_gudang']);
+        $this->fullRole->syncPermissions([InventoryPermission::ConfirmStockOpname->value, InventoryPermission::ViewWarehouseStockOpname->value]);
         
         $opname = StockOpname::factory()->create([
             'user_id' => $this->testUser->id,
@@ -420,7 +413,7 @@ describe('Export Excel', function () {
     
     it('export dapat diakses dengan permission yang benar', function () {
         // Need lihat permission to access print-excel
-        $this->fullRole->syncPermissions(['lihat_stock_opname_gudang']);
+        $this->fullRole->syncPermissions([InventoryPermission::ViewWarehouseStockOpname->value]);
         
         StockOpname::factory()->count(3)->create([
             'user_id' => $this->testUser->id,

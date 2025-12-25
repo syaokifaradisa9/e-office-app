@@ -1,5 +1,7 @@
 <?php
 
+namespace Modules\Inventory\Tests\Unit;
+
 use App\Models\Division;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -9,6 +11,7 @@ use Modules\Inventory\Models\CategoryItem;
 use Modules\Inventory\Models\Item;
 use Modules\Inventory\Models\WarehouseOrder;
 use Modules\Inventory\Models\WarehouseOrderCart;
+use Modules\Inventory\DataTransferObjects\WarehouseOrderDTO;
 use Modules\Inventory\Services\WarehouseOrderService;
 use Spatie\Permission\Models\Permission;
 
@@ -42,7 +45,12 @@ it('can create a warehouse order', function () {
         ],
     ];
 
-    $order = $this->service->store($data, $user);
+    $order = $this->service->store(new WarehouseOrderDTO(
+        description: $data['description'],
+        notes: null,
+        items: $data['items'],
+        division_id: $data['division_id']
+    ), $user);
 
     expect($order)->toBeInstanceOf(WarehouseOrder::class);
     expect($order->user_id)->toBe($user->id);

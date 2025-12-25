@@ -11,13 +11,17 @@ uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function () {
     // Create permissions
-    Permission::firstOrCreate(['name' => 'lihat_barang', 'guard_name' => 'web']);
-    Permission::firstOrCreate(['name' => 'kelola_barang', 'guard_name' => 'web']);
-    Permission::firstOrCreate(['name' => 'keluarkan_stok', 'guard_name' => 'web']);
+    Permission::firstOrCreate(['name' => \Modules\Inventory\Enums\InventoryPermission::ViewItem->value, 'guard_name' => 'web']);
+    Permission::firstOrCreate(['name' => \Modules\Inventory\Enums\InventoryPermission::ManageItem->value, 'guard_name' => 'web']);
+    Permission::firstOrCreate(['name' => \Modules\Inventory\Enums\InventoryPermission::IssueItemGudang->value, 'guard_name' => 'web']);
     
     // Create role with full permissions
     $this->testRole = Role::firstOrCreate(['name' => 'Test Role Items', 'guard_name' => 'web']);
-    $this->testRole->syncPermissions(['lihat_barang', 'kelola_barang', 'keluarkan_stok']);
+    $this->testRole->syncPermissions([
+        \Modules\Inventory\Enums\InventoryPermission::ViewItem->value,
+        \Modules\Inventory\Enums\InventoryPermission::ManageItem->value,
+        \Modules\Inventory\Enums\InventoryPermission::IssueItemGudang->value,
+    ]);
     
     // Create user
     $this->testUser = User::factory()->create();
@@ -42,7 +46,7 @@ describe('Permission Akses Index', function () {
     });
     
     it('mengizinkan akses index dengan permission lihat', function () {
-        $this->testRole->syncPermissions(['lihat_barang']);
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewItem->value]);
         
         $response = $this->actingAs($this->testUser)->get('/inventory/items');
         
@@ -50,7 +54,7 @@ describe('Permission Akses Index', function () {
     });
     
     it('mengizinkan akses index dengan permission kelola', function () {
-        $this->testRole->syncPermissions(['kelola_barang']);
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageItem->value]);
         
         $response = $this->actingAs($this->testUser)->get('/inventory/items');
         
@@ -58,7 +62,7 @@ describe('Permission Akses Index', function () {
     });
     
     it('mengizinkan akses index dengan permission keluarkan_stok', function () {
-        $this->testRole->syncPermissions(['keluarkan_stok']);
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::IssueItemGudang->value]);
         
         $response = $this->actingAs($this->testUser)->get('/inventory/items');
         
@@ -69,7 +73,7 @@ describe('Permission Akses Index', function () {
 describe('Permission CRUD', function () {
     
     it('menolak akses halaman create tanpa permission kelola', function () {
-        $this->testRole->syncPermissions(['lihat_barang']);
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewItem->value]);
         
         $response = $this->actingAs($this->testUser)->get('/inventory/items/create');
         
@@ -77,7 +81,7 @@ describe('Permission CRUD', function () {
     });
     
     it('mengizinkan akses halaman create dengan permission kelola', function () {
-        $this->testRole->syncPermissions(['kelola_barang']);
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageItem->value]);
         
         $response = $this->actingAs($this->testUser)->get('/inventory/items/create');
         
@@ -85,7 +89,7 @@ describe('Permission CRUD', function () {
     });
     
     it('menolak akses halaman edit tanpa permission kelola', function () {
-        $this->testRole->syncPermissions(['lihat_barang']);
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewItem->value]);
         
         $item = Item::factory()->create(['category_id' => $this->category->id]);
         
@@ -95,7 +99,7 @@ describe('Permission CRUD', function () {
     });
     
     it('mengizinkan akses halaman edit dengan permission kelola', function () {
-        $this->testRole->syncPermissions(['kelola_barang']);
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageItem->value]);
         
         $item = Item::factory()->create(['category_id' => $this->category->id]);
         
@@ -105,7 +109,7 @@ describe('Permission CRUD', function () {
     });
     
     it('menolak menyimpan update tanpa permission kelola', function () {
-        $this->testRole->syncPermissions(['lihat_barang']);
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewItem->value]);
         
         $item = Item::factory()->create(['category_id' => $this->category->id]);
         
@@ -119,7 +123,7 @@ describe('Permission CRUD', function () {
     });
     
     it('menolak menghapus barang tanpa permission kelola', function () {
-        $this->testRole->syncPermissions(['lihat_barang']);
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewItem->value]);
         
         $item = Item::factory()->create(['category_id' => $this->category->id]);
         
@@ -129,7 +133,7 @@ describe('Permission CRUD', function () {
     });
     
     it('mengizinkan menghapus barang dengan permission kelola', function () {
-        $this->testRole->syncPermissions(['kelola_barang']);
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageItem->value]);
         
         $item = Item::factory()->create(['category_id' => $this->category->id]);
         
@@ -144,7 +148,7 @@ describe('Permission CRUD', function () {
 describe('Permission Issue Stock', function () {
     
     it('menolak akses issue form tanpa permission keluarkan_stok', function () {
-        $this->testRole->syncPermissions(['lihat_barang']);
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewItem->value]);
         
         $item = Item::factory()->create(['category_id' => $this->category->id, 'stock' => 100]);
         
@@ -154,7 +158,7 @@ describe('Permission Issue Stock', function () {
     });
     
     it('mengizinkan akses issue form dengan permission keluarkan_stok', function () {
-        $this->testRole->syncPermissions(['keluarkan_stok']);
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::IssueItemGudang->value]);
         
         $item = Item::factory()->create(['category_id' => $this->category->id, 'stock' => 100]);
         
@@ -164,7 +168,7 @@ describe('Permission Issue Stock', function () {
     });
     
     it('menolak issue stok tanpa permission keluarkan_stok', function () {
-        $this->testRole->syncPermissions(['lihat_barang']);
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewItem->value]);
         
         $item = Item::factory()->create(['category_id' => $this->category->id, 'stock' => 100]);
         
@@ -177,7 +181,7 @@ describe('Permission Issue Stock', function () {
     });
     
     it('mengizinkan issue stok dengan permission keluarkan_stok', function () {
-        $this->testRole->syncPermissions(['keluarkan_stok']);
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::IssueItemGudang->value]);
         
         $item = Item::factory()->create(['category_id' => $this->category->id, 'stock' => 100]);
         

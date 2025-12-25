@@ -3,6 +3,7 @@
 use App\Models\Division;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Modules\Inventory\Enums\InventoryPermission;
 use Modules\Inventory\Enums\ItemTransactionType;
 use Modules\Inventory\Models\CategoryItem;
 use Modules\Inventory\Models\Item;
@@ -13,8 +14,8 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $permissions = [
-        'monitor_transaksi_barang',
-        'monitor_semua_transaksi_barang',
+        InventoryPermission::MonitorItemTransaction->value,
+        InventoryPermission::MonitorAllItemTransaction->value,
     ];
 
     foreach ($permissions as $permission) {
@@ -24,7 +25,7 @@ beforeEach(function () {
 
 it('can display item transaction index for authorized user', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('monitor_transaksi_barang');
+    $user->givePermissionTo(InventoryPermission::MonitorItemTransaction->value);
 
     $response = $this->actingAs($user)->get('/inventory/transactions');
 
@@ -42,7 +43,7 @@ it('denies access for unauthorized user', function () {
 it('returns datatable data with permission filter', function () {
     $division = Division::factory()->create();
     $user = User::factory()->create(['division_id' => $division->id]);
-    $user->givePermissionTo('monitor_transaksi_barang');
+    $user->givePermissionTo(InventoryPermission::MonitorItemTransaction->value);
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
     $item = Item::create([
@@ -69,7 +70,7 @@ it('returns datatable data with permission filter', function () {
 
 it('can view all transactions with proper permission', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('monitor_semua_transaksi_barang');
+    $user->givePermissionTo(InventoryPermission::MonitorAllItemTransaction->value);
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
 
@@ -97,7 +98,7 @@ it('can view all transactions with proper permission', function () {
 
 it('filters transactions by type', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('monitor_semua_transaksi_barang');
+    $user->givePermissionTo(InventoryPermission::MonitorAllItemTransaction->value);
 
     $response = $this->actingAs($user)->get('/inventory/transactions/datatable?type=In');
 
@@ -106,7 +107,7 @@ it('filters transactions by type', function () {
 
 it('filters transactions by date', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('monitor_semua_transaksi_barang');
+    $user->givePermissionTo(InventoryPermission::MonitorAllItemTransaction->value);
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
     $item = Item::create(['category_id' => $category->id, 'name' => 'Test Item', 'unit_of_measure' => 'pcs', 'stock' => 100]);
@@ -136,7 +137,7 @@ it('filters transactions by date', function () {
 
 it('exports excel successfully', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('monitor_semua_transaksi_barang');
+    $user->givePermissionTo(InventoryPermission::MonitorAllItemTransaction->value);
 
     $response = $this->actingAs($user)->get('/inventory/transactions/print-excel');
 
@@ -146,7 +147,7 @@ it('exports excel successfully', function () {
 it('filters transactions by user name', function () {
     $user1 = User::factory()->create(['name' => 'Budi']);
     $user2 = User::factory()->create(['name' => 'Andi']);
-    $user1->givePermissionTo('monitor_semua_transaksi_barang');
+    $user1->givePermissionTo(InventoryPermission::MonitorAllItemTransaction->value);
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
     $item = Item::create(['category_id' => $category->id, 'name' => 'Test Item', 'unit_of_measure' => 'pcs', 'stock' => 100]);
@@ -176,7 +177,7 @@ it('filters transactions by user name', function () {
 
 it('filters transactions by description', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('monitor_semua_transaksi_barang');
+    $user->givePermissionTo(InventoryPermission::MonitorAllItemTransaction->value);
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
     $item = Item::create(['category_id' => $category->id, 'name' => 'Test Item', 'unit_of_measure' => 'pcs', 'stock' => 100]);
@@ -208,19 +209,17 @@ it('filters transactions by description', function () {
 
 it('shows division column for users with monitor all permission', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('monitor_semua_transaksi_barang');
+    $user->givePermissionTo(InventoryPermission::MonitorAllItemTransaction->value);
 
     $response = $this->actingAs($user)->get('/inventory/transactions');
 
     $response->assertOk();
-    $response->assertInertia(fn ($page) => $page
-        ->component('Inventory/ItemTransaction/Index')
-    );
+    expect($response->inertiaPage()['component'])->toBe('Inventory/ItemTransaction/Index');
 });
 
 it('menampilkan transaksi dari konfirmasi stock opname sebagai tipe Stock Opname', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('monitor_semua_transaksi_barang');
+    $user->givePermissionTo(InventoryPermission::MonitorAllItemTransaction->value);
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
     $item = Item::create(['category_id' => $category->id, 'name' => 'Test Item', 'unit_of_measure' => 'pcs', 'stock' => 100]);
@@ -243,7 +242,7 @@ it('menampilkan transaksi dari konfirmasi stock opname sebagai tipe Stock Opname
 
 it('dapat mengurutkan transaksi berdasarkan jumlah', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('monitor_semua_transaksi_barang');
+    $user->givePermissionTo(InventoryPermission::MonitorAllItemTransaction->value);
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
     $item = Item::create(['category_id' => $category->id, 'name' => 'Test Item', 'unit_of_measure' => 'pcs', 'stock' => 100]);
@@ -277,7 +276,7 @@ it('user dengan monitor_transaksi_barang hanya melihat transaksi dari division s
     $divisionB = Division::factory()->create();
 
     $userA = User::factory()->create(['division_id' => $divisionA->id]);
-    $userA->givePermissionTo('monitor_transaksi_barang');
+    $userA->givePermissionTo(InventoryPermission::MonitorItemTransaction->value);
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
 
@@ -329,7 +328,7 @@ it('user dengan monitor_semua_transaksi_barang melihat transaksi dari semua divi
     $divisionB = Division::factory()->create();
 
     $user = User::factory()->create();
-    $user->givePermissionTo('monitor_semua_transaksi_barang');
+    $user->givePermissionTo(InventoryPermission::MonitorAllItemTransaction->value);
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
 
@@ -399,7 +398,7 @@ it('user tanpa permission tidak dapat melihat transaksi apapun', function () {
 it('user dengan monitor_transaksi_barang tidak melihat transaksi gudang utama', function () {
     $division = Division::factory()->create();
     $user = User::factory()->create(['division_id' => $division->id]);
-    $user->givePermissionTo('monitor_transaksi_barang');
+    $user->givePermissionTo(InventoryPermission::MonitorItemTransaction->value);
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
 
@@ -425,7 +424,7 @@ it('user dengan monitor_transaksi_barang tidak melihat transaksi gudang utama', 
         'date' => now(),
         'type' => ItemTransactionType::In,
         'item_id' => $mainItem->id,
-        'quantity' => 50,
+        'quantity' => 10,
         'user_id' => $user->id,
     ]);
 

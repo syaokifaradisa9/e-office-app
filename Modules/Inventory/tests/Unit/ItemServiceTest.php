@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Inventory;
+namespace Modules\Inventory\Tests\Unit;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,7 +15,7 @@ uses(RefreshDatabase::class);
 describe('ItemService', function () {
     
     beforeEach(function () {
-        $this->service = new ItemService();
+        $this->service = app(ItemService::class);
         $this->user = User::factory()->create();
         $this->category = CategoryItem::factory()->create();
     });
@@ -126,18 +126,22 @@ describe('ItemService', function () {
         expect($item->stock)->toBe(50);
     });
 
-    it('tidak dapat mengeluarkan stok dengan jumlah negatif', function () {
+    it('tidak dapat mengeluarkan stok dengan jumlah nol atau negatif', function () {
         // Arrange
         $item = Item::factory()->create([
             'category_id' => $this->category->id,
             'stock' => 50,
         ]);
         
-        // Update ItemService to also check this if needed, or assume DB unsigned might catch it, 
-        // but better validation is explicit.
-        // For now let's just test overflow. 
-        // If user wants negative test, I should add negative check too.
-        
-        // Let's stick to overflow first as per my previous proactive fix.
+        // Act & Assert - Zero
+        expect(fn () => $this->service->issueStock($item, 0, 'Zero quantity', $this->user))
+            ->toThrow(\Exception::class, 'Jumlah pengeluaran harus lebih besar dari nol');
+
+        // Act & Assert - Negative
+        expect(fn () => $this->service->issueStock($item, -10, 'Negative quantity', $this->user))
+            ->toThrow(\Exception::class, 'Jumlah pengeluaran harus lebih besar dari nol');
+
+        $item->refresh();
+        expect($item->stock)->toBe(50);
     });
 });

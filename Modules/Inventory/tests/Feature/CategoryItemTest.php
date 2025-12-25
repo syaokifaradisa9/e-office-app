@@ -10,12 +10,15 @@ uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 beforeEach(function () {
     // Create permissions
-    Permission::firstOrCreate(['name' => 'lihat_kategori_barang', 'guard_name' => 'web']);
-    Permission::firstOrCreate(['name' => 'kelola_kategori_barang', 'guard_name' => 'web']);
+    Permission::firstOrCreate(['name' => \Modules\Inventory\Enums\InventoryPermission::ViewCategory->value, 'guard_name' => 'web']);
+    Permission::firstOrCreate(['name' => \Modules\Inventory\Enums\InventoryPermission::ManageCategory->value, 'guard_name' => 'web']);
     
     // Create role with full permissions
     $this->testRole = Role::firstOrCreate(['name' => 'Test Role', 'guard_name' => 'web']);
-    $this->testRole->syncPermissions(['lihat_kategori_barang', 'kelola_kategori_barang']);
+    $this->testRole->syncPermissions([
+        \Modules\Inventory\Enums\InventoryPermission::ViewCategory->value,
+        \Modules\Inventory\Enums\InventoryPermission::ManageCategory->value,
+    ]);
     
     // Create user
     $this->testUser = User::factory()->create();
@@ -30,7 +33,7 @@ describe('Permission untuk Edit dan Delete', function () {
     
     it('menolak akses halaman edit tanpa permission kelola', function () {
         // User hanya dengan permission lihat
-        $this->testRole->syncPermissions(['lihat_kategori_barang']);
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewCategory->value]);
         
         $category = CategoryItem::factory()->create();
         
@@ -40,7 +43,7 @@ describe('Permission untuk Edit dan Delete', function () {
     });
     
     it('mengizinkan akses halaman edit dengan permission kelola', function () {
-        $this->testRole->syncPermissions(['kelola_kategori_barang']);
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageCategory->value]);
         
         $category = CategoryItem::factory()->create();
         
@@ -50,7 +53,7 @@ describe('Permission untuk Edit dan Delete', function () {
     });
     
     it('menolak menyimpan update tanpa permission kelola', function () {
-        $this->testRole->syncPermissions(['lihat_kategori_barang']);
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewCategory->value]);
         
         $category = CategoryItem::factory()->create();
         
@@ -65,7 +68,7 @@ describe('Permission untuk Edit dan Delete', function () {
     });
     
     it('mengizinkan menyimpan update dengan permission kelola', function () {
-        $this->testRole->syncPermissions(['kelola_kategori_barang']);
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageCategory->value]);
         
         $category = CategoryItem::factory()->create(['name' => 'Old Name']);
         
@@ -85,7 +88,7 @@ describe('Permission untuk Edit dan Delete', function () {
     });
     
     it('menolak menghapus kategori tanpa permission kelola', function () {
-        $this->testRole->syncPermissions(['lihat_kategori_barang']);
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewCategory->value]);
         
         $category = CategoryItem::factory()->create();
         
@@ -96,7 +99,7 @@ describe('Permission untuk Edit dan Delete', function () {
     });
     
     it('mengizinkan menghapus kategori dengan permission kelola', function () {
-        $this->testRole->syncPermissions(['kelola_kategori_barang']);
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageCategory->value]);
         
         $category = CategoryItem::factory()->create();
         
@@ -333,7 +336,7 @@ describe('Export Excel', function () {
     });
     
     it('export menghormati permission lihat', function () {
-        $this->testRole->syncPermissions(['kelola_kategori_barang']); // Tanpa lihat
+        $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageCategory->value]); // Tanpa lihat
         
         CategoryItem::factory()->count(5)->create();
         

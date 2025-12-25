@@ -34,6 +34,7 @@ Route::prefix('inventory')->name('inventory.')->middleware(['auth'])->group(func
             Route::get('/print-excel/{type}', 'printExcel')->name('print-excel');
             Route::get('/{type}/{stockOpname}/show', 'show')->name('show');
             Route::get('/{type}/{stockOpname}/detail', 'show')->name('detail'); // Alias for detail link in frontend
+            Route::get('/{type?}', 'index')->name('index');
         });
 
         Route::middleware('permission:kelola_stock_opname_gudang|kelola_stock_opname_divisi')->group(function () {
@@ -47,9 +48,6 @@ Route::prefix('inventory')->name('inventory.')->middleware(['auth'])->group(func
         Route::middleware('permission:konfirmasi_stock_opname')->group(function () {
             Route::post('/{stockOpname}/confirm', 'confirm')->name('confirm'); // Frontend uses POST (router.post) baris 194
         });
-
-        // Index route at the bottom
-        Route::get('/{type?}', 'index')->name('index');
     });
 
     // Reports

@@ -1,5 +1,7 @@
 <?php
 
+echo "Pest loaded for Inventory Module\n";
+
 /*
 |--------------------------------------------------------------------------
 | Test Case

@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Inventory;
+namespace Modules\Inventory\Tests\Unit;
 
 use App\Models\Division;
 use App\Models\User;
@@ -17,7 +17,7 @@ use Spatie\Permission\Models\Role;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->service = new StockOpnameService();
+    $this->service = app(StockOpnameService::class);
     
     // Create permissions
     Permission::firstOrCreate(['name' => InventoryPermission::ManageWarehouseStockOpname->value, 'guard_name' => 'web']);

@@ -3,6 +3,7 @@
 use App\Models\Division;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Modules\Inventory\Enums\InventoryPermission;
 use Modules\Inventory\Enums\WarehouseOrderStatus;
 use Modules\Inventory\Models\CategoryItem;
 use Modules\Inventory\Models\Item;
@@ -14,14 +15,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Create permissions
-    $permissions = [
-        'lihat_permintaan_barang',
-        'lihat_semua_permintaan_barang',
-        'buat_permintaan_barang',
-        'konfirmasi_permintaan_barang',
-        'serah_terima_barang',
-        'terima_barang',
-    ];
+    $permissions = InventoryPermission::values();
 
     foreach ($permissions as $permission) {
         Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
@@ -30,7 +24,7 @@ beforeEach(function () {
 
 it('can display warehouse order index for authorized user', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('lihat_permintaan_barang');
+    $user->givePermissionTo(InventoryPermission::ViewWarehouseOrderDivisi->value);
 
     $response = $this->actingAs($user)->get('/inventory/warehouse-orders');
 
@@ -46,28 +40,25 @@ it('denies access for unauthorized user', function () {
 });
 
 it('can create a warehouse order', function () {
-    $user = User::factory()->create();
-    $user->givePermissionTo('buat_permintaan_barang');
-
     $division = Division::factory()->create();
-    $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
-    $item = Item::create([
+    $user = User::factory()->create(['division_id' => $division->id]);
+    $user->givePermissionTo(InventoryPermission::CreateWarehouseOrder->value);
+
+    $category = CategoryItem::factory()->create();
+    $item = Item::factory()->create([
         'category_id' => $category->id,
-        'name' => 'Test Item',
-        'unit_of_measure' => 'pcs',
         'stock' => 100,
     ]);
 
     $response = $this->actingAs($user)->post('/inventory/warehouse-orders/store', [
-        'division_id' => $division->id,
         'description' => 'Test order',
-        'notes' => 'Some notes',
         'items' => [
             ['item_id' => $item->id, 'quantity' => 5],
         ],
     ]);
 
     $response->assertRedirect('/inventory/warehouse-orders');
+    
     $this->assertDatabaseHas('warehouse_orders', [
         'user_id' => $user->id,
         'division_id' => $division->id,
@@ -77,16 +68,16 @@ it('can create a warehouse order', function () {
 
 it('validates required fields when creating order', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('buat_permintaan_barang');
+    $user->givePermissionTo(InventoryPermission::CreateWarehouseOrder->value);
 
     $response = $this->actingAs($user)->post('/inventory/warehouse-orders/store', []);
 
-    $response->assertSessionHasErrors(['division_id', 'items']);
+    $response->assertSessionHasErrors(['items']);
 });
 
 it('can confirm a pending order', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('konfirmasi_permintaan_barang');
+    $user->givePermissionTo(InventoryPermission::ConfirmWarehouseOrder->value);
 
     $division = Division::factory()->create();
     $order = WarehouseOrder::create([
@@ -107,7 +98,7 @@ it('can confirm a pending order', function () {
 
 it('can reject a pending order', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('konfirmasi_permintaan_barang');
+    $user->givePermissionTo(InventoryPermission::ConfirmWarehouseOrder->value);
 
     $division = Division::factory()->create();
     $order = WarehouseOrder::create([
@@ -130,7 +121,7 @@ it('can reject a pending order', function () {
 
 it('cannot edit confirmed order', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('buat_permintaan_barang');
+    $user->givePermissionTo(InventoryPermission::CreateWarehouseOrder->value);
 
     $division = Division::factory()->create();
     $order = WarehouseOrder::create([
@@ -147,7 +138,7 @@ it('cannot edit confirmed order', function () {
 
 it('can deliver confirmed order', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('serah_terima_barang');
+    $user->givePermissionTo(InventoryPermission::HandoverItem->value);
 
     $division = Division::factory()->create();
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
@@ -172,6 +163,10 @@ it('can deliver confirmed order', function () {
     ]);
 
     $response = $this->actingAs($user)->post("/inventory/warehouse-orders/{$order->id}/delivery", [
+        'delivery_date' => now()->format('Y-m-d'),
+        'delivery_images' => [
+            \Illuminate\Http\UploadedFile::fake()->image('delivery.jpg'),
+        ],
         'items' => [
             ['cart_id' => $cart->id, 'delivered_quantity' => 5],
         ],
@@ -187,7 +182,7 @@ it('can deliver confirmed order', function () {
 it('can receive delivered order', function () {
     $division = Division::factory()->create();
     $user = User::factory()->create(['division_id' => $division->id]);
-    $user->givePermissionTo('terima_barang');
+    $user->givePermissionTo(InventoryPermission::ReceiveItem->value);
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
     $item = Item::create([
@@ -214,6 +209,10 @@ it('can receive delivered order', function () {
     ]);
 
     $response = $this->actingAs($user)->post("/inventory/warehouse-orders/{$order->id}/receive", [
+        'receipt_date' => now()->format('Y-m-d'),
+        'receipt_images' => [
+            \Illuminate\Http\UploadedFile::fake()->image('receipt.jpg'),
+        ],
         'items' => [
             ['cart_id' => $cart->id, 'received_quantity' => 5],
         ],
@@ -228,7 +227,7 @@ it('can receive delivered order', function () {
 
 it('returns datatable data with permission filter', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('lihat_permintaan_barang');
+    $user->givePermissionTo(InventoryPermission::ViewWarehouseOrderDivisi->value);
 
     $response = $this->actingAs($user)->get('/inventory/warehouse-orders/datatable');
 
@@ -237,7 +236,7 @@ it('returns datatable data with permission filter', function () {
 
 it('exports excel successfully', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('lihat_semua_permintaan_barang');
+    $user->givePermissionTo(InventoryPermission::ViewAllWarehouseOrder->value);
 
     $response = $this->actingAs($user)->get('/inventory/warehouse-orders/print-excel');
 

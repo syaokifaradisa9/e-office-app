@@ -2,14 +2,15 @@
 
 namespace Modules\Inventory\Services;
 
+use Exception;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
-use Modules\Inventory\DataTransferObjects\ItemDTO;
-use Modules\Inventory\Enums\ItemTransactionType;
 use Modules\Inventory\Models\Item;
-use Modules\Inventory\Repositories\CategoryItem\CategoryItemRepository;
+use Illuminate\Database\Eloquent\Collection;
+use Modules\Inventory\Enums\ItemTransactionType;
+use Modules\Inventory\DataTransferObjects\ItemDTO;
 use Modules\Inventory\Repositories\Item\ItemRepository;
+use Modules\Inventory\Repositories\CategoryItem\CategoryItemRepository;
 use Modules\Inventory\Repositories\ItemTransaction\ItemTransactionRepository;
 
 class ItemService
@@ -52,9 +53,13 @@ class ItemService
 
     public function issueStock(Item $item, int $quantity, string $description, User $user): void
     {
+        if ($quantity <= 0) {
+            throw new Exception('Jumlah pengeluaran harus lebih besar dari nol');
+        }
+
         DB::transaction(function () use ($item, $quantity, $description, $user) {
             if ($item->stock < $quantity) {
-                throw new \Exception('Stok tidak mencukupi');
+                throw new Exception('Stok tidak mencukupi');
             }
 
             $this->itemRepository->update($item, [

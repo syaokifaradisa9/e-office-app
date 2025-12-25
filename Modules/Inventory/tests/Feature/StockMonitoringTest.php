@@ -10,20 +10,15 @@ use Spatie\Permission\Models\Permission;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $permissions = [
-        'lihat_stok_divisi',
-        'lihat_semua_stok',
-        'pengeluaran_stok_barang',
-    ];
-
-    foreach ($permissions as $permission) {
-        Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
-    }
+    Permission::firstOrCreate(['name' => \Modules\Inventory\Enums\InventoryPermission::MonitorStock->value, 'guard_name' => 'web']);
+    Permission::firstOrCreate(['name' => \Modules\Inventory\Enums\InventoryPermission::MonitorAllStock->value, 'guard_name' => 'web']);
+    Permission::firstOrCreate(['name' => \Modules\Inventory\Enums\InventoryPermission::IssueStock->value, 'guard_name' => 'web']);
+    Permission::firstOrCreate(['name' => \Modules\Inventory\Enums\InventoryPermission::ConvertStock->value, 'guard_name' => 'web']);
 });
 
 it('can display stock monitoring index for authorized user', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('lihat_stok_divisi');
+    $user->givePermissionTo(\Modules\Inventory\Enums\InventoryPermission::MonitorStock->value);
 
     $response = $this->actingAs($user)->get('/inventory/stock-monitoring');
 
@@ -40,7 +35,7 @@ it('denies access for unauthorized user', function () {
 
 it('returns datatable data', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('lihat_stok_divisi');
+    $user->givePermissionTo(\Modules\Inventory\Enums\InventoryPermission::MonitorStock->value);
 
     $response = $this->actingAs($user)->get('/inventory/stock-monitoring/datatable');
 
@@ -49,7 +44,7 @@ it('returns datatable data', function () {
 
 it('can view all stock with proper permission', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('lihat_semua_stok');
+    $user->givePermissionTo(\Modules\Inventory\Enums\InventoryPermission::MonitorAllStock->value);
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
 
@@ -79,7 +74,7 @@ it('can view all stock with proper permission', function () {
 it('filters stock by division for regular user', function () {
     $division = Division::factory()->create();
     $user = User::factory()->create(['division_id' => $division->id]);
-    $user->givePermissionTo('lihat_stok_divisi');
+    $user->givePermissionTo(\Modules\Inventory\Enums\InventoryPermission::MonitorStock->value);
 
     $response = $this->actingAs($user)->get('/inventory/stock-monitoring/datatable');
 
@@ -88,7 +83,7 @@ it('filters stock by division for regular user', function () {
 
 it('can issue stock from monitoring', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('pengeluaran_stok_barang');
+    $user->givePermissionTo(\Modules\Inventory\Enums\InventoryPermission::IssueStock->value);
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
     $item = Item::create([
@@ -113,7 +108,8 @@ it('can issue stock from monitoring', function () {
 it('can convert item units from monitoring', function () {
     $division = Division::factory()->create();
     $user = User::factory()->create(['division_id' => $division->id]);
-    $user->givePermissionTo('lihat_stok_divisi');
+    $user->givePermissionTo(\Modules\Inventory\Enums\InventoryPermission::MonitorStock->value);
+    $user->givePermissionTo(\Modules\Inventory\Enums\InventoryPermission::ConvertStock->value);
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
 
@@ -151,7 +147,7 @@ it('can convert item units from monitoring', function () {
 
 it('exports excel successfully', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('lihat_semua_stok');
+    $user->givePermissionTo(\Modules\Inventory\Enums\InventoryPermission::MonitorAllStock->value);
 
     $response = $this->actingAs($user)->get('/inventory/stock-monitoring/print-excel');
 
@@ -160,7 +156,7 @@ it('exports excel successfully', function () {
 
 it('filters stock by max stock', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('lihat_semua_stok');
+    $user->givePermissionTo(\Modules\Inventory\Enums\InventoryPermission::MonitorAllStock->value);
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
     $division = Division::factory()->create();
@@ -190,7 +186,7 @@ it('filters stock by max stock', function () {
 
 it('filters stock by unit of measure', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('lihat_semua_stok');
+    $user->givePermissionTo(\Modules\Inventory\Enums\InventoryPermission::MonitorAllStock->value);
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
     $division = Division::factory()->create();
@@ -220,7 +216,7 @@ it('filters stock by unit of measure', function () {
 
 it('dapat mengurutkan stok berdasarkan nama barang', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('lihat_semua_stok');
+    $user->givePermissionTo(\Modules\Inventory\Enums\InventoryPermission::MonitorAllStock->value);
     $division = Division::factory()->create();
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
@@ -253,7 +249,7 @@ it('user dengan lihat_stok_divisi hanya melihat stok dari division sendiri', fun
     $divisionB = Division::factory()->create();
 
     $userA = User::factory()->create(['division_id' => $divisionA->id]);
-    $userA->givePermissionTo('lihat_stok_divisi');
+    $userA->givePermissionTo(\Modules\Inventory\Enums\InventoryPermission::MonitorStock->value);
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
 
@@ -287,7 +283,7 @@ it('user dengan lihat_semua_stok melihat stok dari semua division', function () 
     $divisionB = Division::factory()->create();
 
     $user = User::factory()->create();
-    $user->givePermissionTo('lihat_semua_stok');
+    $user->givePermissionTo(\Modules\Inventory\Enums\InventoryPermission::MonitorAllStock->value);
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
 
@@ -335,7 +331,7 @@ it('user tanpa permission tidak dapat melihat stok apapun', function () {
 it('user dengan lihat_stok_divisi tidak melihat stok gudang utama', function () {
     $division = Division::factory()->create();
     $user = User::factory()->create(['division_id' => $division->id]);
-    $user->givePermissionTo('lihat_stok_divisi');
+    $user->givePermissionTo(\Modules\Inventory\Enums\InventoryPermission::MonitorStock->value);
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
 

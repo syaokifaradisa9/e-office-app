@@ -3,6 +3,7 @@
 use App\Models\Division;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Modules\Inventory\Enums\InventoryPermission;
 use Modules\Inventory\Enums\WarehouseOrderStatus;
 use Modules\Inventory\Models\WarehouseOrder;
 use Spatie\Permission\Models\Permission;
@@ -11,8 +12,8 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $permissions = [
-        'lihat_dashboard_gudang_utama',
-        'lihat_dashboard_gudang_divisi',
+        InventoryPermission::ViewMainWarehouseDashboard->value,
+        InventoryPermission::ViewDivisionWarehouseDashboard->value,
     ];
 
     foreach ($permissions as $permission) {
@@ -22,7 +23,7 @@ beforeEach(function () {
 
 it('redirects to main warehouse dashboard for authorized user', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('lihat_dashboard_gudang_utama');
+    $user->givePermissionTo(InventoryPermission::ViewMainWarehouseDashboard->value);
 
     $response = $this->actingAs($user)->get('/inventory/dashboard');
 
@@ -32,7 +33,7 @@ it('redirects to main warehouse dashboard for authorized user', function () {
 it('redirects to division warehouse dashboard for authorized user', function () {
     $division = Division::factory()->create();
     $user = User::factory()->create(['division_id' => $division->id]);
-    $user->givePermissionTo('lihat_dashboard_gudang_divisi');
+    $user->givePermissionTo(InventoryPermission::ViewDivisionWarehouseDashboard->value);
 
     $response = $this->actingAs($user)->get('/inventory/dashboard');
 
@@ -41,12 +42,12 @@ it('redirects to division warehouse dashboard for authorized user', function () 
 
 it('can access main warehouse dashboard', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('lihat_dashboard_gudang_utama');
+    $user->givePermissionTo(InventoryPermission::ViewMainWarehouseDashboard->value);
 
     $response = $this->actingAs($user)->get('/inventory/dashboard/main-warehouse');
 
-    $response->assertOk();
-    $response->assertInertia(fn ($page) => $page->component('Inventory/Dashboard/MainWarehouse'));
+    $response->assertStatus(200);
+    expect($response->inertiaPage()['component'])->toBe('Inventory/Dashboard/MainWarehouse');
 });
 
 it('denies main warehouse dashboard for unauthorized user', function () {
@@ -60,12 +61,12 @@ it('denies main warehouse dashboard for unauthorized user', function () {
 it('can access division warehouse dashboard', function () {
     $division = Division::factory()->create();
     $user = User::factory()->create(['division_id' => $division->id]);
-    $user->givePermissionTo('lihat_dashboard_gudang_divisi');
+    $user->givePermissionTo(InventoryPermission::ViewDivisionWarehouseDashboard->value);
 
     $response = $this->actingAs($user)->get('/inventory/dashboard/division-warehouse');
 
-    $response->assertOk();
-    $response->assertInertia(fn ($page) => $page->component('Inventory/Dashboard/DivisionWarehouse'));
+    $response->assertStatus(200);
+    expect($response->inertiaPage()['component'])->toBe('Inventory/Dashboard/DivisionWarehouse');
 });
 
 it('denies division warehouse dashboard for unauthorized user', function () {
@@ -78,7 +79,7 @@ it('denies division warehouse dashboard for unauthorized user', function () {
 
 it('shows pending orders on main warehouse dashboard', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('lihat_dashboard_gudang_utama');
+    $user->givePermissionTo(InventoryPermission::ViewMainWarehouseDashboard->value);
 
     $division = Division::factory()->create();
     WarehouseOrder::create([
@@ -91,15 +92,14 @@ it('shows pending orders on main warehouse dashboard', function () {
     $response = $this->actingAs($user)->get('/inventory/dashboard/main-warehouse');
 
     $response->assertOk();
-    $response->assertInertia(fn ($page) => $page
-        ->has('pendingOrders', 1)
-        ->has('statistics')
-    );
+    $page = $response->inertiaPage();
+    expect($page['props']['pendingOrders'])->toHaveCount(1);
+    expect($page['props'])->toHaveKey('statistics');
 });
 
 it('shows confirmed orders on main warehouse dashboard', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('lihat_dashboard_gudang_utama');
+    $user->givePermissionTo(InventoryPermission::ViewMainWarehouseDashboard->value);
 
     $division = Division::factory()->create();
     WarehouseOrder::create([
@@ -112,13 +112,13 @@ it('shows confirmed orders on main warehouse dashboard', function () {
     $response = $this->actingAs($user)->get('/inventory/dashboard/main-warehouse');
 
     $response->assertOk();
-    $response->assertInertia(fn ($page) => $page->has('confirmedOrders', 1));
+    expect($response->inertiaPage()['props']['confirmedOrders'])->toHaveCount(1);
 });
 
 it('shows delivered orders on division warehouse dashboard', function () {
     $division = Division::factory()->create();
     $user = User::factory()->create(['division_id' => $division->id]);
-    $user->givePermissionTo('lihat_dashboard_gudang_divisi');
+    $user->givePermissionTo(InventoryPermission::ViewDivisionWarehouseDashboard->value);
 
     WarehouseOrder::create([
         'user_id' => $user->id,
@@ -130,17 +130,17 @@ it('shows delivered orders on division warehouse dashboard', function () {
     $response = $this->actingAs($user)->get('/inventory/dashboard/division-warehouse');
 
     $response->assertOk();
-    $response->assertInertia(fn ($page) => $page->has('deliveredOrders', 1));
+    $response->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page->has('activeOrders', 1));
 });
 
 it('shows error message for division user without division', function () {
     $user = User::factory()->create(['division_id' => null]);
-    $user->givePermissionTo('lihat_dashboard_gudang_divisi');
+    $user->givePermissionTo(InventoryPermission::ViewDivisionWarehouseDashboard->value);
 
     $response = $this->actingAs($user)->get('/inventory/dashboard/division-warehouse');
 
     $response->assertOk();
-    $response->assertInertia(fn ($page) => $page->has('error'));
+    expect($response->inertiaPage()['props'])->toHaveKey('error');
 });
 
 it('filters division dashboard by user division', function () {
@@ -148,7 +148,7 @@ it('filters division dashboard by user division', function () {
     $division2 = Division::factory()->create();
 
     $user = User::factory()->create(['division_id' => $division1->id]);
-    $user->givePermissionTo('lihat_dashboard_gudang_divisi');
+    $user->givePermissionTo(InventoryPermission::ViewDivisionWarehouseDashboard->value);
 
     // Create order for user's division
     WarehouseOrder::create([
@@ -169,5 +169,5 @@ it('filters division dashboard by user division', function () {
     $response = $this->actingAs($user)->get('/inventory/dashboard/division-warehouse');
 
     $response->assertOk();
-    $response->assertInertia(fn ($page) => $page->has('deliveredOrders', 1));
+    $response->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page->has('activeOrders', 1));
 });

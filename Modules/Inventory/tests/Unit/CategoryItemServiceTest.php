@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Inventory;
+namespace Modules\Inventory\Tests\Unit;
 
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
