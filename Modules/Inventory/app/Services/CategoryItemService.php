@@ -46,6 +46,11 @@ class CategoryItemService
         return $result;
     }
 
+    public function hasItems(CategoryItem $categoryItem): bool
+    {
+        return $this->categoryItemRepository->hasItems($categoryItem);
+    }
+
     private function clearCache(): void
     {
         Cache::forget(self::CACHE_KEY);

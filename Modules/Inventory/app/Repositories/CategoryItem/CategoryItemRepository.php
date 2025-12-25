@@ -14,4 +14,6 @@ interface CategoryItemRepository
     public function update(CategoryItem $categoryItem, array $data): CategoryItem;
 
     public function delete(CategoryItem $categoryItem): bool;
+
+    public function hasItems(CategoryItem $categoryItem): bool;
 }

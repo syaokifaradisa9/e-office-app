@@ -58,7 +58,7 @@ class CategoryItemController extends Controller
     public function delete(CategoryItem $categoryItem)
     {
         // Check if category has items linked to it
-        if ($categoryItem->items()->exists()) {
+        if ($this->categoryItemService->hasItems($categoryItem)) {
             return back()->withErrors(['delete' => 'Kategori tidak bisa dihapus karena masih digunakan oleh barang.']);
         }
 

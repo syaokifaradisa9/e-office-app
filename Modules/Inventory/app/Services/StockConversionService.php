@@ -7,10 +7,16 @@ use Exception;
 use Illuminate\Support\Facades\DB;
 use Modules\Inventory\Enums\ItemTransactionType;
 use Modules\Inventory\Models\Item;
-use Modules\Inventory\Models\ItemTransaction;
+use Modules\Inventory\Repositories\Item\ItemRepository;
+use Modules\Inventory\Repositories\ItemTransaction\ItemTransactionRepository;
 
 class StockConversionService
 {
+    public function __construct(
+        private ItemRepository $itemRepository,
+        private ItemTransactionRepository $transactionRepository
+    ) {}
+
     /**
      * Convert stock from pack/box to units
      */
@@ -42,7 +48,7 @@ class StockConversionService
 
             // 2. Check Reference Item
             if ($sourceItem->reference_item_id) {
-                $targetItem = Item::find($sourceItem->reference_item_id);
+                $targetItem = $this->itemRepository->findById($sourceItem->reference_item_id);
             } else {
                 if ($sourceItem->division_id === null) {
                     throw new Exception('Item referensi tidak ditemukan. Silakan set reference_item_id terlebih dahulu pada data item.');
@@ -52,20 +58,20 @@ class StockConversionService
                     throw new Exception('Item ini tidak memiliki referensi ke Gudang Utama.');
                 }
 
-                $mainSourceItem = Item::find($sourceItem->main_reference_item_id);
+                $mainSourceItem = $this->itemRepository->findById($sourceItem->main_reference_item_id);
 
                 if (! $mainSourceItem || ! $mainSourceItem->reference_item_id) {
                     throw new Exception('Item referensi tidak ditemukan di Gudang Utama.');
                 }
 
-                $mainTargetItem = Item::find($mainSourceItem->reference_item_id);
+                $mainTargetItem = $this->itemRepository->findById($mainSourceItem->reference_item_id);
 
                 if (! $mainTargetItem) {
                     throw new Exception('Item target referensi tidak ditemukan di Gudang Utama.');
                 }
 
                 // Create Item (Clone to Division)
-                $targetItem = Item::create([
+                $targetItem = $this->itemRepository->create([
                     'division_id' => $user->division_id,
                     'category_id' => $mainTargetItem->category_id,
                     'image_url' => $mainTargetItem->image_url,
@@ -79,7 +85,7 @@ class StockConversionService
                 ]);
 
                 // Update Link Reference on Source Item
-                $sourceItem->update(['reference_item_id' => $targetItem->id]);
+                $this->itemRepository->update($sourceItem, ['reference_item_id' => $targetItem->id]);
             }
 
             if (! $targetItem) {
@@ -87,13 +93,13 @@ class StockConversionService
             }
 
             // 3. Update Stocks
-            $sourceItem->decrement('stock', $quantityToConvert);
-            $targetItem->increment('stock', $quantityToAdd);
+            $this->itemRepository->update($sourceItem, ['stock' => $sourceItem->stock - $quantityToConvert]);
+            $this->itemRepository->update($targetItem, ['stock' => $targetItem->stock + $quantityToAdd]);
 
             // 4. Transaction Logging
             $date = now();
 
-            ItemTransaction::create([
+            $this->transactionRepository->create([
                 'date' => $date,
                 'type' => ItemTransactionType::ConversionOut,
                 'item_id' => $sourceItem->id,
@@ -102,7 +108,7 @@ class StockConversionService
                 'description' => 'Konversi ke '.$targetItem->name,
             ]);
 
-            ItemTransaction::create([
+            $this->transactionRepository->create([
                 'date' => $date,
                 'type' => ItemTransactionType::ConversionIn,
                 'item_id' => $targetItem->id,

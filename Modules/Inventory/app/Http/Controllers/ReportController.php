@@ -3,15 +3,16 @@
 namespace Modules\Inventory\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Division;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Modules\Inventory\Services\LookupService;
 use Modules\Inventory\Services\ReportService;
 
 class ReportController extends Controller
 {
     public function __construct(
-        private ReportService $reportService
+        private ReportService $reportService,
+        private LookupService $lookupService
     ) {}
 
     public function index(Request $request)
@@ -32,7 +33,7 @@ class ReportController extends Controller
 
         return Inertia::render('Inventory/Report/Index', [
             'reportData' => $data,
-            'divisions' => Division::all(),
+            'divisions' => $this->lookupService->getActiveDivisions(),
             'type' => 'division'
         ]);
     }
@@ -43,7 +44,7 @@ class ReportController extends Controller
 
         return Inertia::render('Inventory/Report/All', [
             'reportData' => $data,
-            'divisions' => Division::all(),
+            'divisions' => $this->lookupService->getActiveDivisions(),
             'type' => 'all'
         ]);
     }

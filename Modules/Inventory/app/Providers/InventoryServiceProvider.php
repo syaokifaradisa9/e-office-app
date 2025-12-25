@@ -42,6 +42,26 @@ class InventoryServiceProvider extends ServiceProvider
             \Modules\Inventory\Repositories\CategoryItem\CategoryItemRepository::class,
             \Modules\Inventory\Repositories\CategoryItem\EloquentCategoryItemRepository::class
         );
+
+        $this->app->singleton(
+            \Modules\Inventory\Repositories\Item\ItemRepository::class,
+            \Modules\Inventory\Repositories\Item\EloquentItemRepository::class
+        );
+
+        $this->app->singleton(
+            \Modules\Inventory\Repositories\ItemTransaction\ItemTransactionRepository::class,
+            \Modules\Inventory\Repositories\ItemTransaction\EloquentItemTransactionRepository::class
+        );
+
+        $this->app->singleton(
+            \Modules\Inventory\Repositories\WarehouseOrder\WarehouseOrderRepository::class,
+            \Modules\Inventory\Repositories\WarehouseOrder\EloquentWarehouseOrderRepository::class
+        );
+
+        $this->app->singleton(
+            \Modules\Inventory\Repositories\StockOpname\StockOpnameRepository::class,
+            \Modules\Inventory\Repositories\StockOpname\EloquentStockOpnameRepository::class
+        );
     }
 
     /**

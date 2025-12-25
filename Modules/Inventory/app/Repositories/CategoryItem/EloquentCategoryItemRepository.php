@@ -28,4 +28,9 @@ class EloquentCategoryItemRepository implements CategoryItemRepository
     {
         return $categoryItem->delete();
     }
+
+    public function hasItems(CategoryItem $categoryItem): bool
+    {
+        return $categoryItem->items()->exists();
+    }
 }

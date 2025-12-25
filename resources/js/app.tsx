@@ -8,7 +8,11 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 const pages = import.meta.glob([
     './pages/**/*.tsx',
+    './pages/**/*.jsx',
+    '../../Modules/**/resources/assets/js/Pages/**/*.tsx',
+    '../../Modules/**/resources/assets/js/Pages/**/*.jsx',
     '../../Modules/*/resources/assets/js/Pages/**/*.tsx',
+    '../../Modules/*/resources/assets/js/Pages/**/*.jsx',
 ]);
 
 // Helper to normalize paths for comparison
@@ -22,32 +26,44 @@ const normalizedPageKeys = pageKeys.reduce((acc, key) => {
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     resolve: (name) => {
-        // 1. Check local pages
+        const pageKeys = Object.keys(pages);
+
+        // 1. Try local pages (exact match)
         const localPath = `./pages/${name}.tsx`;
         if (pages[localPath]) {
             return resolvePageComponent(localPath, pages);
         }
 
-        // 2. Check module pages
-        const [module, ...rest] = name.split('/');
-        const pagePath = rest.join('/');
-        const fullModulePath = `../../Modules/${module}/resources/assets/js/Pages/${pagePath}.tsx`;
+        // 2. Try module pages
+        // The name usually comes as "ModuleName/PagePath"
+        const parts = name.split('/');
+        if (parts.length >= 2) {
+            const moduleName = parts[0];
+            const pagePath = parts.slice(1).join('/');
 
-        // Direct match
-        if (pages[fullModulePath]) {
-            return resolvePageComponent(fullModulePath, pages);
+            // Look for a match in Modules
+            // We look for a key that ends with /Modules/ModuleName/.../Pages/PagePath.tsx
+            const targetSuffix = `/modules/${moduleName}/resources/assets/js/pages/${pagePath}.tsx`.toLowerCase();
+            const matchingKey = pageKeys.find((key) =>
+                key.replace(/\\/g, '/').toLowerCase().endsWith(targetSuffix)
+            );
+
+            if (matchingKey) {
+                return resolvePageComponent(matchingKey, pages);
+            }
         }
 
-        // Case-insensitive fallback
-        const normalizedTarget = normalizePath(fullModulePath);
-        const actualKey = normalizedPageKeys[normalizedTarget];
-
-        if (actualKey) {
-            return resolvePageComponent(actualKey, pages);
+        // 3. Case-insensitive fallback for local pages
+        const normalizedLocal = localPath.toLowerCase();
+        const foundLocalKey = pageKeys.find(
+            (key) => key.toLowerCase() === normalizedLocal
+        );
+        if (foundLocalKey) {
+            return resolvePageComponent(foundLocalKey, pages);
         }
 
-        // Fallback to error
-        return resolvePageComponent(fullModulePath, pages);
+        // Fallback to the original resolver behavior which will throw the informed Error if not found
+        return resolvePageComponent(`./pages/${name}.tsx`, pages);
     },
     setup({ el, App, props }) {
         const root = createRoot(el);

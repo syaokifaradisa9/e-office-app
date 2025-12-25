@@ -4,28 +4,30 @@ namespace Modules\Inventory\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DatatableRequest;
-use App\Models\Division;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Modules\Inventory\Datatables\StockOpnameDatatableService;
 use Modules\Inventory\Enums\InventoryPermission;
+use Modules\Inventory\Http\Requests\StoreStockOpnameRequest;
+use Modules\Inventory\Http\Requests\UpdateStockOpnameRequest;
 use Modules\Inventory\Models\StockOpname;
+use Modules\Inventory\Services\LookupService;
 use Modules\Inventory\Services\StockOpnameService;
 
 class StockOpnameController extends Controller
 {
     public function __construct(
         private StockOpnameService $stockOpnameService,
-        private StockOpnameDatatableService $datatableService
+        private StockOpnameDatatableService $datatableService,
+        private LookupService $lookupService
     ) {}
 
     public function index(Request $request, string $type = 'all')
     {
-        $divisions = Division::where('is_active', true)->get(['id', 'name']);
-
         return Inertia::render('Inventory/StockOpname/Index', [
             'type' => $type,
-            'divisions' => $divisions,
+            'divisions' => $this->lookupService->getActiveDivisions(),
         ]);
     }
 
@@ -35,6 +37,7 @@ class StockOpnameController extends Controller
             abort(404);
         }
 
+        /** @var User $user */
         $user = $request->user();
 
         // Check permission based on type
@@ -50,11 +53,11 @@ class StockOpnameController extends Controller
         return Inertia::render('Inventory/StockOpname/Create', [
             'items' => $items,
             'type' => $type,
-            'divisions' => Division::where('is_active', true)->get(['id', 'name']),
+            'divisions' => $this->lookupService->getActiveDivisions(),
         ]);
     }
 
-    public function store(Request $request, string $type = 'warehouse')
+    public function store(StoreStockOpnameRequest $request, string $type = 'warehouse')
     {
         if (! in_array($type, ['warehouse', 'division'])) {
             abort(404);
@@ -70,14 +73,7 @@ class StockOpnameController extends Controller
             abort(403);
         }
 
-        $validated = $request->validate([
-            'opname_date' => 'required|date',
-            'notes' => 'nullable|string|max:500',
-            'items' => 'required|array|min:1',
-            'items.*.item_id' => 'required|exists:items,id',
-            'items.*.physical_stock' => 'required|integer|min:0',
-            'items.*.notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         if ($type === 'warehouse') {
             $this->stockOpnameService->createWarehouse($validated, $user);
@@ -121,24 +117,17 @@ class StockOpnameController extends Controller
             'opname' => $stockOpname->load('items.item'),
             'items' => $items,
             'type' => $type,
-            'divisions' => Division::where('is_active', true)->get(['id', 'name']),
+            'divisions' => $this->lookupService->getActiveDivisions(),
         ]);
     }
 
-    public function update(Request $request, string $type, StockOpname $stockOpname)
+    public function update(UpdateStockOpnameRequest $request, string $type, StockOpname $stockOpname)
     {
         if (! in_array($type, ['warehouse', 'division'])) {
             abort(404);
         }
 
-        $validated = $request->validate([
-            'opname_date' => 'required|date',
-            'notes' => 'nullable|string|max:500',
-            'items' => 'required|array|min:1',
-            'items.*.item_id' => 'required|exists:items,id',
-            'items.*.physical_stock' => 'required|integer|min:0',
-            'items.*.notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         try {
             $this->stockOpnameService->update($stockOpname, $validated, $request->user());

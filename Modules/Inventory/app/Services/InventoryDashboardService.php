@@ -2,16 +2,22 @@
 
 namespace Modules\Inventory\Services;
 
-use App\Models\Division;
-use Carbon\Carbon;
-use Modules\Inventory\Models\Item;
-use Modules\Inventory\Models\ItemTransaction;
-use Modules\Inventory\Models\StockOpname;
-use Modules\Inventory\Models\WarehouseOrder;
-use Modules\Inventory\Enums\WarehouseOrderStatus;
+use App\Repositories\Division\DivisionRepository;
+use Modules\Inventory\Repositories\Item\ItemRepository;
+use Modules\Inventory\Repositories\ItemTransaction\ItemTransactionRepository;
+use Modules\Inventory\Repositories\StockOpname\StockOpnameRepository;
+use Modules\Inventory\Repositories\WarehouseOrder\WarehouseOrderRepository;
 
 class InventoryDashboardService
 {
+    public function __construct(
+        private ItemRepository $itemRepository,
+        private ItemTransactionRepository $transactionRepository,
+        private WarehouseOrderRepository $orderRepository,
+        private StockOpnameRepository $opnameRepository,
+        private DivisionRepository $divisionRepository
+    ) {}
+
     /**
      * Get inventory dashboard tabs for the authenticated user
      */
@@ -39,54 +45,69 @@ class InventoryDashboardService
     }
 
     /**
+     * Get division warehouse data
+     */
+    public function getDivisionWarehouseData($user): array
+    {
+        $divisionId = $user->division_id;
+
+        return [
+            'mostStockItems' => $this->itemRepository->getMostStocked(5, $divisionId),
+            'leastStockItems' => $this->itemRepository->getLeastStocked(5, $divisionId),
+            'hasStockOpnameThisMonth' => $this->opnameRepository->hasOpnameThisMonth($divisionId),
+            'activeOrders' => $this->orderRepository->getActiveOrders($divisionId, 5),
+            'recentTransactions' => $this->transactionRepository->getLatestTransactions($divisionId, 5),
+            'divisionName' => $user->division?->name,
+        ];
+    }
+
+    /**
+     * Get main warehouse data
+     */
+    public function getMainWarehouseData(): array
+    {
+        $statistics = $this->orderRepository->getStatusStatistics()
+            ->mapWithKeys(function ($item) {
+                return [$item->status->value => $item->total];
+            });
+
+        return [
+            'statistics' => $statistics,
+            'pendingOrders' => $this->orderRepository->getPendingOrders(10),
+            'confirmedOrders' => $this->orderRepository->getConfirmedOrders(10),
+        ];
+    }
+
+    /**
+     * Get generic dashboard data
+     */
+    public function getGenericDashboardData(): array
+    {
+        $statistics = $this->orderRepository->getStatusStatistics()
+            ->mapWithKeys(function ($item) {
+                return [$item->status->value => $item->total];
+            });
+
+        return [
+            'statistics' => $statistics,
+            'pendingOrders' => $this->orderRepository->getPendingOrders(10),
+            'confirmedOrders' => $this->orderRepository->getConfirmedOrders(10),
+            'deliveredOrders' => $this->orderRepository->getActiveOrders(null, 10), // Simplification
+        ];
+    }
+
+    /**
      * Get division warehouse tab data
      */
     private function getDivisionWarehouseTab($user): array
     {
-        $divisionId = $user->division_id;
-        $currentMonth = Carbon::now()->month;
-        $currentYear = Carbon::now()->year;
-
         return [
             'id' => 'division',
             'label' => 'Gudang ' . ($user->division?->name ?? 'Divisi'),
             'icon' => 'building',
             'type' => 'warehouse',
             'stock_opname_link' => '/inventory/stock-opname/division',
-            'data' => [
-                'most_stock_items' => Item::where('division_id', $divisionId)
-                    ->orderByDesc('stock')
-                    ->limit(5)
-                    ->get(['id', 'name', 'stock', 'unit_of_measure']),
-                
-                'least_stock_items' => Item::where('division_id', $divisionId)
-                    ->where('stock', '>', 0)
-                    ->orderBy('stock')
-                    ->limit(5)
-                    ->get(['id', 'name', 'stock', 'unit_of_measure']),
-                
-                'has_stock_opname_this_month' => StockOpname::where('division_id', $divisionId)
-                    ->whereMonth('opname_date', $currentMonth)
-                    ->whereYear('opname_date', $currentYear)
-                    ->exists(),
-                
-                'active_orders' => WarehouseOrder::where('division_id', $divisionId)
-                    ->whereNotIn('status', [WarehouseOrderStatus::Finished, WarehouseOrderStatus::Rejected])
-                    ->with(['user:id,name'])
-                    ->withCount('carts')
-                    ->withSum('carts', 'quantity')
-                    ->latest()
-                    ->limit(5)
-                    ->get(),
-                
-                'recent_transactions' => ItemTransaction::whereHas('item', function ($query) use ($divisionId) {
-                        $query->where('division_id', $divisionId);
-                    })
-                    ->with(['item:id,name', 'user:id,name'])
-                    ->latest()
-                    ->limit(5)
-                    ->get(),
-            ],
+            'data' => $this->getDivisionWarehouseData($user),
         ];
     }
 
@@ -95,9 +116,6 @@ class InventoryDashboardService
      */
     private function getMainWarehouseTab(): array
     {
-        $currentMonth = Carbon::now()->month;
-        $currentYear = Carbon::now()->year;
-
         return [
             'id' => 'main',
             'label' => 'Gudang Utama',
@@ -105,37 +123,11 @@ class InventoryDashboardService
             'type' => 'warehouse',
             'stock_opname_link' => '/inventory/stock-opname/warehouse',
             'data' => [
-                'most_stock_items' => Item::whereNull('division_id')
-                    ->orderByDesc('stock')
-                    ->limit(5)
-                    ->get(['id', 'name', 'stock', 'unit_of_measure']),
-                
-                'least_stock_items' => Item::whereNull('division_id')
-                    ->where('stock', '>', 0)
-                    ->orderBy('stock')
-                    ->limit(5)
-                    ->get(['id', 'name', 'stock', 'unit_of_measure']),
-                
-                'has_stock_opname_this_month' => StockOpname::whereNull('division_id')
-                    ->whereMonth('opname_date', $currentMonth)
-                    ->whereYear('opname_date', $currentYear)
-                    ->exists(),
-                
-                'active_orders' => WarehouseOrder::whereNotIn('status', [WarehouseOrderStatus::Finished, WarehouseOrderStatus::Rejected])
-                    ->with(['user:id,name', 'division:id,name'])
-                    ->withCount('carts')
-                    ->withSum('carts', 'quantity')
-                    ->latest()
-                    ->limit(5)
-                    ->get(),
-                
-                'recent_transactions' => ItemTransaction::whereHas('item', function ($query) {
-                        $query->whereNull('division_id');
-                    })
-                    ->with(['item:id,name', 'user:id,name'])
-                    ->latest()
-                    ->limit(5)
-                    ->get(),
+                'most_stock_items' => $this->itemRepository->getMostStocked(5),
+                'least_stock_items' => $this->itemRepository->getLeastStocked(5),
+                'has_stock_opname_this_month' => $this->opnameRepository->hasOpnameThisMonth(),
+                'active_orders' => $this->orderRepository->getActiveOrders(null, 5),
+                'recent_transactions' => $this->transactionRepository->getLatestTransactions(null, 5),
             ],
         ];
     }
@@ -145,36 +137,23 @@ class InventoryDashboardService
      */
     private function getAllWarehouseTab(): array
     {
-        $currentMonth = Carbon::now()->month;
-        $currentYear = Carbon::now()->year;
-
         // Get all divisions with their stock opname status
-        $divisions = Division::orderBy('name')->get(['id', 'name']);
+        $divisions = $this->divisionRepository->all();
         $stockOpnameStatus = [];
 
         foreach ($divisions as $division) {
-            $hasOpname = StockOpname::where('division_id', $division->id)
-                ->whereMonth('opname_date', $currentMonth)
-                ->whereYear('opname_date', $currentYear)
-                ->exists();
-
             $stockOpnameStatus[] = [
                 'division_id' => $division->id,
                 'division_name' => $division->name,
-                'has_stock_opname' => $hasOpname,
+                'has_stock_opname' => $this->opnameRepository->hasOpnameThisMonth($division->id),
             ];
         }
 
         // Add main warehouse status
-        $hasMainOpname = StockOpname::whereNull('division_id')
-            ->whereMonth('opname_date', $currentMonth)
-            ->whereYear('opname_date', $currentYear)
-            ->exists();
-
         array_unshift($stockOpnameStatus, [
             'division_id' => null,
             'division_name' => 'Gudang Utama',
-            'has_stock_opname' => $hasMainOpname,
+            'has_stock_opname' => $this->opnameRepository->hasOpnameThisMonth(),
         ]);
 
         return [
@@ -183,18 +162,8 @@ class InventoryDashboardService
             'icon' => 'globe',
             'type' => 'overview',
             'data' => [
-                'recent_transactions' => ItemTransaction::with(['item:id,name,division_id', 'item.division:id,name', 'user:id,name'])
-                    ->latest()
-                    ->limit(10)
-                    ->get(),
-                
-                'recent_orders' => WarehouseOrder::with(['user:id,name', 'division:id,name'])
-                    ->withCount('carts')
-                    ->withSum('carts', 'quantity')
-                    ->latest()
-                    ->limit(5)
-                    ->get(),
-                
+                'recent_transactions' => $this->transactionRepository->getLatestTransactions(null, 10),
+                'recent_orders' => $this->orderRepository->getActiveOrders(null, 5),
                 'stock_opname_status' => $stockOpnameStatus,
             ],
         ];

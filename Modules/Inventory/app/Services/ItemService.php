@@ -3,13 +3,53 @@
 namespace Modules\Inventory\Services;
 
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Modules\Inventory\DataTransferObjects\ItemDTO;
 use Modules\Inventory\Enums\ItemTransactionType;
 use Modules\Inventory\Models\Item;
-use Modules\Inventory\Models\ItemTransaction;
+use Modules\Inventory\Repositories\CategoryItem\CategoryItemRepository;
+use Modules\Inventory\Repositories\Item\ItemRepository;
+use Modules\Inventory\Repositories\ItemTransaction\ItemTransactionRepository;
 
 class ItemService
 {
+    public function __construct(
+        private ItemRepository $itemRepository,
+        private ItemTransactionRepository $transactionRepository,
+        private CategoryItemRepository $categoryRepository
+    ) {}
+
+    public function getActiveCategories(): Collection
+    {
+        return $this->categoryRepository->getActiveCategories();
+    }
+
+    public function getBaseUnits(): Collection
+    {
+        return $this->itemRepository->getBaseUnits();
+    }
+
+    public function getConversionTargets(Item $item): Collection
+    {
+        return $this->itemRepository->getConversionTargets($item);
+    }
+
+    public function store(ItemDTO $dto): Item
+    {
+        return $this->itemRepository->create($dto->toArray());
+    }
+
+    public function update(Item $item, ItemDTO $dto): Item
+    {
+        return $this->itemRepository->update($item, $dto->toArray());
+    }
+
+    public function delete(Item $item): bool
+    {
+        return $this->itemRepository->delete($item);
+    }
+
     public function issueStock(Item $item, int $quantity, string $description, User $user): void
     {
         DB::transaction(function () use ($item, $quantity, $description, $user) {
@@ -17,9 +57,11 @@ class ItemService
                 throw new \Exception('Stok tidak mencukupi');
             }
 
-            $item->decrement('stock', $quantity);
+            $this->itemRepository->update($item, [
+                'stock' => $item->stock - $quantity
+            ]);
 
-            ItemTransaction::create([
+            $this->transactionRepository->create([
                 'date' => now(),
                 'type' => ItemTransactionType::Out,
                 'item_id' => $item->id,

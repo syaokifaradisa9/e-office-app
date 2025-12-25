@@ -4,13 +4,13 @@ namespace Modules\Inventory\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DatatableRequest;
-use App\Models\Division;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Modules\Inventory\Datatables\StockMonitoringDatatableService;
-use Modules\Inventory\Models\CategoryItem;
+use Modules\Inventory\Http\Requests\ConvertItemRequest;
+use Modules\Inventory\Http\Requests\IssueItemRequest;
 use Modules\Inventory\Models\Item;
 use Modules\Inventory\Services\ItemService;
+use Modules\Inventory\Services\LookupService;
 use Modules\Inventory\Services\StockConversionService;
 
 class StockMonitoringController extends Controller
@@ -18,14 +18,15 @@ class StockMonitoringController extends Controller
     public function __construct(
         private StockMonitoringDatatableService $datatableService,
         private StockConversionService $stockConversionService,
-        private ItemService $itemService
+        private ItemService $itemService,
+        private LookupService $lookupService
     ) {}
 
     public function index()
     {
         return Inertia::render('Inventory/StockMonitoring/Index', [
-            'categories' => CategoryItem::where('is_active', true)->get(),
-            'divisions' => Division::all(),
+            'categories' => $this->lookupService->getActiveCategories(),
+            'divisions' => $this->lookupService->getActiveDivisions(),
         ]);
     }
 
@@ -55,14 +56,12 @@ class StockMonitoringController extends Controller
         ]);
     }
 
-    public function processConversion(Request $request, Item $item)
+    public function processConversion(ConvertItemRequest $request, Item $item)
     {
-        $request->validate([
-            'quantity' => 'required|integer|min:1|max:'.$item->stock,
-        ]);
+        $validated = $request->validated();
 
         try {
-            $this->stockConversionService->convertStock($item, $request->quantity, $request->user());
+            $this->stockConversionService->convertStock($item, $validated['quantity'], $request->user());
 
             return redirect()->route('inventory.stock-monitoring.index')->with('success', 'Stok berhasil dikonversi.');
         } catch (\Exception $e) {
@@ -82,15 +81,12 @@ class StockMonitoringController extends Controller
         ]);
     }
 
-    public function issue(Request $request, Item $item)
+    public function issue(IssueItemRequest $request, Item $item)
     {
-        $request->validate([
-            'quantity' => 'required|integer|min:1|max:'.$item->stock,
-            'description' => 'required|string|max:255',
-        ]);
+        $validated = $request->validated();
 
         try {
-            $this->itemService->issueStock($item, $request->quantity, $request->description, $request->user());
+            $this->itemService->issueStock($item, $validated['quantity'], $validated['description'], $request->user());
 
             return redirect()->route('inventory.stock-monitoring.index')->with('success', 'Barang berhasil dikeluarkan.');
         } catch (\Exception $e) {
