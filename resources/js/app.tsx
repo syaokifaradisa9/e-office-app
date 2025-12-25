@@ -42,11 +42,14 @@ createInertiaApp({
             const pagePath = parts.slice(1).join('/');
 
             // Look for a match in Modules
-            // We look for a key that ends with /Modules/ModuleName/.../Pages/PagePath.tsx
-            const targetSuffix = `/modules/${moduleName}/resources/assets/js/pages/${pagePath}.tsx`.toLowerCase();
-            const matchingKey = pageKeys.find((key) =>
-                key.replace(/\\/g, '/').toLowerCase().endsWith(targetSuffix)
-            );
+            // We look for a key that ends with /Modules/ModuleName/.../Pages/PagePath.tsx or .jsx
+            const targetSuffixTSX = `/modules/${moduleName}/resources/assets/js/pages/${pagePath}.tsx`.toLowerCase();
+            const targetSuffixJSX = `/modules/${moduleName}/resources/assets/js/pages/${pagePath}.jsx`.toLowerCase();
+
+            const matchingKey = pageKeys.find((key) => {
+                const normalizedKey = key.replace(/\\/g, '/').toLowerCase();
+                return normalizedKey.endsWith(targetSuffixTSX) || normalizedKey.endsWith(targetSuffixJSX);
+            });
 
             if (matchingKey) {
                 return resolvePageComponent(matchingKey, pages);
