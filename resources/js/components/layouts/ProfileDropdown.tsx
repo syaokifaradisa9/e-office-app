@@ -3,8 +3,10 @@ import { ChevronDown, KeyRound, LogOut, Moon, Sun, User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface LoggedUser {
+    id: number;
     name: string;
     email: string;
+    division_id?: number | null;
     position?: string;
 }
 

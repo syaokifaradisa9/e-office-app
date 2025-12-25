@@ -21,7 +21,7 @@ interface DivisionCardItemProps {
 
 export default function DivisionCardItem({ item, onDelete }: DivisionCardItemProps) {
     const { permissions } = usePage<PageProps>().props;
-    const hasManagePermission = permissions?.includes('manajemen-divisi');
+    const hasManagePermission = permissions?.includes('kelola_divisi');
 
     return (
         <div className="transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/30">

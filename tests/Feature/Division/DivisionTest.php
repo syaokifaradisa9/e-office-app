@@ -4,9 +4,11 @@ use App\Models\Division;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
+use Modules\Inventory\Database\Seeders\InventoryPermissionSeeder;
 
 beforeEach(function () {
     $this->seed(PermissionSeeder::class);
+    $this->seed(InventoryPermissionSeeder::class);
     $this->seed(RoleSeeder::class);
 });
 

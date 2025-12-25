@@ -3,7 +3,7 @@ import RootLayout from '@/components/layouts/RootLayout';
 import DataTable from '@/components/tables/Datatable';
 import { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
-import { Briefcase, Edit, Plus, Trash2, FileSpreadsheet, Users } from 'lucide-react';
+import { Briefcase, Edit, Plus, Trash2, FileSpreadsheet, Users, Shield } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import ConfirmationAlert from '@/components/alerts/ConfirmationAlert';
 import FormSearch from '@/components/forms/FormSearch';
@@ -180,113 +180,123 @@ export default function PositionIndex() {
                 title="Jabatan"
                 mobileFullWidth
                 additionalButton={
-                    <CheckPermissions permissions={['manajemen-jabatan']}>
+                    <CheckPermissions permissions={['kelola_jabatan']}>
                         <Button className="hidden w-full md:flex" label="Tambah Jabatan" href="/position/create" icon={<Plus className="size-4" />} />
                     </CheckPermissions>
                 }
             >
-                <DataTable
-                    onChangePage={onChangePage}
-                    onParamsChange={onParamsChange}
-                    limit={params.limit}
-                    searchValue={params.search}
-                    dataTable={dataTable}
-                    isLoading={isLoading}
-                    SkeletonComponent={PositionCardSkeleton}
-                    sortBy={params.sort_by}
-                    sortDirection={params.sort_direction}
-                    additionalHeaderElements={
-                        <div className="flex gap-2">
-                            <Button href={getPrintUrl('excel')} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                {usePage<PageProps>().props.permissions?.includes('lihat_jabatan') ? (
+                    <DataTable
+                        onChangePage={onChangePage}
+                        onParamsChange={onParamsChange}
+                        limit={params.limit}
+                        searchValue={params.search}
+                        dataTable={dataTable}
+                        isLoading={isLoading}
+                        SkeletonComponent={PositionCardSkeleton}
+                        sortBy={params.sort_by}
+                        sortDirection={params.sort_direction}
+                        additionalHeaderElements={
+                            <div className="flex gap-2">
+                                <Button href={getPrintUrl('excel')} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                            </div>
+                        }
+                        onHeaderClick={(columnName) => {
+                            const newSortDirection = params.sort_by === columnName && params.sort_direction === 'asc' ? 'desc' : 'asc';
+                            setParams((prevParams) => ({
+                                ...prevParams,
+                                sort_by: columnName,
+                                sort_direction: newSortDirection,
+                            }));
+                        }}
+                        cardItem={(item: Position) => (
+                            <PositionCardItem
+                                item={item}
+                                onDelete={(item) => {
+                                    setSelectedPosition(item);
+                                    setOpenConfirm(true);
+                                }}
+                            />
+                        )}
+                        columns={[
+                            {
+                                name: 'name',
+                                header: 'Nama Jabatan',
+                                render: (position: Position) => (
+                                    <div className="flex items-center gap-2">
+                                        <Briefcase className="size-4 text-primary" />
+                                        <span className="font-medium">{position.name}</span>
+                                    </div>
+                                ),
+                                footer: <FormSearch name="name" onChange={onParamsChange} placeholder="Filter Nama" />,
+                            },
+                            {
+                                name: 'description',
+                                header: 'Deskripsi',
+                                render: (position: Position) => <span className="text-gray-500 dark:text-slate-400">{position.description || '-'}</span>,
+                            },
+                            {
+                                name: 'users_count',
+                                header: 'Jumlah Pegawai',
+                                render: (position: Position) => (
+                                    <div className="flex items-center gap-1">
+                                        <Users className="size-4 text-slate-400" />
+                                        <span>{position.users_count || 0}</span>
+                                    </div>
+                                ),
+                            },
+                            {
+                                name: 'is_active',
+                                header: 'Status',
+                                render: (position: Position) => (
+                                    <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${position.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'}`}>
+                                        {position.is_active ? 'Aktif' : 'Tidak Aktif'}
+                                    </span>
+                                ),
+                            },
+                            ...(usePage<PageProps>().props.permissions?.includes('kelola_jabatan')
+                                ? [
+                                    {
+                                        header: 'Aksi',
+                                        render: (position: Position) => (
+                                            <div className="flex justify-end gap-1">
+                                                <Tooltip text="Edit">
+                                                    <Button
+                                                        href={`/position/${position.id}/edit`}
+                                                        className="!bg-transparent !p-1 text-yellow-600 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
+                                                        icon={<Edit className="size-4" />}
+                                                    />
+                                                </Tooltip>
+                                                <Tooltip text="Hapus">
+                                                    <Button
+                                                        onClick={() => {
+                                                            setSelectedPosition(position);
+                                                            setOpenConfirm(true);
+                                                        }}
+                                                        className="!bg-transparent !p-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                                                        icon={<Trash2 className="size-4" />}
+                                                    />
+                                                </Tooltip>
+                                            </div>
+                                        ),
+                                    },
+                                ]
+                                : []),
+                        ]}
+                    />
+                ) : (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <div className="mb-4 rounded-full bg-red-100 p-3 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                            <Shield className="size-8" />
                         </div>
-                    }
-                    onHeaderClick={(columnName) => {
-                        const newSortDirection = params.sort_by === columnName && params.sort_direction === 'asc' ? 'desc' : 'asc';
-                        setParams((prevParams) => ({
-                            ...prevParams,
-                            sort_by: columnName,
-                            sort_direction: newSortDirection,
-                        }));
-                    }}
-                    cardItem={(item: Position) => (
-                        <PositionCardItem
-                            item={item}
-                            onDelete={(item) => {
-                                setSelectedPosition(item);
-                                setOpenConfirm(true);
-                            }}
-                        />
-                    )}
-                    columns={[
-                        {
-                            name: 'name',
-                            header: 'Nama Jabatan',
-                            render: (position: Position) => (
-                                <div className="flex items-center gap-2">
-                                    <Briefcase className="size-4 text-primary" />
-                                    <span className="font-medium">{position.name}</span>
-                                </div>
-                            ),
-                            footer: <FormSearch name="name" onChange={onParamsChange} placeholder="Filter Nama" />,
-                        },
-                        {
-                            name: 'description',
-                            header: 'Deskripsi',
-                            render: (position: Position) => <span className="text-gray-500 dark:text-slate-400">{position.description || '-'}</span>,
-                        },
-                        {
-                            name: 'users_count',
-                            header: 'Jumlah Pegawai',
-                            render: (position: Position) => (
-                                <div className="flex items-center gap-1">
-                                    <Users className="size-4 text-slate-400" />
-                                    <span>{position.users_count || 0}</span>
-                                </div>
-                            ),
-                        },
-                        {
-                            name: 'is_active',
-                            header: 'Status',
-                            render: (position: Position) => (
-                                <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${position.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'}`}>
-                                    {position.is_active ? 'Aktif' : 'Tidak Aktif'}
-                                </span>
-                            ),
-                        },
-                        ...(usePage<PageProps>().props.permissions?.includes('manajemen-jabatan')
-                            ? [
-                                {
-                                    header: 'Aksi',
-                                    render: (position: Position) => (
-                                        <div className="flex justify-end gap-1">
-                                            <Tooltip text="Edit">
-                                                <Button
-                                                    href={`/position/${position.id}/edit`}
-                                                    className="!bg-transparent !p-1 text-yellow-600 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
-                                                    icon={<Edit className="size-4" />}
-                                                />
-                                            </Tooltip>
-                                            <Tooltip text="Hapus">
-                                                <Button
-                                                    onClick={() => {
-                                                        setSelectedPosition(position);
-                                                        setOpenConfirm(true);
-                                                    }}
-                                                    className="!bg-transparent !p-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                                                    icon={<Trash2 className="size-4" />}
-                                                />
-                                            </Tooltip>
-                                        </div>
-                                    ),
-                                },
-                            ]
-                            : []),
-                    ]}
-                />
+                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Akses Ditolak</h3>
+                        <p className="mt-1 text-slate-500 dark:text-slate-400">Anda tidak memiliki akses untuk melihat data jabatan</p>
+                    </div>
+                )}
             </ContentCard>
 
             {/* FAB for mobile */}
-            <CheckPermissions permissions={['manajemen-jabatan']}>
+            <CheckPermissions permissions={['kelola_jabatan']}>
                 <FloatingActionButton href="/position/create" label="Tambah Jabatan" />
             </CheckPermissions>
         </RootLayout>

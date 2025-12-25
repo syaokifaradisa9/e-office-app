@@ -25,7 +25,7 @@ interface RoleCardItemProps {
 
 export default function RoleCardItem({ item, onDelete }: RoleCardItemProps) {
     const { permissions } = usePage<PageProps>().props;
-    const hasManagePermission = permissions?.includes('manajemen-role');
+    const hasManagePermission = permissions?.includes('kelola_role');
 
     return (
         <div className="transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/30">

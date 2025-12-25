@@ -11,6 +11,12 @@
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
+        <testsuite name="Inventory Unit">
+            <directory>Modules/Inventory/tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Inventory Feature">
+            <directory>Modules/Inventory/tests/Feature</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>

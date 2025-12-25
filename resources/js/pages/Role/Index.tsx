@@ -183,7 +183,7 @@ export default function RoleIndex() {
                 title="Role & Permission"
                 mobileFullWidth
                 additionalButton={
-                    <CheckPermissions permissions={['manajemen-role']}>
+                    <CheckPermissions permissions={['kelola_role']}>
                         <Button className="hidden w-full md:flex" label="Tambah Role" href="/role/create" icon={<Plus className="size-4" />} />
                     </CheckPermissions>
                 }
@@ -236,7 +236,7 @@ export default function RoleIndex() {
                                 </span>
                             ),
                         },
-                        ...(usePage<PageProps>().props.permissions?.includes('manajemen-role')
+                        ...(usePage<PageProps>().props.permissions?.includes('kelola_role')
                             ? [
                                 {
                                     header: 'Aksi',
@@ -271,7 +271,7 @@ export default function RoleIndex() {
             </ContentCard>
 
             {/* FAB for mobile */}
-            <CheckPermissions permissions={['manajemen-role']}>
+            <CheckPermissions permissions={['kelola_role']}>
                 <FloatingActionButton href="/role/create" label="Tambah Role" />
             </CheckPermissions>
         </RootLayout>

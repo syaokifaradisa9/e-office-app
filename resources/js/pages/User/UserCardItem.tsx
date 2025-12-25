@@ -29,7 +29,7 @@ interface UserCardItemProps {
 
 export default function UserCardItem({ item, onDelete }: UserCardItemProps) {
     const { permissions } = usePage<PageProps>().props;
-    const hasManagePermission = permissions?.includes('manajemen-pengguna');
+    const hasManagePermission = permissions?.includes('kelola_pengguna');
 
     return (
         <div className="transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/30">
