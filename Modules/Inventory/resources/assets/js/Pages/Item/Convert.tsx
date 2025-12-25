@@ -48,8 +48,8 @@ export default function ItemConvert({ item, targetItems }: Props) {
     const resultQuantity = parseInt(data.quantity || '0') * multiplier;
 
     return (
-        <RootLayout title="Konversi Stok" backPath="/inventory/items">
-            <ContentCard title="Konversi Stok" mobileFullWidth>
+        <RootLayout title="Konversi Barang Gudang" backPath="/inventory/items">
+            <ContentCard title="Konversi Barang Gudang" mobileFullWidth>
                 <p className="mb-6 text-sm text-gray-500 dark:text-slate-400">
                     Konversi stok dari satuan besar ke satuan kecil
                 </p>
@@ -121,7 +121,7 @@ export default function ItemConvert({ item, targetItems }: Props) {
                             <Button href="/inventory/items" label="Batal" variant="secondary" />
                             <Button
                                 type="submit"
-                                label="Konversi Stok"
+                                label="Konversi Barang Gudang"
                                 icon={<ArrowRightLeft className="h-4 w-4" />}
                                 isLoading={processing}
                                 disabled={parseInt(data.quantity) > item.stock || parseInt(data.quantity) <= 0}

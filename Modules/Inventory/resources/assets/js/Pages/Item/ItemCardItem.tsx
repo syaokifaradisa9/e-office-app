@@ -25,8 +25,8 @@ interface Props {
 export default function ItemCardItem({ item, onDelete }: Props) {
     const { permissions } = usePage<PageProps>().props;
     const hasManagePermission = permissions?.includes('kelola_barang');
-    const hasIssuePermission = permissions?.includes('keluarkan_stok');
-    const hasConvertPermission = permissions?.includes('konversi_barang');
+    const hasIssuePermission = permissions?.includes('pengeluaran_barang_gudang');
+    const hasConvertPermission = permissions?.includes('konversi_barang_gudang');
 
     const hasConvertAction = hasConvertPermission && item.multiplier > 1 && item.reference_item_id;
     const hasIssueAction = hasIssuePermission && item.stock > 0;

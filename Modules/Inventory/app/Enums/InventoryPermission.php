@@ -7,16 +7,17 @@ enum InventoryPermission: string
     // Dashboard
     case ViewMainWarehouseDashboard = 'lihat_dashboard_gudang_utama';
     case ViewDivisionWarehouseDashboard = 'lihat_dashboard_gudang_divisi';
+    case ViewAllWarehouseDashboard = 'lihat_dashboard_gudang_keseluruhan';
 
     // Category Item
-    case ViewCategory = 'lihat_kategori_barang';
-    case ManageCategory = 'kelola_kategori_barang';
+    case ViewCategory = 'lihat_kategori';
+    case ManageCategory = 'kelola_kategori';
 
-    // Item
+    // Item (Gudang Utama)
     case ViewItem = 'lihat_barang';
     case ManageItem = 'kelola_barang';
-    case IssueStock = 'keluarkan_stok';
-    case ConvertItem = 'konversi_barang';
+    case IssueItemGudang = 'pengeluaran_barang_gudang';
+    case ConvertItemGudang = 'konversi_barang_gudang';
 
     // Warehouse Order
     case ViewWarehouseOrderDivisi = 'lihat_permintaan_barang_divisi';
@@ -37,8 +38,10 @@ enum InventoryPermission: string
     // Monitoring
     case MonitorItemTransaction = 'monitor_transaksi_barang';
     case MonitorAllItemTransaction = 'monitor_semua_transaksi_barang';
-    case MonitorStock = 'monitor_stok';
-    case MonitorAllStock = 'monitor_semua_stok';
+    case MonitorStock = 'lihat_stok_divisi';
+    case MonitorAllStock = 'lihat_semua_stok';
+    case IssueStock = 'pengeluaran_stok_barang';
+    case ConvertStock = 'konversi_stok_barang';
 
     // Report
     case ViewDivisionReport = 'lihat_laporan_gudang_divisi';

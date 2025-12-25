@@ -130,23 +130,34 @@ export default function StockOpnameIndex() {
         return url;
     }
 
-    // Dynamic Permission Check based on Type
-    const managePermission = type === 'warehouse'
-        ? 'kelola_stock_opname_gudang'
-        : type === 'division'
-            ? 'kelola_stock_opname_divisi'
-            : null;
-
-    const canManage = managePermission ? permissions?.includes(managePermission) : false;
+    // Global Permission Checks
+    const hasWarehouseManage = permissions?.includes('kelola_stock_opname_gudang');
+    const hasDivisionManage = permissions?.includes('kelola_stock_opname_divisi');
+    const hasWarehouseView = permissions?.includes('lihat_stock_opname_gudang');
+    const hasDivisionView = permissions?.includes('lihat_stock_opname_divisi');
     const canConfirm = permissions?.includes('konfirmasi_stock_opname');
 
-    // Button Create Logic
-    const showCreate = type !== 'all' && canManage;
+    // For action buttons in table, we check per row. 
+    // For the "Create" button:
+    const canCreateWarehouse = hasWarehouseManage;
+    const canCreateDivision = hasDivisionManage;
+
+    // Determine the type for "Create" button link
+    const createType = type !== 'all'
+        ? type
+        : canCreateDivision
+            ? 'division'
+            : 'warehouse';
+
+    const showCreate = type !== 'all' && (
+        (type === 'warehouse' && hasWarehouseManage) ||
+        (type === 'division' && hasDivisionManage)
+    );
 
     const titleMap = {
         warehouse: 'Stock Opname Gudang',
         division: 'Stock Opname Divisi',
-        all: 'Stock Opname Keseluruhan',
+        all: 'Semua Stock Opname',
     };
 
     return (
@@ -202,7 +213,7 @@ export default function StockOpnameIndex() {
                 mobileFullWidth
                 additionalButton={
                     showCreate && (
-                        <Button className="hidden w-full md:flex" label="Buat Stock Opname" href={`/inventory/stock-opname/${type}/create`} icon={<Plus className="size-4" />} />
+                        <Button className="hidden w-full md:flex" label="Buat Stock Opname" href={`/inventory/stock-opname/${createType}/create`} icon={<Plus className="size-4" />} />
                     )
                 }
             >
@@ -221,7 +232,7 @@ export default function StockOpnameIndex() {
                             <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
                         </div>
                     }
-                    onHeaderClick={(columnName) => {
+                    onHeaderClick={(columnName: string) => {
                         const newSortDirection = params.sort_by === columnName && params.sort_direction === 'asc' ? 'desc' : 'asc';
                         setParams((prevParams) => ({
                             ...prevParams,
@@ -245,7 +256,7 @@ export default function StockOpnameIndex() {
                             header: 'Petugas',
                             render: (opname: StockOpname) => <span>{opname.user}</span>,
                         },
-                        {
+                        type === 'all' && {
                             name: 'division',
                             header: 'Divisi/Gudang',
                             render: (opname: StockOpname) => <span className="text-gray-500 dark:text-slate-400">{opname.division || 'Gudang Utama'}</span>,
@@ -261,57 +272,62 @@ export default function StockOpnameIndex() {
                         },
                         {
                             header: 'Aksi',
-                            render: (opname: StockOpname) => (
-                                <div className="flex justify-end gap-1">
-                                    <Tooltip text="Lihat Detail">
-                                        <Button
-                                            href={`/inventory/stock-opname/${opname.division ? 'division' : 'warehouse'}/${opname.id}/detail`}
-                                            className="!bg-transparent !p-1 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
-                                            icon={<Eye className="size-4" />}
-                                        />
-                                    </Tooltip>
-                                    {canManage && opname.status === 'Draft' && (
-                                        <>
-                                            <Tooltip text="Edit">
-                                                <Button
-                                                    href={`/inventory/stock-opname/${type}/${opname.id}/edit`}
-                                                    className="!bg-transparent !p-1 text-yellow-600 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
-                                                    icon={<Edit className="size-4" />}
-                                                />
-                                            </Tooltip>
-                                            <Tooltip text="Hapus">
+                            render: (opname: StockOpname) => {
+                                const rowType = opname.division ? 'division' : 'warehouse';
+                                const canManageRow = rowType === 'warehouse' ? hasWarehouseManage : hasDivisionManage;
+
+                                return (
+                                    <div className="flex justify-end gap-1">
+                                        <Tooltip text="Lihat Detail">
+                                            <Button
+                                                href={`/inventory/stock-opname/${rowType}/${opname.id}/detail`}
+                                                className="!bg-transparent !p-1 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                                                icon={<Eye className="size-4" />}
+                                            />
+                                        </Tooltip>
+                                        {type !== 'all' && canManageRow && opname.status === 'Draft' && (
+                                            <>
+                                                <Tooltip text="Edit">
+                                                    <Button
+                                                        href={`/inventory/stock-opname/${rowType}/${opname.id}/edit`}
+                                                        className="!bg-transparent !p-1 text-yellow-600 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
+                                                        icon={<Edit className="size-4" />}
+                                                    />
+                                                </Tooltip>
+                                                <Tooltip text="Hapus">
+                                                    <Button
+                                                        onClick={() => {
+                                                            setSelectedOpname(opname);
+                                                            setOpenConfirm(true);
+                                                        }}
+                                                        className="!bg-transparent !p-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                                                        icon={<Trash2 className="size-4" />}
+                                                    />
+                                                </Tooltip>
+                                            </>
+                                        )}
+                                        {type !== 'all' && canConfirm && opname.status === 'Draft' && (
+                                            <Tooltip text="Konfirmasi">
                                                 <Button
                                                     onClick={() => {
                                                         setSelectedOpname(opname);
-                                                        setOpenConfirm(true);
+                                                        setOpenConfirmOpname(true);
                                                     }}
-                                                    className="!bg-transparent !p-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                                                    icon={<Trash2 className="size-4" />}
+                                                    className="!bg-transparent !p-1 text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20"
+                                                    icon={<Check className="size-4" />}
                                                 />
                                             </Tooltip>
-                                        </>
-                                    )}
-                                    {canConfirm && opname.status === 'Draft' && (
-                                        <Tooltip text="Konfirmasi">
-                                            <Button
-                                                onClick={() => {
-                                                    setSelectedOpname(opname);
-                                                    setOpenConfirmOpname(true);
-                                                }}
-                                                className="!bg-transparent !p-1 text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20"
-                                                icon={<Check className="size-4" />}
-                                            />
-                                        </Tooltip>
-                                    )}
-                                </div>
-                            ),
+                                        )}
+                                    </div>
+                                );
+                            },
                         },
-                    ]}
+                    ].filter(Boolean) as any}
                 />
             </ContentCard>
 
             {showCreate && (
-                <FloatingActionButton href={`/inventory/stock-opname/${type}/create`} label="Buat Stock Opname" />
+                <FloatingActionButton href={`/inventory/stock-opname/${createType}/create`} label="Buat Stock Opname" />
             )}
         </RootLayout>
     );

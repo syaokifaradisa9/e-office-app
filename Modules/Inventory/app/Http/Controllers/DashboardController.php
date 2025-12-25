@@ -3,11 +3,15 @@
 namespace Modules\Inventory\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Modules\Inventory\Enums\InventoryPermission;
 use Modules\Inventory\Enums\WarehouseOrderStatus;
+use Modules\Inventory\Models\Item;
+use Modules\Inventory\Models\ItemTransaction;
+use Modules\Inventory\Models\StockOpname;
 use Modules\Inventory\Models\WarehouseOrder;
 
 class DashboardController extends Controller
@@ -93,28 +97,55 @@ class DashboardController extends Controller
             ]);
         }
 
-        // Statistik order per status untuk divisi ini
-        $statistics = WarehouseOrder::where('division_id', $user->division_id)
-            ->select('status', DB::raw('count(*) as total'))
-            ->groupBy('status')
-            ->get()
-            ->mapWithKeys(function ($item) {
-                return [$item->status->value => $item->total];
-            });
+        $divisionId = $user->division_id;
 
-        // 10 Order Delivered (siap untuk diterima)
-        $deliveredOrders = WarehouseOrder::where('division_id', $user->division_id)
-            ->where('status', WarehouseOrderStatus::Delivered)
-            ->with(['user', 'division'])
+        // 5 Barang dengan stok terbanyak
+        $mostStockItems = Item::where('division_id', $divisionId)
+            ->orderByDesc('stock')
+            ->limit(5)
+            ->get(['id', 'name', 'stock', 'unit_of_measure']);
+
+        // 5 Barang dengan stok tersedikit
+        $leastStockItems = Item::where('division_id', $divisionId)
+            ->where('stock', '>', 0)
+            ->orderBy('stock')
+            ->limit(5)
+            ->get(['id', 'name', 'stock', 'unit_of_measure']);
+
+        // Cek apakah sudah stock opname bulan ini
+        $currentMonth = Carbon::now()->month;
+        $currentYear = Carbon::now()->year;
+        $hasStockOpnameThisMonth = StockOpname::where('division_id', $divisionId)
+            ->whereMonth('opname_date', $currentMonth)
+            ->whereYear('opname_date', $currentYear)
+            ->exists();
+
+        // Permintaan barang aktif (belum selesai)
+        $activeOrders = WarehouseOrder::where('division_id', $divisionId)
+            ->whereNotIn('status', [WarehouseOrderStatus::Finished, WarehouseOrderStatus::Rejected])
+            ->with(['user'])
             ->withCount('carts')
             ->withSum('carts', 'quantity')
             ->latest()
-            ->limit(10)
+            ->limit(5)
+            ->get();
+
+        // Transaksi barang terbaru
+        $recentTransactions = ItemTransaction::whereHas('item', function ($query) use ($divisionId) {
+                $query->where('division_id', $divisionId);
+            })
+            ->with(['item:id,name', 'user:id,name'])
+            ->latest()
+            ->limit(5)
             ->get();
 
         return Inertia::render('Inventory/Dashboard/DivisionWarehouse', [
-            'statistics' => $statistics,
-            'deliveredOrders' => $deliveredOrders,
+            'mostStockItems' => $mostStockItems,
+            'leastStockItems' => $leastStockItems,
+            'hasStockOpnameThisMonth' => $hasStockOpnameThisMonth,
+            'activeOrders' => $activeOrders,
+            'recentTransactions' => $recentTransactions,
+            'divisionName' => $user->division?->name,
         ]);
     }
 

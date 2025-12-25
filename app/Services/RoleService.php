@@ -39,25 +39,30 @@ class RoleService
                 'label' => 'Permintaan Barang',
                 'keywords' => ['permintaan', 'serah_terima_barang', 'terima_barang'],
             ],
+            'stok' => [
+                'module' => 'Sistem Manajemen Gudang',
+                'label' => 'Data Stok',
+                'keywords' => ['lihat_stok_divisi', 'lihat_semua_stok', 'konversi_stok_barang', 'pengeluaran_stok_barang'],
+            ],
             'divisi' => [
                 'module' => 'Data Master',
                 'label' => 'Divisi',
-                'keywords' => ['divisi'],
+                'keywords' => ['lihat_divisi', 'kelola_divisi'],
             ],
             'jabatan' => [
                 'module' => 'Data Master',
                 'label' => 'Jabatan',
-                'keywords' => ['jabatan'],
+                'keywords' => ['lihat_jabatan', 'kelola_jabatan'],
             ],
             'pengguna' => [
                 'module' => 'Data Master',
                 'label' => 'Pengguna',
-                'keywords' => ['pengguna'],
+                'keywords' => ['lihat_pengguna', 'kelola_pengguna'],
             ],
             'role' => [
                 'module' => 'Data Master',
                 'label' => 'Role & Permission',
-                'keywords' => ['role'],
+                'keywords' => ['lihat_role', 'kelola_role'],
             ],
             'kategori' => [
                 'module' => 'Sistem Manajemen Gudang',
@@ -67,7 +72,27 @@ class RoleService
             'barang' => [
                 'module' => 'Sistem Manajemen Gudang',
                 'label' => 'Barang',
-                'keywords' => ['barang', 'keluarkan_stok'],
+                'keywords' => ['lihat_barang', 'kelola_barang', 'konversi_barang_gudang', 'pengeluaran_barang_gudang'],
+            ],
+            'transaksi' => [
+                'module' => 'Sistem Manajemen Gudang',
+                'label' => 'Monitor Transaksi',
+                'keywords' => ['transaksi_barang'],
+            ],
+            'stok_opname' => [
+                'module' => 'Sistem Manajemen Gudang',
+                'label' => 'Stok Opname',
+                'keywords' => ['stock_opname'],
+            ],
+            'laporan' => [
+                'module' => 'Sistem Manajemen Gudang',
+                'label' => 'Laporan Gudang',
+                'keywords' => ['laporan_gudang'],
+            ],
+            'dashboard' => [
+                'module' => 'Sistem Manajemen Gudang',
+                'label' => 'Dashboard Gudang',
+                'keywords' => ['dashboard_gudang'],
             ],
         ];
 

@@ -18,11 +18,33 @@ class ReportController extends Controller
     {
         $user = $request->user();
 
-        $data = $this->reportService->getReportData($user);
+        if ($user->can('lihat_laporan_gudang_semua')) {
+            return redirect()->route('inventory.reports.all');
+        }
+
+        return redirect()->route('inventory.reports.division');
+    }
+
+    public function division(Request $request)
+    {
+        $user = $request->user();
+        $data = $this->reportService->getDivisionReportData($user);
 
         return Inertia::render('Inventory/Report/Index', [
             'reportData' => $data,
             'divisions' => Division::all(),
+            'type' => 'division'
+        ]);
+    }
+
+    public function all(Request $request)
+    {
+        $data = $this->reportService->getAllReportData();
+
+        return Inertia::render('Inventory/Report/All', [
+            'reportData' => $data,
+            'divisions' => Division::all(),
+            'type' => 'all'
         ]);
     }
 

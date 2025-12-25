@@ -9,155 +9,305 @@ use Modules\Inventory\Enums\WarehouseOrderStatus;
 use Modules\Inventory\Models\Item;
 use Modules\Inventory\Models\WarehouseOrder;
 use Modules\Inventory\Models\WarehouseOrderCart;
+use Modules\Inventory\Models\StockOpnameItem; // Added for opname variance
 
 class ReportService
 {
-    public function getReportData(User $user): array
+    public function getDivisionReportData(User $user): array
     {
+        $divisionId = $user->division_id;
+
         return [
-            'overall' => $this->getOverallData(),
-            'division' => $this->getDivisionData(),
-            'alerts' => $this->getAlertsData(),
+            'overview_stats' => $this->getOrderStatusStats($divisionId),
+            'request_trend' => $this->getMonthlyRequestTrend($divisionId),
+            'opname_variance_trend' => $this->getOpnameVarianceTrend($divisionId),
+            'item_rankings' => [
+                'most_requested' => $this->getItemRequestRankings($divisionId, 'most', 10),
+                'least_requested' => $this->getItemRequestRankings($divisionId, 'least', 10),
+                'most_outbound' => $this->getItemOutboundRankings($divisionId, 10),
+                'opname_variance_minus' => $this->getOpnameVarianceRankings($divisionId, 10),
+                'most_stock' => $this->getStockRankings($divisionId, 'most', 10),
+                'least_stock' => $this->getStockRankings($divisionId, 'least', 10),
+            ],
+            'category_rankings' => [
+                'most_requested' => $this->getCategoryRankings($divisionId, 'most', 5),
+                'least_requested' => $this->getCategoryRankings($divisionId, 'least', 5),
+                'most_outbound' => $this->getCategoryOutboundRankings($divisionId, 5),
+            ],
+            'stock_analysis' => [
+                'stagnant_stock' => $this->getStagnantStockAnalysis($divisionId, 3),
+            ],
+            'alerts' => $this->getAlertsData($divisionId),
         ];
     }
 
-    private function getOverallData(): array
+    public function getAllReportData(): array
     {
+        $divisions = Division::all();
+
         return [
-            'stock_extremes' => $this->getOverallStockExtremes(),
-            'out_of_stock' => $this->getOutOfStockItems(),
-            'request_extremes' => $this->getOverallItemRequestExtremes(),
-            'monthly_requests' => $this->getOverallMonthlyRequests(),
-            'stock_by_category' => $this->getStockByCategory(),
-            'dead_stock' => $this->getDeadStock(),
-            'stock_turnover' => $this->getStockTurnover(),
-            'order_status_stats' => $this->getOrderStatusStats(),
-            'efficiency_stats' => $this->getEfficiencyStats(),
-            'reorder_recommendations' => $this->getReorderRecommendations(),
+            // Laporan Barang (Global / Gudang Utama)
+            'global' => [
+                'overview_stats' => $this->getOrderStatusStats(null),
+                'request_trend' => $this->getMonthlyRequestTrend(null),
+                'opname_variance_trend' => $this->getOpnameVarianceTrend(null),
+                'item_rankings' => [
+                    'most_requested' => $this->getItemRequestRankings(null, 'most', 10),
+                    'least_requested' => $this->getItemRequestRankings(null, 'least', 10),
+                    'most_outbound' => $this->getItemOutboundRankings(null, 10),
+                    'opname_variance_minus' => $this->getOpnameVarianceRankings(null, 10),
+                    'most_stock' => $this->getStockRankings(null, 'most', 10),
+                    'least_stock' => $this->getStockRankings(null, 'least', 10),
+                ],
+                'category_rankings' => [
+                    'most_requested' => $this->getCategoryRankings(null, 'most', 5),
+                    'least_requested' => $this->getCategoryRankings(null, 'least', 5),
+                    'most_outbound' => $this->getCategoryOutboundRankings(null, 5),
+                ],
+                'stock_analysis' => [
+                    'stagnant_stock' => $this->getStagnantStockAnalysis(null, 3),
+                ],
+                'alerts' => $this->getAlertsData(null),
+            ],
+            // Laporan Barang Divisi
+            'per_division' => $divisions->map(function ($division) {
+                return [
+                    'division_id' => $division->id,
+                    'division_name' => $division->name,
+                    'request_trend' => $this->getMonthlyRequestTrend($division->id),
+                    'opname_variance_trend' => $this->getOpnameVarianceTrend($division->id),
+                    'item_rankings' => [
+                        'most_requested' => $this->getItemRequestRankings($division->id, 'most', 10),
+                        'least_requested' => $this->getItemRequestRankings($division->id, 'least', 10),
+                        'most_outbound' => $this->getItemOutboundRankings($division->id, 10),
+                        'opname_variance_minus' => $this->getOpnameVarianceRankings($division->id, 10),
+                        'most_stock' => $this->getStockRankings($division->id, 'most', 10),
+                        'least_stock' => $this->getStockRankings($division->id, 'least', 10),
+                    ],
+                    'category_rankings' => [
+                        'most_requested' => $this->getCategoryRankings($division->id, 'most', 5),
+                        'least_requested' => $this->getCategoryRankings($division->id, 'least', 5),
+                        'most_outbound' => $this->getCategoryOutboundRankings($division->id, 5),
+                    ],
+                    'stock_analysis' => [
+                        'stagnant_stock' => $this->getStagnantStockAnalysis($division->id, 3),
+                    ],
+                    'alerts' => $this->getAlertsData($division->id),
+                ];
+            })->toArray(),
         ];
     }
 
-    private function getDivisionData(?string $divisionId = null): array
+    private function getOrderStatusStats(?string $divisionId = null)
     {
-        return [
-            'stock_extremes' => $this->getDivisionStockExtremes($divisionId),
-            'request_extremes' => $this->getDivisionItemRequestExtremes($divisionId),
-            'monthly_item_requests' => $this->getDivisionMonthlyItemRequests($divisionId),
-            'monthly_order_requests' => $this->getDivisionMonthlyOrderRequests($divisionId),
-            'lead_time_analysis' => $this->getLeadTimeAnalysis($divisionId),
-            'top_requesters' => $this->getTopRequesters($divisionId),
-            'order_status_stats' => $this->getOrderStatusStats($divisionId),
+        $query = WarehouseOrder::query();
+        if ($divisionId) {
+            $query->where('division_id', $divisionId);
+        }
+
+        $stats = $query->select('status', DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->get()
+            ->mapWithKeys(fn ($item) => [$item->status->value => $item->total]);
+
+        // Ensure all statuses exist even with 0
+        $allStatuses = [
+            WarehouseOrderStatus::Pending->value => 0,
+            WarehouseOrderStatus::Confirmed->value => 0,
+            WarehouseOrderStatus::Accepted->value => 0,
+            WarehouseOrderStatus::Delivery->value => 0,
+            WarehouseOrderStatus::Delivered->value => 0,
+            WarehouseOrderStatus::Finished->value => 0,
+            WarehouseOrderStatus::Rejected->value => 0,
+            WarehouseOrderStatus::Revision->value => 0,
         ];
+
+        return array_merge($allStatuses, $stats->toArray());
+    }
+
+    private function getMonthlyRequestTrend(?string $divisionId)
+    {
+        $query = WarehouseOrder::query()
+            ->leftJoin('warehouse_order_carts', 'warehouse_orders.id', '=', 'warehouse_order_carts.warehouse_order_id');
+
+        if ($divisionId) {
+            $query->where('warehouse_orders.division_id', $divisionId);
+        }
+
+        return $query->select(
+            DB::raw('DATE_FORMAT(warehouse_orders.created_at, "%Y-%m") as month'),
+            DB::raw('COUNT(DISTINCT warehouse_orders.id) as total_orders'),
+            DB::raw('COALESCE(SUM(warehouse_order_carts.quantity), 0) as total_items')
+        )
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
+    }
+
+    private function getItemRequestRankings(?string $divisionId, string $type = 'most', int $limit = 10)
+    {
+        $query = WarehouseOrderCart::query()
+            ->join('warehouse_orders', 'warehouse_order_carts.warehouse_order_id', '=', 'warehouse_orders.id')
+            ->join('items', 'warehouse_order_carts.item_id', '=', 'items.id')
+            ->select('items.name', DB::raw('SUM(warehouse_order_carts.quantity) as total'))
+            ->when($divisionId, fn ($q) => $q->where('warehouse_orders.division_id', $divisionId))
+            ->groupBy('items.id', 'items.name');
+
+        if ($type === 'most') {
+            $query->orderByDesc('total');
+        } else {
+            $query->orderBy('total');
+        }
+
+        return $query->limit($limit)->get();
+    }
+
+    private function getItemOutboundRankings(?string $divisionId, int $limit = 10)
+    {
+        return WarehouseOrderCart::query()
+            ->join('warehouse_orders', 'warehouse_order_carts.warehouse_order_id', '=', 'warehouse_orders.id')
+            ->join('items', 'warehouse_order_carts.item_id', '=', 'items.id')
+            ->select('items.name', DB::raw('SUM(warehouse_order_carts.quantity) as total'))
+            ->where('warehouse_orders.status', WarehouseOrderStatus::Finished)
+            ->when($divisionId, fn ($q) => $q->where('warehouse_orders.division_id', $divisionId))
+            ->groupBy('items.id', 'items.name')
+            ->orderByDesc('total')
+            ->limit($limit)
+            ->get();
+    }
+
+    private function getOpnameVarianceRankings(?string $divisionId, int $limit = 10)
+    {
+        return StockOpnameItem::query()
+            ->join('stock_opnames', 'stock_opname_items.stock_opname_id', '=', 'stock_opnames.id')
+            ->join('items', 'stock_opname_items.item_id', '=', 'items.id')
+            ->select('items.name', DB::raw('SUM(difference) as total_difference'))
+            ->where('difference', '<', 0)
+            ->when($divisionId, fn ($q) => $q->where('stock_opnames.division_id', $divisionId))
+            ->groupBy('items.id', 'items.name')
+            ->orderBy('total_difference') // Large negative values first
+            ->limit($limit)
+            ->get();
+    }
+
+    private function getOpnameVarianceTrend(?string $divisionId)
+    {
+        return StockOpnameItem::query()
+            ->join('stock_opnames', 'stock_opname_items.stock_opname_id', '=', 'stock_opnames.id')
+            ->select(
+                DB::raw('DATE_FORMAT(stock_opnames.opname_date, "%Y-%m") as month'),
+                DB::raw('ABS(SUM(CASE WHEN difference < 0 THEN difference ELSE 0 END)) as total_minus')
+            )
+            ->when($divisionId, fn ($q) => $q->where('stock_opnames.division_id', $divisionId), fn ($q) => $q->whereNull('stock_opnames.division_id'))
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
+    }
+
+    private function getStockRankings(?string $divisionId, string $type = 'most', int $limit = 10)
+    {
+        $query = Item::query()
+            ->select('name', 'stock', 'unit_of_measure')
+            ->when($divisionId, fn ($q) => $q->where('division_id', $divisionId), fn ($q) => $q->whereNull('division_id'));
+
+        if ($type === 'most') {
+            $query->orderByDesc('stock');
+        } else {
+            $query->orderBy('stock');
+        }
+
+        return $query->limit($limit)->get();
+    }
+
+    private function getCategoryRankings(?string $divisionId, string $type = 'most', int $limit = 5)
+    {
+        $query = WarehouseOrderCart::query()
+            ->join('warehouse_orders', 'warehouse_order_carts.warehouse_order_id', '=', 'warehouse_orders.id')
+            ->join('items', 'warehouse_order_carts.item_id', '=', 'items.id')
+            ->join('category_items', 'items.category_id', '=', 'category_items.id')
+            ->select('category_items.name', DB::raw('COUNT(DISTINCT warehouse_orders.id) as total_requests'))
+            ->when($divisionId, fn ($q) => $q->where('warehouse_orders.division_id', $divisionId))
+            ->groupBy('category_items.id', 'category_items.name');
+
+        if ($type === 'most') {
+            $query->orderByDesc('total_requests');
+        } else {
+            $query->orderBy('total_requests');
+        }
+
+        return $query->limit($limit)->get();
+    }
+
+    private function getCategoryOutboundRankings(?string $divisionId, int $limit = 5)
+    {
+        return WarehouseOrderCart::query()
+            ->join('warehouse_orders', 'warehouse_order_carts.warehouse_order_id', '=', 'warehouse_orders.id')
+            ->join('items', 'warehouse_order_carts.item_id', '=', 'items.id')
+            ->join('category_items', 'items.category_id', '=', 'category_items.id')
+            ->select('category_items.name', DB::raw('SUM(warehouse_order_carts.quantity) as total_quantity'))
+            ->where('warehouse_orders.status', WarehouseOrderStatus::Finished)
+            ->when($divisionId, fn ($q) => $q->where('warehouse_orders.division_id', $divisionId))
+            ->groupBy('category_items.id', 'category_items.name')
+            ->orderByDesc('total_quantity')
+            ->limit($limit)
+            ->get();
+    }
+
+    private function getStagnantStockAnalysis(?string $divisionId, int $months = 3)
+    {
+        $dateLimit = now()->subMonths($months);
+
+        // For global (Gudang Utama): Not REQUESTED in 3 months
+        // For division: Not RELEASED/OUTBOUND (Finished) in 3 months
+        $isGlobal = is_null($divisionId);
+
+        return Item::query()
+            ->select(
+                'items.id',
+                'items.name', 
+                'items.stock', 
+                'items.unit_of_measure',
+                $isGlobal 
+                    // For global: last request date (any order status)
+                    ? DB::raw('(SELECT MAX(warehouse_orders.created_at) 
+                        FROM warehouse_order_carts 
+                        JOIN warehouse_orders ON warehouse_order_carts.warehouse_order_id = warehouse_orders.id 
+                        WHERE warehouse_order_carts.item_id = items.id 
+                    ) as last_activity_date')
+                    // For division: last outbound date (Finished orders only)
+                    : DB::raw('(SELECT MAX(warehouse_orders.created_at) 
+                        FROM warehouse_order_carts 
+                        JOIN warehouse_orders ON warehouse_order_carts.warehouse_order_id = warehouse_orders.id 
+                        WHERE warehouse_order_carts.item_id = items.id 
+                        AND warehouse_orders.status = "' . WarehouseOrderStatus::Finished->value . '"
+                    ) as last_activity_date')
+            )
+            ->where('items.stock', '>', 0)
+            ->when($divisionId, fn ($q) => $q->where('items.division_id', $divisionId), fn ($q) => $q->whereNull('items.division_id'))
+            // Exclude items created less than 3 months ago (give new items time before considering stagnant)
+            ->where('items.created_at', '<', $dateLimit)
+            ->whereNotExists(function ($query) use ($dateLimit, $isGlobal) {
+                $query->select(DB::raw(1))
+                    ->from('warehouse_order_carts')
+                    ->join('warehouse_orders', 'warehouse_order_carts.warehouse_order_id', '=', 'warehouse_orders.id')
+                    ->whereRaw('warehouse_order_carts.item_id = items.id')
+                    ->where('warehouse_orders.created_at', '>=', $dateLimit);
+                
+                // For division only: filter by Finished status (outbound)
+                if (!$isGlobal) {
+                    $query->where('warehouse_orders.status', WarehouseOrderStatus::Finished);
+                }
+            })
+            ->limit(10)
+            ->get();
     }
 
     private function getAlertsData(?string $divisionId = null): array
     {
         return [
             'critical_stock' => $this->getCriticalStock($divisionId),
-            'stock_out_frequency' => $this->getStockOutFrequency($divisionId),
             'fulfillment_rate' => $this->getFulfillmentRate($divisionId),
         ];
-    }
-
-    private function getOverallStockExtremes(): array
-    {
-        return [
-            'most' => Item::where('stock', '>', 0)->orderByDesc('stock')->limit(10)->with('division')->get(),
-            'least' => Item::where('stock', '>', 0)->orderBy('stock')->limit(10)->with('division')->get(),
-        ];
-    }
-
-    private function getOutOfStockItems()
-    {
-        return Item::where('stock', '<=', 0)->limit(10)->with('division')->get();
-    }
-
-    private function getOverallItemRequestExtremes(): array
-    {
-        $query = WarehouseOrderCart::query()
-            ->select('item_id', DB::raw('SUM(quantity) as total_quantity'))
-            ->join('warehouse_orders', 'warehouse_order_carts.warehouse_order_id', '=', 'warehouse_orders.id')
-            ->where('warehouse_orders.status', WarehouseOrderStatus::Finished)
-            ->groupBy('item_id')
-            ->with('item');
-
-        return [
-            'most' => (clone $query)->orderByDesc('total_quantity')->limit(10)->get()->map(fn ($i) => ['name' => $i->item->name ?? 'Unknown', 'total' => $i->total_quantity]),
-            'least' => (clone $query)->orderBy('total_quantity')->limit(10)->get()->map(fn ($i) => ['name' => $i->item->name ?? 'Unknown', 'total' => $i->total_quantity]),
-        ];
-    }
-
-    private function getOverallMonthlyRequests()
-    {
-        return WarehouseOrder::query()
-            ->leftJoin('warehouse_order_carts', 'warehouse_orders.id', '=', 'warehouse_order_carts.warehouse_order_id')
-            ->select(
-                DB::raw('DATE_FORMAT(warehouse_orders.created_at, "%Y-%m") as month'),
-                DB::raw('count(distinct warehouse_orders.id) as total_orders'),
-                DB::raw('coalesce(sum(warehouse_order_carts.quantity), 0) as total_items')
-            )
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get();
-    }
-
-    private function getStockByCategory()
-    {
-        return Item::query()
-            ->join('category_items', 'items.category_id', '=', 'category_items.id')
-            ->select('category_items.name', DB::raw('SUM(items.stock) as total_stock'))
-            ->groupBy('category_items.name')
-            ->get();
-    }
-
-    private function getDeadStock()
-    {
-        $threeMonthsAgo = now()->subMonths(3);
-
-        return Item::whereNull('division_id')
-            ->whereDoesntHave('warehouseOrderCarts', function ($query) use ($threeMonthsAgo) {
-                $query->whereHas('warehouseOrder', function ($q) use ($threeMonthsAgo) {
-                    $q->where('created_at', '>=', $threeMonthsAgo);
-                });
-            })
-            ->limit(20)
-            ->get();
-    }
-
-    private function getStockTurnover()
-    {
-        $result = Item::whereNull('items.division_id')
-            ->select(
-                'items.id',
-                'items.name',
-                'items.stock',
-                'items.unit_of_measure',
-                DB::raw('COALESCE(SUM(warehouse_order_carts.quantity), 0) as total_requested')
-            )
-            ->leftJoin('warehouse_order_carts', 'items.id', '=', 'warehouse_order_carts.item_id')
-            ->leftJoin('warehouse_orders', 'warehouse_order_carts.warehouse_order_id', '=', 'warehouse_orders.id')
-            ->where(function ($query) {
-                $query->where('warehouse_orders.created_at', '>=', now()->subMonths(3))
-                    ->orWhereNull('warehouse_orders.id');
-            })
-            ->groupBy('items.id', 'items.name', 'items.stock', 'items.unit_of_measure')
-            ->get()
-            ->map(function ($item) {
-                $turnoverRatio = $item->stock > 0 ? round($item->total_requested / $item->stock, 2) : 0;
-
-                return [
-                    'name' => $item->name,
-                    'stock' => $item->stock,
-                    'unit_of_measure' => $item->unit_of_measure,
-                    'total_requested' => $item->total_requested,
-                    'turnover_ratio' => $turnoverRatio,
-                ];
-            })
-            ->sortByDesc('turnover_ratio')
-            ->take(10)
-            ->values();
-
-        return $result;
     }
 
     private function getCriticalStock(?string $divisionId)
@@ -171,25 +321,7 @@ class ReportService
             $query->whereNull('division_id');
         }
 
-        return $query->with('category')->limit(20)->get();
-    }
-
-    private function getStockOutFrequency(?string $divisionId): array
-    {
-        $query = Item::where('stock', '<=', 0);
-
-        if ($divisionId) {
-            $query->where('division_id', $divisionId);
-        } else {
-            $query->whereNull('division_id');
-        }
-
-        $outOfStockItems = $query->with('category')->get();
-
-        return [
-            'out_of_stock_items' => $outOfStockItems,
-            'unfulfilled_requests' => [],
-        ];
+        return $query->with('category')->limit(10)->get();
     }
 
     private function getFulfillmentRate(?string $divisionId): array
@@ -219,231 +351,9 @@ class ReportService
         ];
     }
 
-    private function getDivisionStockExtremes(?string $divisionId): array
+    public function printExcel(User $user)
     {
-        $divisions = $divisionId ? Division::where('id', $divisionId)->get() : Division::all();
-        $result = [];
-
-        foreach ($divisions as $division) {
-            $most = Item::where('division_id', $division->id)->where('stock', '>', 0)->orderByDesc('stock')->limit(5)->get();
-            $least = Item::where('division_id', $division->id)->where('stock', '>', 0)->orderBy('stock')->limit(5)->get();
-            $outOfStock = Item::where('division_id', $division->id)->where('stock', '<=', 0)->limit(5)->get();
-
-            if ($most->isNotEmpty() || $least->isNotEmpty() || $outOfStock->isNotEmpty()) {
-                $result[] = [
-                    'division_name' => $division->name,
-                    'most' => $most,
-                    'least' => $least,
-                    'out_of_stock' => $outOfStock,
-                ];
-            }
-        }
-
-        return $result;
-    }
-
-    private function getDivisionItemRequestExtremes(?string $divisionId): array
-    {
-        $divisions = $divisionId ? Division::where('id', $divisionId)->get() : Division::all();
-        $result = [];
-
-        foreach ($divisions as $division) {
-            $query = WarehouseOrderCart::query()
-                ->select('item_id', DB::raw('SUM(quantity) as total_quantity'))
-                ->join('warehouse_orders', 'warehouse_order_carts.warehouse_order_id', '=', 'warehouse_orders.id')
-                ->where('warehouse_orders.status', WarehouseOrderStatus::Finished)
-                ->where('warehouse_orders.division_id', $division->id)
-                ->groupBy('item_id')
-                ->with('item');
-
-            $most = (clone $query)->orderByDesc('total_quantity')->limit(5)->get()->map(fn ($i) => ['name' => $i->item->name ?? 'Unknown', 'total' => $i->total_quantity]);
-            $least = (clone $query)->orderBy('total_quantity')->limit(5)->get()->map(fn ($i) => ['name' => $i->item->name ?? 'Unknown', 'total' => $i->total_quantity]);
-
-            if ($most->isNotEmpty() || $least->isNotEmpty()) {
-                $result[] = [
-                    'division_name' => $division->name,
-                    'most' => $most,
-                    'least' => $least,
-                ];
-            }
-        }
-
-        return $result;
-    }
-
-    private function getDivisionMonthlyItemRequests(?string $divisionId)
-    {
-        $query = WarehouseOrderCart::query()
-            ->join('warehouse_orders', 'warehouse_order_carts.warehouse_order_id', '=', 'warehouse_orders.id')
-            ->join('divisions', 'warehouse_orders.division_id', '=', 'divisions.id')
-            ->select(
-                'divisions.name as division_name',
-                DB::raw('DATE_FORMAT(warehouse_orders.created_at, "%Y-%m") as month'),
-                DB::raw('SUM(warehouse_order_carts.quantity) as total_quantity')
-            )
-            ->groupBy('divisions.name', 'month')
-            ->orderBy('month');
-
-        if ($divisionId) {
-            $query->where('warehouse_orders.division_id', $divisionId);
-        }
-
-        return $query->get()->groupBy('division_name');
-    }
-
-    private function getDivisionMonthlyOrderRequests(?string $divisionId)
-    {
-        $query = WarehouseOrder::query()
-            ->join('divisions', 'warehouse_orders.division_id', '=', 'divisions.id')
-            ->select(
-                'divisions.name as division_name',
-                DB::raw('DATE_FORMAT(warehouse_orders.created_at, "%Y-%m") as month'),
-                DB::raw('count(*) as total_orders')
-            )
-            ->groupBy('divisions.name', 'month')
-            ->orderBy('month');
-
-        if ($divisionId) {
-            $query->where('warehouse_orders.division_id', $divisionId);
-        }
-
-        return $query->get()->groupBy('division_name');
-    }
-
-    private function getLeadTimeAnalysis(?string $divisionId): array
-    {
-        $divisions = $divisionId ? Division::where('id', $divisionId)->get() : Division::all();
-        $result = [];
-
-        foreach ($divisions as $division) {
-            $avgLeadTime = WarehouseOrder::where('division_id', $division->id)
-                ->where('status', WarehouseOrderStatus::Finished)
-                ->whereNotNull('receipt_date')
-                ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, created_at, receipt_date)) as avg_hours')
-                ->value('avg_hours');
-
-            $avgApprovalTime = WarehouseOrder::where('division_id', $division->id)
-                ->whereNotNull('accepted_date')
-                ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, created_at, accepted_date)) as avg_hours')
-                ->value('avg_hours');
-
-            $avgDeliveryTime = WarehouseOrder::where('division_id', $division->id)
-                ->where('status', WarehouseOrderStatus::Finished)
-                ->whereNotNull('delivery_date')
-                ->whereNotNull('accepted_date')
-                ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, accepted_date, delivery_date)) as avg_hours')
-                ->value('avg_hours');
-
-            if ($avgLeadTime || $avgApprovalTime || $avgDeliveryTime) {
-                $result[] = [
-                    'division_name' => $division->name,
-                    'avg_total_lead_time' => round($avgLeadTime ?? 0, 1),
-                    'avg_approval_time' => round($avgApprovalTime ?? 0, 1),
-                    'avg_delivery_time' => round($avgDeliveryTime ?? 0, 1),
-                ];
-            }
-        }
-
-        return $result;
-    }
-
-    private function getTopRequesters(?string $divisionId): array
-    {
-        $divisions = $divisionId ? Division::where('id', $divisionId)->get() : Division::all();
-        $result = [];
-
-        foreach ($divisions as $division) {
-            $topUsers = WarehouseOrder::where('warehouse_orders.division_id', $division->id)
-                ->join('users', 'warehouse_orders.user_id', '=', 'users.id')
-                ->select(
-                    'users.name',
-                    DB::raw('COUNT(*) as total_requests'),
-                    DB::raw('SUM(CASE WHEN warehouse_orders.status = "'.WarehouseOrderStatus::Finished->value.'" THEN 1 ELSE 0 END) as finished_requests')
-                )
-                ->groupBy('users.id', 'users.name')
-                ->orderByDesc('total_requests')
-                ->limit(5)
-                ->get();
-
-            if ($topUsers->isNotEmpty()) {
-                $result[] = [
-                    'division_name' => $division->name,
-                    'top_users' => $topUsers,
-                ];
-            }
-        }
-
-        return $result;
-    }
-
-    private function getOrderStatusStats(?string $divisionId = null)
-    {
-        $query = WarehouseOrder::query()
-            ->select('status', DB::raw('count(*) as total'));
-
-        if ($divisionId) {
-            $query->where('division_id', $divisionId);
-        }
-
-        return $query->groupBy('status')->get()->mapWithKeys(function ($item) {
-            return [$item->status->value => $item->total];
-        });
-    }
-
-    private function getEfficiencyStats(?string $divisionId = null): array
-    {
-        $query = WarehouseOrder::query();
-
-        if ($divisionId) {
-            $query->where('division_id', $divisionId);
-        }
-
-        $avgLeadTime = (clone $query)->where('status', WarehouseOrderStatus::Finished)
-            ->whereNotNull('receipt_date')
-            ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, created_at, receipt_date)) as avg_hours')
-            ->value('avg_hours');
-
-        $avgApprovalTime = (clone $query)->whereNotNull('accepted_date')
-            ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, created_at, accepted_date)) as avg_hours')
-            ->value('avg_hours');
-
-        $avgDeliveryTime = (clone $query)->where('status', WarehouseOrderStatus::Finished)
-            ->whereNotNull('delivery_date')
-            ->whereNotNull('accepted_date')
-            ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, accepted_date, delivery_date)) as avg_hours')
-            ->value('avg_hours');
-
-        return [
-            'avg_total_lead_time' => round($avgLeadTime ?? 0, 1),
-            'avg_approval_time' => round($avgApprovalTime ?? 0, 1),
-            'avg_delivery_time' => round($avgDeliveryTime ?? 0, 1),
-        ];
-    }
-
-    private function getReorderRecommendations(?string $divisionId = null)
-    {
-        $query = Item::query()
-            ->select(
-                'items.id',
-                'items.name',
-                'items.stock',
-                'items.unit_of_measure',
-                DB::raw('COALESCE(SUM(warehouse_order_carts.quantity), 0) as total_requested')
-            )
-            ->leftJoin('warehouse_order_carts', 'items.id', '=', 'warehouse_order_carts.item_id')
-            ->leftJoin('warehouse_orders', 'warehouse_order_carts.warehouse_order_id', '=', 'warehouse_orders.id')
-            ->where('items.stock', '<=', 20)
-            ->where('warehouse_orders.created_at', '>=', now()->subMonths(3))
-            ->groupBy('items.id', 'items.name', 'items.stock', 'items.unit_of_measure')
-            ->orderByDesc('total_requested')
-            ->limit(10);
-
-        if ($divisionId) {
-            $query->where('items.division_id', $divisionId);
-        } else {
-            $query->whereNull('items.division_id');
-        }
-
-        return $query->get();
+        // Placeholder for excel export logic
+        return null;
     }
 }

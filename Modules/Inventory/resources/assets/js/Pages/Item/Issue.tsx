@@ -37,8 +37,8 @@ export default function ItemIssue({ item }: Props) {
     const remainingStock = item.stock - parseInt(data.quantity || '0');
 
     return (
-        <RootLayout title="Keluarkan Stok" backPath="/inventory/items">
-            <ContentCard title="Keluarkan Stok" mobileFullWidth>
+        <RootLayout title="Pengeluaran Barang Gudang" backPath="/inventory/items">
+            <ContentCard title="Pengeluaran Barang Gudang" mobileFullWidth>
                 <p className="mb-6 text-sm text-gray-500 dark:text-slate-400">
                     Keluarkan stok barang dari gudang
                 </p>
@@ -119,7 +119,7 @@ export default function ItemIssue({ item }: Props) {
                             <Button href="/inventory/items" label="Batal" variant="secondary" />
                             <Button
                                 type="submit"
-                                label="Keluarkan Stok"
+                                label="Keluarkan Barang Gudang"
                                 icon={<LogOut className="h-4 w-4" />}
                                 isLoading={processing}
                                 disabled={remainingStock < 0 || parseInt(data.quantity) <= 0 || !data.description}

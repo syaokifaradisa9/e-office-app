@@ -1,13 +1,13 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::get('/', function () {
     return redirect()->route('auth.login');
@@ -25,9 +25,7 @@ Route::prefix('auth')->name('auth.')->controller(LoginController::class)->group(
 
 Route::middleware(['auth'])->group(function () {
     // Dashboard Routes
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard.index');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
     // Division Routes
     Route::prefix('division')->name('division.')->controller(DivisionController::class)->group(function () {

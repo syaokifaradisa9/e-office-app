@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Modules\Inventory\Enums\InventoryPermission;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -15,7 +16,7 @@ class SuperAdminSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Create Permissions
+        // 1. Base Permissions
         $permissions = [
             'lihat_divisi',
             'kelola_divisi',
@@ -25,32 +26,24 @@ class SuperAdminSeeder extends Seeder
             'kelola_pengguna',
             'lihat_role',
             'kelola_role',
-            'lihat_kategori',
-            'kelola_kategori',
-            'lihat_barang',
-            'kelola_barang',
-            'konversi_barang',
-            'keluarkan_stok',
-            'lihat_permintaan_barang_divisi',
-            'lihat_semua_permintaan_barang',
-            'buat_permintaan_barang',
-            'konfirmasi_permintaan_barang',
-            'serah_terima_barang',
-            'terima_barang',
         ];
 
-        foreach ($permissions as $permission) {
+        // 2. Add all Inventory Permissions from Enum
+        $inventoryPermissions = InventoryPermission::values();
+        $allPermissions = array_unique(array_merge($permissions, $inventoryPermissions));
+
+        foreach ($allPermissions as $permission) {
             Permission::firstOrCreate([
                 'name' => $permission,
                 'guard_name' => 'web',
             ]);
         }
 
-        // 2. Create Role and Assign Permissions
+        // 3. Create Role and Assign Permissions
         $role = Role::firstOrCreate(['name' => 'superadmin', 'guard_name' => 'web']);
-        $role->syncPermissions($permissions);
+        $role->syncPermissions($allPermissions);
 
-        // 3. Create SuperAdmin User
+        // 4. Create SuperAdmin User
         $user = User::updateOrCreate(
             ['email' => 'syaokifaradisa09@gmail.com'],
             [

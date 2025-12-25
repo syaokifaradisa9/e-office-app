@@ -11,6 +11,56 @@ use Modules\Inventory\Http\Controllers\StockOpnameController;
 use Modules\Inventory\Http\Controllers\WarehouseOrderController;
 
 Route::prefix('inventory')->name('inventory.')->middleware(['auth'])->group(function () {
+    // Dashboard
+    Route::prefix('dashboard')->name('dashboard.')->controller(DashboardController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/main-warehouse', 'mainWarehouse')->name('main-warehouse');
+        Route::get('/division-warehouse', 'divisionWarehouse')->name('division-warehouse');
+    });
+
+    // Item Transactions
+    Route::prefix('transactions')->name('transactions.')->controller(ItemTransactionController::class)->group(function () {
+        Route::middleware('permission:monitor_transaksi_barang|monitor_semua_transaksi_barang')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/datatable', 'datatable')->name('datatable');
+            Route::get('/print-excel', 'printExcel')->name('print-excel');
+        });
+    });
+
+    // Stock Opname
+    Route::prefix('stock-opname')->name('stock-opname.')->controller(StockOpnameController::class)->group(function () {
+        Route::middleware('permission:lihat_stock_opname_gudang|lihat_stock_opname_divisi|lihat_semua_stock_opname')->group(function () {
+            Route::get('/datatable/{type}', 'datatable')->name('datatable');
+            Route::get('/print-excel/{type}', 'printExcel')->name('print-excel');
+            Route::get('/{type}/{stockOpname}/show', 'show')->name('show');
+            Route::get('/{type}/{stockOpname}/detail', 'show')->name('detail'); // Alias for detail link in frontend
+        });
+
+        Route::middleware('permission:kelola_stock_opname_gudang|kelola_stock_opname_divisi')->group(function () {
+            Route::get('/{type}/create', 'create')->name('create');
+            Route::post('/{type}/store', 'store')->name('store');
+            Route::get('/{type}/{stockOpname}/edit', 'edit')->name('edit');
+            Route::put('/{type}/{stockOpname}/update', 'update')->name('update');
+            Route::delete('/{type}/{stockOpname}/delete', 'delete')->name('delete');
+        });
+
+        Route::middleware('permission:konfirmasi_stock_opname')->group(function () {
+            Route::post('/{stockOpname}/confirm', 'confirm')->name('confirm'); // Frontend uses POST (router.post) baris 194
+        });
+
+        // Index route at the bottom
+        Route::get('/{type?}', 'index')->name('index');
+    });
+
+    // Reports
+    Route::prefix('reports')->name('reports.')->controller(ReportController::class)->group(function () {
+        Route::middleware('permission:lihat_laporan_gudang_divisi|lihat_laporan_gudang_semua')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/division', 'division')->name('division');
+            Route::get('/all', 'all')->name('all')->middleware('permission:lihat_laporan_gudang_semua');
+            Route::get('/print-excel', 'printExcel')->name('print-excel');
+        });
+    });
 
     // Categories
     Route::prefix('categories')->name('categories.')->controller(CategoryItemController::class)->group(function () {
@@ -37,7 +87,7 @@ Route::prefix('inventory')->name('inventory.')->middleware(['auth'])->group(func
 
     // Items
     Route::prefix('items')->name('items.')->controller(ItemController::class)->group(function () {
-        Route::middleware('permission:lihat_barang|kelola_barang|keluarkan_stok|konversi_barang')->group(function () {
+        Route::middleware('permission:lihat_barang|kelola_barang|pengeluaran_barang_gudang|konversi_barang_gudang')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/datatable', 'datatable')->name('datatable');
             Route::get('/print-excel', 'printExcel')->name('print-excel');
@@ -51,12 +101,12 @@ Route::prefix('inventory')->name('inventory.')->middleware(['auth'])->group(func
             Route::delete('/{item}/delete', 'delete')->name('delete');
         });
 
-        Route::middleware('permission:konversi_barang')->group(function () {
+        Route::middleware('permission:konversi_barang_gudang')->group(function () {
             Route::get('/{item}/convert', 'convert')->name('convert');
             Route::post('/{item}/convert', 'processConversion')->name('process-conversion');
         });
 
-        Route::middleware('permission:keluarkan_stok')->group(function () {
+        Route::middleware('permission:pengeluaran_barang_gudang')->group(function () {
             Route::get('/{item}/issue', 'issueForm')->name('issue.form');
             Route::post('/{item}/issue', 'issue')->name('issue');
         });
@@ -100,18 +150,18 @@ Route::prefix('inventory')->name('inventory.')->middleware(['auth'])->group(func
 
     // Stock Monitoring
     Route::prefix('stock-monitoring')->name('stock-monitoring.')->controller(StockMonitoringController::class)->group(function () {
-        Route::middleware('permission:monitor_stok|monitor_semua_stok')->group(function () {
+        Route::middleware('permission:lihat_stok_divisi|lihat_semua_stok')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/datatable', 'datatable')->name('datatable');
             Route::get('/print-excel', 'printExcel')->name('print-excel');
         });
 
-        Route::middleware('permission:konversi_barang')->group(function () {
+        Route::middleware('permission:konversi_stok_barang')->group(function () {
             Route::get('/{item}/convert', 'convert')->name('convert');
             Route::post('/{item}/convert', 'processConversion')->name('process-conversion');
         });
 
-        Route::middleware('permission:keluarkan_stok')->group(function () {
+        Route::middleware('permission:pengeluaran_stok_barang')->group(function () {
             Route::get('/{item}/issue', 'issueForm')->name('issue.form');
             Route::post('/{item}/issue', 'issue')->name('issue');
         });

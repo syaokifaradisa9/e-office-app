@@ -10,9 +10,10 @@ interface ContentCardProps {
     backPath?: string;
     additionalButton?: ReactNode;
     mobileFullWidth?: boolean;
+    bodyClassName?: string;
 }
 
-export default function ContentCard({ title, subtitle, children, className = '', backPath, additionalButton, mobileFullWidth }: ContentCardProps) {
+export default function ContentCard({ title, subtitle, children, className = '', backPath, additionalButton, mobileFullWidth, bodyClassName }: ContentCardProps) {
     const { component } = usePage();
     const isMobileFullWidth = mobileFullWidth ?? true;
 
@@ -51,7 +52,7 @@ export default function ContentCard({ title, subtitle, children, className = '',
                     {additionalButton && <div className="hidden md:block">{additionalButton}</div>}
                 </div>
             )}
-            <div className={`${!component?.endsWith('/Index') ? 'p-6 md:p-8' : isMobileFullWidth ? 'px-0 pb-5 pt-0 md:p-6' : 'p-4 pb-5'}`}>{children}</div>
+            <div className={bodyClassName || `${!component?.endsWith('/Index') ? 'p-6 md:p-8' : isMobileFullWidth ? 'px-0 pb-5 pt-0 md:p-6' : 'p-4 pb-5'}`}>{children}</div>
         </div>
     );
 }

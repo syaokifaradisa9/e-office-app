@@ -41,8 +41,8 @@ export default function Issue() {
     }
 
     return (
-        <RootLayout title="Keluarkan Barang">
-            <ContentCard title="Keluarkan Barang" backPath={backPath}>
+        <RootLayout title="Pengeluaran Stok Barang">
+            <ContentCard title="Pengeluaran Stok Barang" backPath={backPath}>
                 <form onSubmit={handleSubmit} className="max-w-lg space-y-6">
                     {/* Item Info */}
                     <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
@@ -99,7 +99,7 @@ export default function Issue() {
                         <Button
                             type="submit"
                             variant="danger"
-                            label={isSubmitting ? 'Memproses...' : 'Keluarkan Barang'}
+                            label={isSubmitting ? 'Memproses...' : 'Keluarkan Stok Barang'}
                             icon={<LogOut className="size-4" />}
                             disabled={isSubmitting || quantity < 1 || quantity > item.stock || !description.trim()}
                         />

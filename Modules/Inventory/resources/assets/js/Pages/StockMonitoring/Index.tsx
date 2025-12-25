@@ -69,9 +69,9 @@ interface Params {
 export default function StockMonitoringIndex() {
     const pageProps = usePage<PageProps>().props;
     const { categories = [], divisions = [], loggeduser } = pageProps;
-    const canIssue = pageProps.permissions?.includes('keluarkan_stok');
-    const canMonitorAll = pageProps.permissions?.includes('monitor_semua_stok');
-    const canConvertPermission = pageProps.permissions?.includes('konversi_barang');
+    const canIssue = pageProps.permissions?.includes('pengeluaran_stok_barang');
+    const canMonitorAll = pageProps.permissions?.includes('lihat_semua_stok');
+    const canConvertPermission = pageProps.permissions?.includes('konversi_stok_barang');
 
     const [dataTable, setDataTable] = useState<PaginationData>({
         data: [],
@@ -206,7 +206,7 @@ export default function StockMonitoringIndex() {
                         }));
                     }}
                     columns={[
-                        // Only show Division column if user has monitor_semua_stok permission
+                        // Only show Division column if user has lihat_semua_stok permission
                         ...(canMonitorAll ? [{
                             name: 'division_id',
                             header: 'Divisi',

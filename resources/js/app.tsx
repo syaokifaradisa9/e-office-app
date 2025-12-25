@@ -11,21 +11,42 @@ const pages = import.meta.glob([
     '../../Modules/*/resources/assets/js/Pages/**/*.tsx',
 ]);
 
+// Helper to normalize paths for comparison
+const normalizePath = (path: string) => path.replace(/\\/g, '/').toLowerCase();
+const pageKeys = Object.keys(pages);
+const normalizedPageKeys = pageKeys.reduce((acc, key) => {
+    acc[normalizePath(key)] = key;
+    return acc;
+}, {} as Record<string, string>);
+
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     resolve: (name) => {
-        const page = pages[`./pages/${name}.tsx`];
-
-        if (page) {
-            return resolvePageComponent(`./pages/${name}.tsx`, pages);
+        // 1. Check local pages
+        const localPath = `./pages/${name}.tsx`;
+        if (pages[localPath]) {
+            return resolvePageComponent(localPath, pages);
         }
 
-        const parts = name.split('/');
-        const module = parts[0];
-        const pagePath = parts.slice(1).join('/');
-
+        // 2. Check module pages
+        const [module, ...rest] = name.split('/');
+        const pagePath = rest.join('/');
         const fullModulePath = `../../Modules/${module}/resources/assets/js/Pages/${pagePath}.tsx`;
 
+        // Direct match
+        if (pages[fullModulePath]) {
+            return resolvePageComponent(fullModulePath, pages);
+        }
+
+        // Case-insensitive fallback
+        const normalizedTarget = normalizePath(fullModulePath);
+        const actualKey = normalizedPageKeys[normalizedTarget];
+
+        if (actualKey) {
+            return resolvePageComponent(actualKey, pages);
+        }
+
+        // Fallback to error
         return resolvePageComponent(fullModulePath, pages);
     },
     setup({ el, App, props }) {

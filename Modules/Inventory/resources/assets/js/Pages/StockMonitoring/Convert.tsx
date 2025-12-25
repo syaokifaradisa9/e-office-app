@@ -46,8 +46,8 @@ export default function Convert() {
     }
 
     return (
-        <RootLayout title="Konversi Stok">
-            <ContentCard title="Konversi Stok" backPath="/inventory/stock-monitoring">
+        <RootLayout title="Konversi Stok Barang">
+            <ContentCard title="Konversi Stok Barang" backPath="/inventory/stock-monitoring">
                 <form onSubmit={handleSubmit} className="max-w-lg space-y-6">
                     {/* Item Info */}
                     <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
@@ -102,7 +102,7 @@ export default function Convert() {
                         <Button type="button" variant="secondary" label="Batal" href="/inventory/stock-monitoring" />
                         <Button
                             type="submit"
-                            label={isSubmitting ? 'Memproses...' : 'Konversi'}
+                            label={isSubmitting ? 'Memproses...' : 'Konversi Stok Barang'}
                             icon={<RefreshCw className="size-4" />}
                             disabled={isSubmitting || quantity < 1 || quantity > item.stock}
                         />

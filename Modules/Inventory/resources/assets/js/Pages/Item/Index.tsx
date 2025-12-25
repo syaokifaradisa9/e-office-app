@@ -121,8 +121,8 @@ export default function ItemIndex() {
 
     const pageProps = usePage<PageProps>().props;
     const canManage = pageProps.permissions?.includes('kelola_barang');
-    const canIssue = pageProps.permissions?.includes('keluarkan_stok');
-    const canConvert = pageProps.permissions?.includes('konversi_barang');
+    const canIssue = pageProps.permissions?.includes('pengeluaran_barang_gudang');
+    const canConvert = pageProps.permissions?.includes('konversi_barang_gudang');
 
     return (
         <RootLayout
@@ -140,7 +140,7 @@ export default function ItemIndex() {
                 />
             }
         >
-            {!(pageProps.permissions?.includes('lihat_barang') || pageProps.permissions?.includes('kelola_barang') || pageProps.permissions?.includes('keluarkan_stok') || pageProps.permissions?.includes('konversi_barang')) ? (
+            {!(pageProps.permissions?.includes('lihat_barang') || pageProps.permissions?.includes('kelola_barang') || pageProps.permissions?.includes('pengeluaran_barang_gudang') || pageProps.permissions?.includes('konversi_barang_gudang')) ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="mb-4 rounded-full bg-red-100 p-3 text-red-600 dark:bg-red-900/30 dark:text-red-400">
                         <Package className="size-8" />

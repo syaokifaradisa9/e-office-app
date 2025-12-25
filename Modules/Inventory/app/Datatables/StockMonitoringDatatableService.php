@@ -16,8 +16,8 @@ class StockMonitoringDatatableService
 
         // Permission Logic
         if ($loggedUser->can(InventoryPermission::MonitorAllStock->value)) {
-            // Can see all items including main warehouse
-            // No filter needed - show everything
+            // Can see all items across all divisions, but exclude main warehouse (which is handled in Items menu)
+            $query->whereNotNull('division_id');
         } elseif ($loggedUser->can(InventoryPermission::MonitorStock->value)) {
             // Can only see their division's items (not main warehouse)
             $query->where('division_id', $loggedUser->division_id);
@@ -48,11 +48,7 @@ class StockMonitoringDatatableService
         }
 
         if ($request->has('division_id') && $request->division_id !== 'ALL') {
-            if ($request->division_id === 'MAIN_WAREHOUSE') {
-                $query->whereNull('division_id');
-            } else {
-                $query->where('division_id', $request->division_id);
-            }
+            $query->where('division_id', $request->division_id);
         }
 
         // Search

@@ -11,9 +11,9 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $permissions = [
-        'monitor_stok',
-        'monitor_semua_stok',
-        'keluarkan_stok',
+        'lihat_stok_divisi',
+        'lihat_semua_stok',
+        'pengeluaran_stok_barang',
     ];
 
     foreach ($permissions as $permission) {
@@ -23,7 +23,7 @@ beforeEach(function () {
 
 it('can display stock monitoring index for authorized user', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('monitor_stok');
+    $user->givePermissionTo('lihat_stok_divisi');
 
     $response = $this->actingAs($user)->get('/inventory/stock-monitoring');
 
@@ -40,7 +40,7 @@ it('denies access for unauthorized user', function () {
 
 it('returns datatable data', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('monitor_stok');
+    $user->givePermissionTo('lihat_stok_divisi');
 
     $response = $this->actingAs($user)->get('/inventory/stock-monitoring/datatable');
 
@@ -49,7 +49,7 @@ it('returns datatable data', function () {
 
 it('can view all stock with proper permission', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('monitor_semua_stok');
+    $user->givePermissionTo('lihat_semua_stok');
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
 
@@ -72,12 +72,14 @@ it('can view all stock with proper permission', function () {
     $response = $this->actingAs($user)->get('/inventory/stock-monitoring/datatable');
 
     $response->assertOk();
+    $response->assertJsonCount(1, 'data');
+    $response->assertJsonPath('data.0.name', 'Division Item');
 });
 
 it('filters stock by division for regular user', function () {
     $division = Division::factory()->create();
     $user = User::factory()->create(['division_id' => $division->id]);
-    $user->givePermissionTo('monitor_stok');
+    $user->givePermissionTo('lihat_stok_divisi');
 
     $response = $this->actingAs($user)->get('/inventory/stock-monitoring/datatable');
 
@@ -86,7 +88,7 @@ it('filters stock by division for regular user', function () {
 
 it('can issue stock from monitoring', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('keluarkan_stok');
+    $user->givePermissionTo('pengeluaran_stok_barang');
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
     $item = Item::create([
@@ -111,7 +113,7 @@ it('can issue stock from monitoring', function () {
 it('can convert item units from monitoring', function () {
     $division = Division::factory()->create();
     $user = User::factory()->create(['division_id' => $division->id]);
-    $user->givePermissionTo('monitor_stok');
+    $user->givePermissionTo('lihat_stok_divisi');
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
 
@@ -149,7 +151,7 @@ it('can convert item units from monitoring', function () {
 
 it('exports excel successfully', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('monitor_semua_stok');
+    $user->givePermissionTo('lihat_semua_stok');
 
     $response = $this->actingAs($user)->get('/inventory/stock-monitoring/print-excel');
 
@@ -158,7 +160,7 @@ it('exports excel successfully', function () {
 
 it('filters stock by max stock', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('monitor_semua_stok');
+    $user->givePermissionTo('lihat_semua_stok');
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
     $division = Division::factory()->create();
@@ -188,7 +190,7 @@ it('filters stock by max stock', function () {
 
 it('filters stock by unit of measure', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('monitor_semua_stok');
+    $user->givePermissionTo('lihat_semua_stok');
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
     $division = Division::factory()->create();
@@ -218,7 +220,7 @@ it('filters stock by unit of measure', function () {
 
 it('dapat mengurutkan stok berdasarkan nama barang', function () {
     $user = User::factory()->create();
-    $user->givePermissionTo('monitor_semua_stok');
+    $user->givePermissionTo('lihat_semua_stok');
     $division = Division::factory()->create();
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
@@ -246,12 +248,12 @@ it('dapat mengurutkan stok berdasarkan nama barang', function () {
     $response->assertJsonPath('data.1.name', 'Zebra Item');
 });
 
-it('user dengan monitor_stok hanya melihat stok dari division sendiri', function () {
+it('user dengan lihat_stok_divisi hanya melihat stok dari division sendiri', function () {
     $divisionA = Division::factory()->create();
     $divisionB = Division::factory()->create();
 
     $userA = User::factory()->create(['division_id' => $divisionA->id]);
-    $userA->givePermissionTo('monitor_stok');
+    $userA->givePermissionTo('lihat_stok_divisi');
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
 
@@ -280,12 +282,12 @@ it('user dengan monitor_stok hanya melihat stok dari division sendiri', function
     $response->assertJsonPath('data.0.name', 'Item Division A');
 });
 
-it('user dengan monitor_semua_stok melihat stok dari semua division', function () {
+it('user dengan lihat_semua_stok melihat stok dari semua division', function () {
     $divisionA = Division::factory()->create();
     $divisionB = Division::factory()->create();
 
     $user = User::factory()->create();
-    $user->givePermissionTo('monitor_semua_stok');
+    $user->givePermissionTo('lihat_semua_stok');
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
 
@@ -316,7 +318,9 @@ it('user dengan monitor_semua_stok melihat stok dari semua division', function (
     $response = $this->actingAs($user)->get('/inventory/stock-monitoring/datatable');
 
     $response->assertOk();
-    $response->assertJsonCount(3, 'data'); // Sees ALL divisions including main warehouse
+    $response->assertJsonCount(2, 'data'); // Sees ALL divisions but EXCLUDES main warehouse
+    $response->assertJsonPath('data.0.name', 'Item A');
+    $response->assertJsonPath('data.1.name', 'Item B');
 });
 
 it('user tanpa permission tidak dapat melihat stok apapun', function () {
@@ -328,10 +332,10 @@ it('user tanpa permission tidak dapat melihat stok apapun', function () {
     $response->assertForbidden();
 });
 
-it('user dengan monitor_stok tidak melihat stok gudang utama', function () {
+it('user dengan lihat_stok_divisi tidak melihat stok gudang utama', function () {
     $division = Division::factory()->create();
     $user = User::factory()->create(['division_id' => $division->id]);
-    $user->givePermissionTo('monitor_stok');
+    $user->givePermissionTo('lihat_stok_divisi');
 
     $category = CategoryItem::create(['name' => 'Test', 'is_active' => true]);
 

@@ -17,6 +17,7 @@ import {
     BarChart,
     PieChart,
     LineChart,
+    ClipboardList,
 } from 'lucide-react';
 import Button from '@/components/buttons/Button';
 import { Bar, Line, Doughnut } from 'react-chartjs-2';
@@ -47,43 +48,42 @@ ChartJS.register(
     ChartDataLabels
 );
 
-interface Item {
+interface ItemRanking {
     id?: number;
     name: string;
+    total?: number;
+    total_requested?: number;
+    total_quantity?: number;
+    total_difference?: number;
     stock?: number;
     unit_of_measure?: string;
-    total_requested?: number;
-    turnover_ratio?: number;
-    division?: { name: string };
+    total_requests?: number;
     category?: { name: string };
 }
 
-interface Division {
-    id: number;
-    name: string;
-}
-
 interface ReportData {
-    overall: {
-        stock_extremes?: { most: Item[]; least: Item[] };
-        out_of_stock?: Item[];
-        request_extremes?: { most: { name: string; total: number }[]; least: { name: string; total: number }[] };
-        monthly_requests?: { month: string; total_orders: number; total_items: number }[];
-        stock_by_category?: { name: string; total_stock: number }[];
-        dead_stock?: Item[];
-        stock_turnover?: Item[];
-        order_status_stats?: Record<string, number>;
-        efficiency_stats?: { avg_total_lead_time: number; avg_approval_time: number; avg_delivery_time: number };
-        reorder_recommendations?: Item[];
+    overview_stats: Record<string, number>;
+    request_trend: { month: string; total_orders: number; total_items: number }[];
+    opname_variance_trend: { month: string; total_minus: number }[];
+    item_rankings: {
+        most_requested: ItemRanking[];
+        least_requested: ItemRanking[];
+        most_outbound: ItemRanking[];
+        opname_variance_minus: ItemRanking[];
+        most_stock: ItemRanking[];
+        least_stock: ItemRanking[];
     };
-    division: {
-        stock_extremes?: { division_name: string; most: Item[]; least: Item[]; out_of_stock: Item[] }[];
-        lead_time_analysis?: { division_name: string; avg_total_lead_time: number; avg_approval_time: number; avg_delivery_time: number }[];
-        top_requesters?: { division_name: string; top_users: { name: string; total_requests: number; finished_requests: number }[] }[];
+    category_rankings: {
+        most_requested: ItemRanking[];
+        least_requested: ItemRanking[];
+        most_outbound: ItemRanking[];
+    };
+    stock_analysis: {
+        stagnant_stock: ItemRanking[];
     };
     alerts: {
-        critical_stock?: Item[];
-        fulfillment_rate?: {
+        critical_stock: ItemRanking[];
+        fulfillment_rate: {
             total_orders: number;
             finished_orders: number;
             pending_orders: number;
@@ -95,61 +95,103 @@ interface ReportData {
 
 interface PageProps {
     reportData: ReportData;
-    divisions: Division[];
+    divisions: { id: number; name: string }[];
     [key: string]: unknown;
 }
 
 export default function ReportIndex() {
-    const { reportData, divisions = [] } = usePage<PageProps>().props;
-    const [activeTab, setActiveTab] = useState<'overview' | 'stock' | 'orders' | 'alerts'>('overview');
+    const { reportData } = usePage<PageProps>().props;
+    const [activeTab, setActiveTab] = useState<'requests' | 'stock' | 'analysis' | 'opname'>('requests');
 
-    const { overall = {}, division = {}, alerts = {} } = reportData || {};
+    if (!reportData) return null;
+
+    const {
+        overview_stats,
+        request_trend,
+        opname_variance_trend,
+        item_rankings,
+        category_rankings,
+        stock_analysis,
+        alerts
+    } = reportData;
 
     const tabs = [
-        { id: 'overview', label: 'Overview', icon: <BarChart3 className="size-4" /> },
-        { id: 'stock', label: 'Stok', icon: <Package className="size-4" /> },
-        { id: 'orders', label: 'Order', icon: <TrendingUp className="size-4" /> },
-        { id: 'alerts', label: 'Alerts', icon: <AlertTriangle className="size-4" /> },
+        { id: 'requests', label: 'Permintaan Barang', icon: <TrendingUp className="size-4" /> },
+        { id: 'stock', label: 'Stok Barang', icon: <Package className="size-4" /> },
+        { id: 'opname', label: 'Stock Opname', icon: <ClipboardList className="size-4" /> },
+        { id: 'analysis', label: 'Stok Tertimbun', icon: <Clock className="size-4" /> },
     ];
 
     const StatCard = ({ label, value, icon, color }: { label: string; value: string | number; icon: React.ReactNode; color: string }) => (
-        <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 transition-all hover:shadow-md dark:border-slate-700 dark:bg-slate-800">
             <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{label}</p>
-                    <p className={`text-2xl font-bold ${color}`}>{value}</p>
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider dark:text-slate-400">{label}</p>
+                    <p className={`mt-1 text-2xl font-bold ${color}`}>{value}</p>
                 </div>
                 <div className={`rounded-lg p-2 ${color.replace('text-', 'bg-')}/10`}>{icon}</div>
             </div>
         </div>
     );
 
-    const ItemList = ({ title, items, showStock = true }: { title: string; items: Item[]; showStock?: boolean }) => (
-        <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
-            <h4 className="mb-3 font-medium text-slate-700 dark:text-slate-300">{title}</h4>
-            {items.length === 0 ? (
-                <p className="text-sm text-slate-500">Tidak ada data</p>
-            ) : (
-                <div className="space-y-2">
-                    {items.slice(0, 5).map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between text-sm">
-                            <span className="text-slate-600 dark:text-slate-400">{item.name}</span>
-                            {showStock && (
-                                <span className="font-medium text-slate-800 dark:text-slate-200">
-                                    {item.stock} {item.unit_of_measure}
+    const SimpleList = ({ title, items, valueField, valueSuffix = '', color = 'text-slate-700', icon, emptyMessage = "Data tidak tersedia" }: { title: string; items: ItemRanking[]; valueField: keyof ItemRanking; valueSuffix?: string; color?: string; icon?: React.ReactNode; emptyMessage?: string }) => (
+        <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
+            <h4 className="mb-4 flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200">
+                {icon}
+                {title}
+            </h4>
+            <div className="space-y-2">
+                {items?.length > 0 ? (
+                    items.map((item, idx) => (
+                        <div key={idx} className="flex items-center justify-between border-b border-slate-50 pb-2 last:border-0 last:pb-0 dark:border-slate-700/50">
+                            <div className="flex items-center gap-2">
+                                <span className="flex size-5 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-500 dark:bg-slate-700">
+                                    {idx + 1}
                                 </span>
-                            )}
+                                <span className="text-sm text-slate-600 dark:text-slate-400">
+                                    {item.name}
+                                </span>
+                            </div>
+                            <span className={`text-xs font-bold ${color}`}>
+                                {String(item[valueField] ?? 0)} {valueSuffix}
+                            </span>
                         </div>
-                    ))}
-                </div>
-            )}
+                    ))
+                ) : (
+                    <p className="py-4 text-center text-xs text-slate-400 italic">{emptyMessage}</p>
+                )}
+            </div>
         </div>
     );
+
+    const statusColors: Record<string, string> = {
+        'Pending': 'text-yellow-600',
+        'Confirmed': 'text-blue-600',
+        'Accepted': 'text-purple-600',
+        'Delivery': 'text-indigo-600',
+        'Delivered': 'text-teal-600',
+        'Finished': 'text-green-600',
+        'Rejected': 'text-red-600',
+        'Revision': 'text-orange-600',
+    };
+
+    const statusLabels: Record<string, string> = {
+        'Pending': 'Menunggu',
+        'Confirmed': 'Dikonfirmasi',
+        'Accepted': 'Diproses',
+        'Delivery': 'Dikirim',
+        'Delivered': 'Sampai',
+        'Finished': 'Selesai',
+        'Rejected': 'Ditolak',
+        'Revision': 'Revisi',
+    };
 
     return (
         <RootLayout title="Laporan Inventory">
             <ContentCard
-                title="Laporan Inventory"
+                title="Laporan Inventory & Statistik"
+                mobileFullWidth={false}
+                bodyClassName="p-6 md:p-8"
                 additionalButton={
                     <Button
                         href="/inventory/report/print-excel"
@@ -161,14 +203,14 @@ export default function ReportIndex() {
                 }
             >
                 {/* Tabs */}
-                <div className="mb-6 flex flex-wrap gap-2 border-b border-slate-200 pb-4 dark:border-slate-700">
+                <div className="mb-8 flex flex-wrap gap-2 border-b border-slate-200 pb-4 dark:border-slate-700">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${activeTab === tab.id
-                                ? 'bg-primary text-white'
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600'
+                            className={`flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-bold transition-all ${activeTab === tab.id
+                                ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                                : 'bg-slate-50 text-slate-500 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'
                                 }`}
                         >
                             {tab.icon}
@@ -177,141 +219,59 @@ export default function ReportIndex() {
                     ))}
                 </div>
 
-                {/* Overview Tab */}
-                {activeTab === 'overview' && (
-                    <div className="space-y-6">
-                        {/* Quick Stats */}
-                        <div className="grid gap-4 md:grid-cols-4">
-                            <StatCard
-                                label="Total Order"
-                                value={alerts.fulfillment_rate?.total_orders || 0}
-                                icon={<Package className="size-5" />}
-                                color="text-primary"
-                            />
-                            <StatCard
-                                label="Order Selesai"
-                                value={alerts.fulfillment_rate?.finished_orders || 0}
-                                icon={<CheckCircle className="size-5" />}
-                                color="text-green-600"
-                            />
-                            <StatCard
-                                label="Order Pending"
-                                value={alerts.fulfillment_rate?.pending_orders || 0}
-                                icon={<Clock className="size-5" />}
-                                color="text-yellow-600"
-                            />
-                            <StatCard
-                                label="Order Dikirim"
-                                value={alerts.fulfillment_rate?.delivered_orders || 0}
-                                icon={<TrendingUp className="size-5" />}
-                                color="text-blue-600"
-                            />
-                        </div>
-
-                        {/* Charts Row 1 */}
-                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                            {/* Monthly Requests Chart (Line) */}
-                            <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
-                                <h3 className="mb-4 flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200">
-                                    <BarChart className="size-5 text-primary" />
-                                    Tren Permintaan Bulanan
-                                </h3>
-                                <div className="h-64">
-                                    <Line
-                                        data={{
-                                            labels: overall.monthly_requests?.map((d) => {
-                                                const [year, month] = d.month.split('-');
-                                                return new Date(parseInt(year), parseInt(month) - 1).toLocaleDateString('id-ID', { month: 'short' });
-                                            }) || [],
-                                            datasets: [
-                                                {
-                                                    label: 'Total Order',
-                                                    data: overall.monthly_requests?.map((d) => d.total_orders) || [],
-                                                    borderColor: 'rgb(59, 130, 246)',
-                                                    backgroundColor: 'rgba(59, 130, 246, 0.5)',
-                                                    tension: 0.3,
-                                                },
-                                                {
-                                                    label: 'Total Barang',
-                                                    data: overall.monthly_requests?.map((d) => d.total_items) || [],
-                                                    borderColor: 'rgb(16, 185, 129)',
-                                                    backgroundColor: 'rgba(16, 185, 129, 0.5)',
-                                                    tension: 0.3,
-                                                },
-                                            ],
-                                        }}
-                                        options={{
-                                            responsive: true,
-                                            maintainAspectRatio: false,
-                                            plugins: {
-                                                legend: { position: 'top' },
-                                                datalabels: { display: false },
-                                            },
-                                            scales: {
-                                                y: { beginAtZero: true },
-                                            },
-                                        }}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Status Distribution Chart (Doughnut) */}
-                            <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
-                                <h3 className="mb-4 flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200">
-                                    <PieChart className="size-5 text-purple-500" />
-                                    Distribusi Status Order
-                                </h3>
-                                <div className="flex h-64 items-center justify-center">
-                                    <Doughnut
-                                        data={{
-                                            labels: Object.keys(overall.order_status_stats || {}),
-                                            datasets: [
-                                                {
-                                                    data: Object.values(overall.order_status_stats || {}),
-                                                    backgroundColor: [
-                                                        'rgb(234, 179, 8)', // pending - yellow
-                                                        'rgb(59, 130, 246)', // confirmed - blue
-                                                        'rgb(168, 85, 247)', // process/delivery - purple
-                                                        'rgb(16, 185, 129)', // delivered/finished - green
-                                                        'rgb(239, 68, 68)', // rejected - red
-                                                    ],
-                                                    borderWidth: 0,
-                                                },
-                                            ],
-                                        }}
-                                        options={{
-                                            responsive: true,
-                                            maintainAspectRatio: false,
-                                            plugins: {
-                                                legend: { position: 'right' },
-                                                datalabels: {
-                                                    color: '#fff',
-                                                    font: { weight: 'bold' },
-                                                    formatter: (value) => value > 0 ? value : '',
-                                                },
-                                            },
-                                        }}
-                                    />
-                                </div>
+                {/* Requests Tab */}
+                {activeTab === 'requests' && (
+                    <div className="space-y-8 animate-in fade-in duration-500">
+                        {/* Status Stats */}
+                        <div>
+                            <h3 className="mb-4 text-sm font-bold text-slate-400 uppercase tracking-widest">Status Permintaan Barang</h3>
+                            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8">
+                                {Object.entries(overview_stats).map(([status, count]) => (
+                                    <div key={status} className="rounded-xl border border-slate-100 bg-white p-3 text-center dark:border-slate-700 dark:bg-slate-800">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter truncate">{statusLabels[status] || status}</p>
+                                        <p className={`text-xl font-black ${statusColors[status] || 'text-slate-800'}`}>{count}</p>
+                                    </div>
+                                ))}
                             </div>
                         </div>
 
-                        {/* Charts Row 2: Most Requested Items (Bar) */}
-                        <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
-                            <h3 className="mb-4 flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200">
-                                <TrendingUp className="size-5 text-green-500" />
-                                10 Barang Paling Banyak Diminta
+                        {/* Trend Chart - Full Width */}
+                        <div className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
+                            <h3 className="mb-6 flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200 text-lg">
+                                <LineChart className="size-5 text-primary" />
+                                Tren Permintaan Barang (Januari - Desember)
                             </h3>
-                            <div className="h-72">
-                                <Bar
+                            <div className="h-[300px]">
+                                <Line
                                     data={{
-                                        labels: overall.request_extremes?.most?.map((i) => i.name.substring(0, 15) + (i.name.length > 15 ? '...' : '')) || [],
+                                        labels: Array.from({ length: 12 }, (_, i) =>
+                                            new Date(0, i).toLocaleDateString('id-ID', { month: 'long' })
+                                        ),
                                         datasets: [
                                             {
-                                                label: 'Total Quantity',
-                                                data: overall.request_extremes?.most?.map((i) => i.total) || [],
-                                                backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                                                borderRadius: 4,
+                                                label: 'Total Order',
+                                                data: Array.from({ length: 12 }, (_, i) => {
+                                                    const monthStr = `${new Date().getFullYear()}-${String(i + 1).padStart(2, '0')}`;
+                                                    const data = request_trend?.find(d => d.month === monthStr);
+                                                    return data ? data.total_orders : 0;
+                                                }),
+                                                borderColor: '#3b82f6',
+                                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                                fill: true,
+                                                tension: 0.4,
+                                                pointRadius: 4,
+                                            },
+                                            {
+                                                label: 'Total Barang',
+                                                data: Array.from({ length: 12 }, (_, i) => {
+                                                    const monthStr = `${new Date().getFullYear()}-${String(i + 1).padStart(2, '0')}`;
+                                                    const data = request_trend?.find(d => d.month === monthStr);
+                                                    return data ? data.total_items : 0;
+                                                }),
+                                                borderColor: '#10b981',
+                                                backgroundColor: 'transparent',
+                                                tension: 0.4,
+                                                pointRadius: 4,
                                             },
                                         ],
                                     }}
@@ -319,270 +279,199 @@ export default function ReportIndex() {
                                         responsive: true,
                                         maintainAspectRatio: false,
                                         plugins: {
-                                            legend: { display: false },
-                                            datalabels: {
-                                                anchor: 'end',
-                                                align: 'top',
-                                                font: { weight: 'bold' },
-                                            },
+                                            legend: { position: 'top', labels: { usePointStyle: true, font: { weight: 'bold' } } },
+                                            datalabels: { display: false },
                                         },
                                         scales: {
-                                            y: { beginAtZero: true },
-                                            x: { ticks: { maxRotation: 45, minRotation: 45 } },
-                                        },
+                                            y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { display: false }, border: { display: false } },
+                                            x: { grid: { display: false }, border: { display: false } }
+                                        }
                                     }}
                                 />
                             </div>
                         </div>
 
-                        {/* Efficiency Stats */}
-                        {overall.efficiency_stats && (
-                            <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
-                                <h3 className="mb-4 flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200">
-                                    <Clock className="size-5 text-orange-500" />
-                                    Efisiensi Waktu Rata-rata
-                                </h3>
-                                <div className="grid gap-4 md:grid-cols-3">
-                                    <div className="text-center">
-                                        <div className="text-3xl font-bold text-slate-800 dark:text-slate-200">
-                                            {overall.efficiency_stats.avg_approval_time}
-                                        </div>
-                                        <div className="text-sm text-slate-500">Jam Approval</div>
-                                    </div>
-                                    <div className="text-center">
-                                        <div className="text-3xl font-bold text-slate-800 dark:text-slate-200">
-                                            {overall.efficiency_stats.avg_delivery_time}
-                                        </div>
-                                        <div className="text-sm text-slate-500">Jam Pengiriman</div>
-                                    </div>
-                                    <div className="text-center">
-                                        <div className="text-3xl font-bold text-primary">
-                                            {overall.efficiency_stats.avg_total_lead_time}
-                                        </div>
-                                        <div className="text-sm text-slate-500">Total Lead Time (Jam)</div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        {/* Item Rankings - 3 Columns Grid */}
+                        <div className="grid gap-6 md:grid-cols-3">
+                            <SimpleList
+                                title="10 Barang Paling Banyak Diminta"
+                                icon={<TrendingUp className="size-5 text-green-500" />}
+                                items={item_rankings.most_requested || []}
+                                valueField="total"
+                                valueSuffix="qty"
+                                color="text-green-600"
+                            />
+                            <SimpleList
+                                title="10 Barang Paling Sedikit Diminta"
+                                icon={<TrendingDown className="size-5 text-red-400" />}
+                                items={item_rankings.least_requested || []}
+                                valueField="total"
+                                valueSuffix="qty"
+                                color="text-red-500"
+                            />
+                            <SimpleList
+                                title="10 Barang Paling Banyak Keluar"
+                                icon={<Package className="size-5 text-blue-500" />}
+                                items={item_rankings.most_outbound || []}
+                                valueField="total"
+                                valueSuffix="qty"
+                                color="text-blue-600"
+                            />
+                        </div>
+
+                        {/* Category Rankings - 3 Columns Grid */}
+                        <div className="grid gap-6 md:grid-cols-3">
+                            <SimpleList
+                                title="5 Kategori Paling Banyak Diminta"
+                                icon={<BarChart className="size-5 text-purple-500" />}
+                                items={category_rankings.most_requested || []}
+                                valueField="total_requests"
+                                valueSuffix="order"
+                                color="text-purple-600"
+                            />
+                            <SimpleList
+                                title="5 Kategori Paling Sedikit Diminta"
+                                icon={<BarChart className="size-5 text-slate-400" />}
+                                items={category_rankings.least_requested || []}
+                                valueField="total_requests"
+                                valueSuffix="order"
+                                color="text-slate-500"
+                            />
+                            <SimpleList
+                                title="5 Kategori Paling Banyak Keluar"
+                                icon={<BarChart className="size-5 text-emerald-500" />}
+                                items={category_rankings.most_outbound || []}
+                                valueField="total_quantity"
+                                valueSuffix="qty"
+                                color="text-emerald-600"
+                            />
+                        </div>
                     </div>
                 )}
 
                 {/* Stock Tab */}
                 {activeTab === 'stock' && (
-                    <div className="space-y-6">
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <ItemList title="Stok Terbanyak" items={overall.stock_extremes?.most || []} />
-                            <ItemList title="Stok Terendah" items={overall.stock_extremes?.least || []} />
+                    <div className="space-y-8 animate-in fade-in duration-500">
+                        <div className="grid gap-6 md:grid-cols-2">
+                            <SimpleList
+                                title="10 Barang Stok Terbanyak"
+                                icon={<Package className="size-5 text-primary" />}
+                                items={item_rankings.most_stock || []}
+                                valueField="stock"
+                                valueSuffix={item_rankings.most_stock?.[0]?.unit_of_measure}
+                                color="text-primary"
+                            />
+                            <SimpleList
+                                title="10 Barang Stok Tersedikit"
+                                icon={<AlertTriangle className="size-5 text-red-500" />}
+                                items={item_rankings.least_stock || []}
+                                valueField="stock"
+                                valueSuffix={item_rankings.least_stock?.[0]?.unit_of_measure}
+                                color="text-red-600"
+                            />
                         </div>
 
-                        {overall.out_of_stock && overall.out_of_stock.length > 0 && (
-                            <div className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-900/20">
-                                <h4 className="mb-3 flex items-center gap-2 font-medium text-red-700 dark:text-red-400">
-                                    <XCircle className="size-5" />
-                                    Barang Habis ({overall.out_of_stock.length})
-                                </h4>
-                                <div className="flex flex-wrap gap-2">
-                                    {overall.out_of_stock.map((item, idx) => (
-                                        <span
-                                            key={idx}
-                                            className="rounded-full bg-red-100 px-3 py-1 text-sm text-red-700 dark:bg-red-900/50 dark:text-red-300"
-                                        >
-                                            {item.name}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
 
-                        {/* Stock Turnover */}
-                        {overall.stock_turnover && overall.stock_turnover.length > 0 && (
-                            <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
-                                <h4 className="mb-3 flex items-center gap-2 font-medium text-slate-700 dark:text-slate-300">
-                                    <RefreshCw className="size-5 text-primary" />
-                                    Stock Turnover (3 Bulan Terakhir)
-                                </h4>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm">
-                                        <thead>
-                                            <tr className="border-b border-slate-200 dark:border-slate-700">
-                                                <th className="py-2 text-left text-slate-500">Barang</th>
-                                                <th className="py-2 text-right text-slate-500">Stok</th>
-                                                <th className="py-2 text-right text-slate-500">Diminta</th>
-                                                <th className="py-2 text-right text-slate-500">Rasio</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {overall.stock_turnover.map((item, idx) => (
-                                                <tr key={idx} className="border-b border-slate-100 dark:border-slate-800">
-                                                    <td className="py-2 text-slate-700 dark:text-slate-300">{item.name}</td>
-                                                    <td className="py-2 text-right text-slate-600 dark:text-slate-400">
-                                                        {item.stock} {item.unit_of_measure}
-                                                    </td>
-                                                    <td className="py-2 text-right text-slate-600 dark:text-slate-400">{item.total_requested}</td>
-                                                    <td className="py-2 text-right font-medium text-primary">{item.turnover_ratio}x</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Dead Stock */}
-                        {overall.dead_stock && overall.dead_stock.length > 0 && (
-                            <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900/50 dark:bg-yellow-900/20">
-                                <h4 className="mb-3 flex items-center gap-2 font-medium text-yellow-700 dark:text-yellow-400">
-                                    <AlertTriangle className="size-5" />
-                                    Dead Stock (Tidak diminta 3 bulan)
-                                </h4>
-                                <div className="flex flex-wrap gap-2">
-                                    {overall.dead_stock.map((item, idx) => (
-                                        <span
-                                            key={idx}
-                                            className="rounded-full bg-yellow-100 px-3 py-1 text-sm text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300"
-                                        >
-                                            {item.name}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
                     </div>
                 )}
 
-                {/* Orders Tab */}
-                {activeTab === 'orders' && (
-                    <div className="space-y-6">
-                        {/* Request Extremes */}
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
-                                <h4 className="mb-3 flex items-center gap-2 font-medium text-slate-700 dark:text-slate-300">
-                                    <TrendingUp className="size-5 text-green-500" />
-                                    Barang Paling Banyak Diminta
-                                </h4>
-                                {overall.request_extremes?.most?.length ? (
-                                    <div className="space-y-2">
-                                        {overall.request_extremes.most.map((item, idx) => (
-                                            <div key={idx} className="flex items-center justify-between text-sm">
-                                                <span className="text-slate-600 dark:text-slate-400">{item.name}</span>
-                                                <span className="font-medium text-green-600">{item.total} qty</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p className="text-sm text-slate-500">Tidak ada data</p>
-                                )}
-                            </div>
-                            <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
-                                <h4 className="mb-3 flex items-center gap-2 font-medium text-slate-700 dark:text-slate-300">
-                                    <TrendingDown className="size-5 text-red-500" />
-                                    Barang Paling Sedikit Diminta
-                                </h4>
-                                {overall.request_extremes?.least?.length ? (
-                                    <div className="space-y-2">
-                                        {overall.request_extremes.least.map((item, idx) => (
-                                            <div key={idx} className="flex items-center justify-between text-sm">
-                                                <span className="text-slate-600 dark:text-slate-400">{item.name}</span>
-                                                <span className="font-medium text-red-600">{item.total} qty</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p className="text-sm text-slate-500">Tidak ada data</p>
-                                )}
+                {/* Stock Opname Tab */}
+                {activeTab === 'opname' && (
+                    <div className="space-y-8 animate-in fade-in duration-500">
+                        {/* Trend Chart */}
+                        <div className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
+                            <h3 className="mb-6 flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200 text-lg">
+                                <LineChart className="size-5 text-orange-500" />
+                                Tren Selisih Stock Opname (Januari - Desember)
+                            </h3>
+                            <div className="h-[300px]">
+                                <Line
+                                    data={{
+                                        labels: Array.from({ length: 12 }, (_, i) =>
+                                            new Date(0, i).toLocaleDateString('id-ID', { month: 'long' })
+                                        ),
+                                        datasets: [
+                                            {
+                                                label: 'Total Selisih (Minus)',
+                                                data: Array.from({ length: 12 }, (_, i) => {
+                                                    const monthStr = `${new Date().getFullYear()}-${String(i + 1).padStart(2, '0')}`;
+                                                    const data = opname_variance_trend?.find(d => d.month === monthStr);
+                                                    return data ? data.total_minus : 0;
+                                                }),
+                                                borderColor: '#f97316',
+                                                backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                                                fill: true,
+                                                tension: 0.4,
+                                                pointRadius: 4,
+                                            },
+                                        ],
+                                    }}
+                                    options={{
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        scales: {
+                                            y: { beginAtZero: true }
+                                        }
+                                    }}
+                                />
                             </div>
                         </div>
 
-                        {/* Top Requesters */}
-                        {division.top_requesters && division.top_requesters.length > 0 && (
-                            <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
-                                <h4 className="mb-4 flex items-center gap-2 font-medium text-slate-700 dark:text-slate-300">
-                                    <Users className="size-5 text-primary" />
-                                    Pengguna Paling Aktif per Divisi
-                                </h4>
-                                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                    {division.top_requesters.map((div, idx) => (
-                                        <div key={idx} className="rounded-lg border border-slate-100 p-3 dark:border-slate-700">
-                                            <h5 className="mb-2 font-medium text-slate-700 dark:text-slate-300">{div.division_name}</h5>
-                                            <div className="space-y-1">
-                                                {div.top_users.slice(0, 3).map((user, uidx) => (
-                                                    <div key={uidx} className="flex items-center justify-between text-sm">
-                                                        <span className="text-slate-600 dark:text-slate-400">{user.name}</span>
-                                                        <span className="text-slate-500">{user.total_requests} order</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                        <div className="w-full">
+                            <SimpleList
+                                title="Laporan Selisih Barang Stock Opname (Minus)"
+                                icon={<AlertTriangle className="size-5 text-orange-500" />}
+                                items={item_rankings.opname_variance_minus || []}
+                                valueField="total_difference"
+                                color="text-orange-600"
+                                emptyMessage="Tidak ada selisih opname minus di divisi ini."
+                            />
+                        </div>
                     </div>
                 )}
 
-                {/* Alerts Tab */}
-                {activeTab === 'alerts' && (
-                    <div className="space-y-6">
-                        {/* Critical Stock */}
-                        {alerts.critical_stock && alerts.critical_stock.length > 0 && (
-                            <div className="rounded-xl border border-orange-200 bg-orange-50 p-4 dark:border-orange-900/50 dark:bg-orange-900/20">
-                                <h4 className="mb-3 flex items-center gap-2 font-medium text-orange-700 dark:text-orange-400">
-                                    <AlertTriangle className="size-5" />
-                                    Stok Kritis (≤10 unit)
-                                </h4>
-                                <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-                                    {alerts.critical_stock.map((item, idx) => (
-                                        <div
-                                            key={idx}
-                                            className="flex items-center justify-between rounded-lg bg-white p-3 dark:bg-slate-800"
-                                        >
-                                            <div>
-                                                <div className="font-medium text-slate-700 dark:text-slate-300">{item.name}</div>
-                                                <div className="text-xs text-slate-500">{item.category?.name}</div>
+
+
+                {/* Analysis Tab */}
+                {activeTab === 'analysis' && (
+                    <div className="space-y-8 animate-in fade-in duration-500">
+                        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 p-6 dark:border-slate-600 dark:bg-slate-900/50">
+                            <h3 className="mb-6 flex items-center gap-2 text-xl font-bold text-slate-800 dark:text-slate-200">
+                                <Clock className="size-6 text-slate-500" />
+                                Analisa Stok Barang Tertimbun
+                                <span className="ml-2 rounded-full bg-slate-200 px-3 py-1 text-xs font-normal text-slate-600 dark:bg-slate-800 dark:text-slate-400">Jarang keluar {'>'} 3 Bulan</span>
+                            </h3>
+                            {stock_analysis.stagnant_stock?.length > 0 ? (
+                                <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
+                                    {stock_analysis.stagnant_stock.map((item: any, idx: number) => (
+                                        <div key={idx} className="rounded-xl bg-white p-4 border border-slate-100 dark:bg-slate-800 dark:border-slate-700 transition-all hover:border-primary/30">
+                                            <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate" title={item.name}>{item.name}</p>
+                                            <div className="mt-3 flex items-center justify-between">
+                                                <p className="text-[10px] text-slate-400 uppercase font-bold">Stok Sisa</p>
+                                                <p className="text-xs font-black text-primary">{item.stock} <span className="text-[10px] text-slate-400 font-normal">{item.unit_of_measure}</span></p>
                                             </div>
-                                            <span className="font-bold text-orange-600">
-                                                {item.stock} {item.unit_of_measure}
-                                            </span>
+                                            <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-2 dark:border-slate-700">
+                                                <p className="text-[10px] text-slate-400 uppercase font-bold">Terakhir Keluar</p>
+                                                <p className="text-[10px] font-medium text-orange-600">
+                                                    {item.last_activity_date
+                                                        ? new Date(item.last_activity_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                                                        : 'Belum pernah'
+                                                    }
+                                                </p>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
-                            </div>
-                        )}
-
-                        {/* Reorder Recommendations */}
-                        {overall.reorder_recommendations && overall.reorder_recommendations.length > 0 && (
-                            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-900/50 dark:bg-blue-900/20">
-                                <h4 className="mb-3 flex items-center gap-2 font-medium text-blue-700 dark:text-blue-400">
-                                    <Package className="size-5" />
-                                    Rekomendasi Restock (Stok Rendah + Permintaan Tinggi)
-                                </h4>
-                                <div className="grid gap-2 md:grid-cols-2">
-                                    {overall.reorder_recommendations.map((item, idx) => (
-                                        <div
-                                            key={idx}
-                                            className="flex items-center justify-between rounded-lg bg-white p-3 dark:bg-slate-800"
-                                        >
-                                            <div>
-                                                <div className="font-medium text-slate-700 dark:text-slate-300">{item.name}</div>
-                                                <div className="text-xs text-slate-500">Diminta: {item.total_requested} dalam 3 bulan</div>
-                                            </div>
-                                            <span className="font-bold text-blue-600">
-                                                {item.stock} {item.unit_of_measure}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {(!alerts.critical_stock || alerts.critical_stock.length === 0) &&
-                            (!overall.reorder_recommendations || overall.reorder_recommendations.length === 0) && (
-                                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-green-300 bg-green-50 py-12 dark:border-green-900/50 dark:bg-green-900/20">
-                                    <CheckCircle className="mb-4 size-12 text-green-500" />
-                                    <h3 className="text-lg font-medium text-green-700 dark:text-green-400">Semua Baik!</h3>
-                                    <p className="text-sm text-green-600 dark:text-green-500">Tidak ada alert yang perlu diperhatikan</p>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-12 text-center">
+                                    <div className="rounded-full bg-green-100 p-4 dark:bg-green-900/20">
+                                        <Package className="size-8 text-green-500" />
+                                    </div>
+                                    <p className="mt-4 text-sm font-medium text-slate-600 dark:text-slate-400">Tidak ada stok tertimbun di divisi ini</p>
+                                    <p className="mt-1 text-xs text-slate-400">Semua barang aktif keluar dalam 3 bulan terakhir</p>
                                 </div>
                             )}
+                        </div>
                     </div>
                 )}
             </ContentCard>
