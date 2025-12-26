@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Save, Shield, Search, CheckSquare, Square, ChevronDown, ChevronRight, Database, Warehouse, Check, X, Filter } from 'lucide-react';
 
 import Button from '../../components/buttons/Button';
@@ -22,6 +22,8 @@ interface PermissionGroup {
     module: string;
     label: string;
     permissions: string[];
+    exclusive?: boolean;
+    columns?: number;
 }
 
 interface Props {
@@ -29,15 +31,14 @@ interface Props {
     permissionsGrouped: Record<string, PermissionGroup>;
 }
 
-// Groups where only ONE permission can be selected (radio behavior)
-const EXCLUSIVE_GROUPS = ['dashboard_gudang', 'monitoring_stok', 'monitoring_transaksi', 'laporan_gudang'];
-
 export default function RoleCreate({ role, permissionsGrouped }: Props) {
     const isEdit = !!role;
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(Object.keys(permissionsGrouped)));
+    const [activeTab, setActiveTab] = useState('');
 
-    const isExclusiveGroup = (groupKey: string) => EXCLUSIVE_GROUPS.includes(groupKey);
+    // Check if group is exclusive (only one permission can be selected)
+    const isExclusiveGroup = (groupKey: string) => permissionsGrouped[groupKey]?.exclusive === true;
 
     const { data, setData, post, put, processing, errors } = useForm({
         name: role?.name || '',
@@ -133,7 +134,6 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
         return filtered;
     }, [permissionsGrouped, searchQuery]);
 
-    // Group permissions by module
     const groupedByModule = useMemo(() => {
         const moduleGroups: Record<string, { key: string; group: PermissionGroup }[]> = {};
 
@@ -148,6 +148,16 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
         return moduleGroups;
     }, [filteredGroups]);
 
+    // Available modules for tabs
+    const availableModules = useMemo(() => Object.keys(groupedByModule), [groupedByModule]);
+
+    // Set default active tab
+    useEffect(() => {
+        if (availableModules.length > 0 && !activeTab) {
+            setActiveTab(availableModules[0]);
+        }
+    }, [availableModules, activeTab]);
+
     const totalPermissions = Object.values(permissionsGrouped).reduce((acc, g) => acc + g.permissions.length, 0);
 
     const getModuleIcon = (moduleName: string) => {
@@ -157,6 +167,8 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                 return <Database className="size-5" />;
             case 'Sistem Manajemen Gudang':
                 return <Warehouse className="size-5" />;
+            case 'Sistem Arsip Dokumen':
+                return <Shield className="size-5 text-indigo-500" />;
             default:
                 return <Shield className="size-5" />;
         }
@@ -176,9 +188,17 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                 return 'from-blue-500 to-blue-600';
             case 'Sistem Manajemen Gudang':
                 return 'from-emerald-500 to-emerald-600';
+            case 'Sistem Arsip Dokumen':
+                return 'from-indigo-500 to-indigo-600';
             default:
                 return 'from-slate-500 to-slate-600';
         }
+    };
+
+    const getGridColsClass = (columns?: number) => {
+        if (columns === 3) return 'sm:grid-cols-3';
+        if (columns === 2) return 'sm:grid-cols-2';
+        return 'sm:grid-cols-2'; // Default fallback
     };
 
     const formatPermissionLabel = (permission: string) => {
@@ -220,6 +240,20 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
             monitor_semua_transaksi_barang: 'Monitor Semua Transaksi Barang',
             lihat_laporan_gudang_divisi: 'Lihat Laporan Gudang Divisi',
             lihat_laporan_gudang_semua: 'Lihat Semua Laporan Gudang',
+            lihat_kategori_arsip: 'Lihat Data Kategori Arsip',
+            kelola_kategori_arsip: 'Kelola Data Kategori Arsip',
+            lihat_arsip_divisi: 'Lihat Arsip Divisi',
+            kelola_arsip_divisi: 'Kelola Arsip Divisi',
+            lihat_arsip_pribadi: 'Lihat Arsip Pribadi',
+            lihat_semua_arsip: 'Lihat Semua Arsip Digital',
+            kelola_semua_arsip: 'Kelola Semua Arsip Digital',
+            lihat_klasifikasi_arsip: 'Lihat Data Klasifikasi Dokumen',
+            kelola_klasifikasi_arsip: 'Kelola Data Klasifikasi Dokumen',
+            lihat_penyimpanan_divisi: 'Lihat Penyimpanan Divisi',
+            kelola_penyimpanan_divisi: 'Kelola Penyimpanan Divisi',
+            pencarian_dokumen_keseluruhan: 'Pencarian Dokumen Keseluruhan',
+            pencarian_dokumen_divisi: 'Pencarian Dokumen Divisi',
+            pencarian_dokumen_pribadi: 'Pencarian Dokumen Pribadi',
         };
 
         if (overrides[permission]) {
@@ -320,21 +354,52 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                             </div>
                         </div>
 
-                        {/* Permission Groups by Module */}
-                        <div className="space-y-10">
-                            {Object.entries(groupedByModule).map(([moduleName, groups]) => (
-                                <div key={moduleName} className="space-y-6">
-                                    {/* Module Header */}
-                                    <div className="flex items-center gap-3">
-                                        <h4 className="text-base font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                            {moduleName}
-                                        </h4>
-                                        <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700/50" />
-                                    </div>
+                        {/* Minimalist Underlined Tabs */}
+                        <div className="border-b border-slate-200 dark:border-slate-800">
+                            <div className="flex flex-wrap gap-8">
+                                {availableModules.map((module) => {
+                                    const displayLabels: Record<string, string> = {
+                                        'Data Master': 'Data Master',
+                                        'Sistem Manajemen Gudang': 'Gudang',
+                                        'Sistem Arsip Dokumen': 'Arsip',
+                                    };
+                                    const label = displayLabels[module] || module;
+                                    const isActive = activeTab === module;
 
+                                    return (
+                                        <button
+                                            key={module}
+                                            type="button"
+                                            onClick={() => setActiveTab(module)}
+                                            className={`group relative pb-4 text-sm transition-all duration-200 ${isActive
+                                                ? 'font-bold text-slate-900 dark:text-white'
+                                                : 'font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                {label}
+                                                <span className={`text-[10px] ${isActive ? 'text-primary' : 'text-slate-400'}`}>
+                                                    ({groupedByModule[module]?.length || 0})
+                                                </span>
+                                            </div>
+
+                                            {/* Active Indicator Bar */}
+                                            {isActive && (
+                                                <div className="absolute bottom-0 left-0 h-0.5 w-full bg-slate-900 dark:bg-white" />
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Permission Groups by Module */}
+                        <div className="space-y-6 min-h-[400px]">
+                            {activeTab && groupedByModule[activeTab] && (
+                                <div className="space-y-6">
                                     {/* Permission Groups Grid */}
                                     <div className="grid gap-6 md:grid-cols-2">
-                                        {groups.map(({ key, group }) => {
+                                        {groupedByModule[activeTab].map(({ key, group }) => {
                                             const isExpanded = expandedGroups.has(key);
                                             const checkedCount = group.permissions.filter((p) => data.permissions.includes(p)).length;
                                             const progress = Math.round((checkedCount / group.permissions.length) * 100);
@@ -397,7 +462,7 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                                                     {/* Card Content (Permissions Grid) */}
                                                     {isExpanded && (
                                                         <div className="border-t border-slate-100 p-4 dark:border-slate-800">
-                                                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                                            <div className={`grid grid-cols-1 gap-3 ${getGridColsClass(group.columns)}`}>
                                                                 {group.permissions.map((permission) => (
                                                                     <div
                                                                         key={permission}
@@ -439,7 +504,7 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                                         })}
                                     </div>
                                 </div>
-                            ))}
+                            )}
                         </div>
 
                         {Object.keys(filteredGroups).length === 0 && (

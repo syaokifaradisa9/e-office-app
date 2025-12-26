@@ -35,7 +35,10 @@
             "Database\\Seeders\\": "database/seeders/",
             "Modules\\Inventory\\Database\\Seeders\\": "Modules/Inventory/database/seeders/",
             "Modules\\Inventory\\Database\\Factories\\": "Modules/Inventory/database/factories/",
-            "Modules\\Inventory\\": "Modules/Inventory/app/"
+            "Modules\\Inventory\\": "Modules/Inventory/app/",
+            "Modules\\Archieve\\Database\\Seeders\\": "Modules/Archieve/database/seeders/",
+            "Modules\\Archieve\\Database\\Factories\\": "Modules/Archieve/database/factories/",
+            "Modules\\Archieve\\": "Modules/Archieve/app/"
         }
     },
     "autoload-dev": {

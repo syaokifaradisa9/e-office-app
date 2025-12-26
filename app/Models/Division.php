@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Modules\Archieve\Models\DivisionStorage;
 
 class Division extends Model
 {
@@ -29,5 +31,13 @@ class Division extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    /**
+     * Get the archive storage quota for this division
+     */
+    public function archieveStorage(): HasOne
+    {
+        return $this->hasOne(DivisionStorage::class);
     }
 }

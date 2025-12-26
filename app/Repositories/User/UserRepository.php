@@ -16,4 +16,10 @@ interface UserRepository extends BaseRepository
      * Get users by divisions
      */
     public function getByDivisions(array $divisionIds): Collection;
+
+    /**
+     * Get users by division with specific columns
+     */
+    public function getByDivisionWithColumns(int $divisionId, array $columns = ['id', 'name', 'division_id']): Collection;
 }
+
