@@ -3,18 +3,29 @@
 namespace Modules\Archieve\Services;
 
 use App\Models\User;
+use App\Models\Division;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Modules\Archieve\DataTransferObjects\StoreDocumentDTO;
+use Modules\Archieve\DataTransferObjects\SearchDocumentDTO;
 use Modules\Archieve\Models\Document;
-use Modules\Archieve\Models\DivisionStorage;
 use Modules\Archieve\Repositories\Document\DocumentRepository;
+use Modules\Archieve\Repositories\DivisionStorage\DivisionStorageRepository;
+use App\Repositories\Division\DivisionRepository;
+use App\Repositories\User\UserRepository;
 
 class DocumentService
 {
     public function __construct(
-        private DocumentRepository $repository
+        private DocumentRepository $repository,
+        private DivisionRepository $divisionRepository,
+        private UserRepository $userRepository,
+        private CategoryContextService $contextService,
+        private DocumentClassificationService $classificationService,
+        private DivisionStorageRepository $storageRepository
     ) {}
 
     public function store(StoreDocumentDTO $dto, UploadedFile $file, User $uploader): Document
@@ -110,6 +121,174 @@ class DocumentService
         });
     }
 
+    public function find(int $id): Document
+    {
+        return $this->repository->find($id);
+    }
+
+    public function getFormDivisions(User $user): Collection
+    {
+        if ($user->can('kelola_semua_arsip')) {
+            return $this->divisionRepository->all();
+        }
+        
+        $division = $this->divisionRepository->find($user->division_id);
+        return $division ? collect([$division]) : collect();
+    }
+
+    public function getFormUsers(User $user): Collection
+    {
+        if ($user->can('kelola_semua_arsip')) {
+            return $this->userRepository->all();
+        }
+        
+        return $this->userRepository->getByDivisionWithColumns($user->division_id);
+    }
+
+    public function getContextsWithCategories(): Collection
+    {
+        return $this->contextService->allWithCategories();
+    }
+
+    public function getUsersByDivision(int $divisionId): Collection
+    {
+        return $this->userRepository->getByDivisionWithColumns($divisionId, ['id', 'name']);
+    }
+
+    public function searchDocuments(SearchDocumentDTO $dto, User $user): LengthAwarePaginator
+    {
+        $query = $this->repository->searchQuery();
+        
+        $this->applySearchScope($query, $user);
+
+        // Filter by exact classification
+        if ($dto->classification_id) {
+            $query->where('classification_id', $dto->classification_id);
+        }
+
+        // Filter by categories
+        if (!empty($dto->category_ids)) {
+            $query->whereHas('categories', function ($q) use ($dto) {
+                $q->whereIn('archieve_categories.id', $dto->category_ids);
+            });
+        }
+
+        // Filter by divisions
+        if (!empty($dto->division_ids)) {
+            $query->whereHas('divisions', function ($q) use ($dto) {
+                $q->whereIn('divisions.id', $dto->division_ids);
+            });
+        }
+
+        // Search by user name
+        if ($dto->user_name) {
+            $query->whereHas('users', function ($q) use ($dto) {
+                $q->where('name', 'like', '%' . $dto->user_name . '%');
+            });
+        }
+
+        // Search by title
+        if ($dto->search) {
+            $query->where('title', 'like', '%' . $dto->search . '%');
+        }
+
+        return $query->orderBy('created_at', 'desc')->paginate($dto->per_page);
+    }
+
+    public function getFilteredClassificationsTree(SearchDocumentDTO $dto, User $user): Collection
+    {
+        // Build base query with filters
+        $query = $this->repository->searchQuery();
+        $this->applySearchScope($query, $user);
+
+        if (!empty($dto->category_ids)) {
+            $query->whereHas('categories', function ($q) use ($dto) {
+                $q->whereIn('archieve_categories.id', $dto->category_ids);
+            });
+        }
+
+        if (!empty($dto->division_ids)) {
+            $query->whereHas('divisions', function ($q) use ($dto) {
+                $q->whereIn('divisions.id', $dto->division_ids);
+            });
+        }
+
+        if ($dto->user_name) {
+            $query->whereHas('users', function ($q) use ($dto) {
+                $q->where('name', 'like', '%' . $dto->user_name . '%');
+            });
+        }
+
+        if ($dto->search) {
+            $query->where('title', 'like', '%' . $dto->search . '%');
+        }
+
+        // Get document counts per classification
+        $counts = $this->repository->getClassificationDocumentCounts($query);
+
+        // Get filtered classifications with hierarchy
+        $classifications = $this->classificationService->getAllWithHierarchy();
+
+        // Filter to only include relevant classifications and attach counts
+        return $this->filterClassificationTree($classifications, $counts);
+    }
+
+    private function applySearchScope($query, User $user): void
+    {
+        // Enforce division scope if has 'divisi' permission but not 'keseluruhan'
+        if ($user->can('pencarian_dokumen_divisi') && !$user->can('pencarian_dokumen_keseluruhan')) {
+            $query->whereHas('divisions', function ($q) use ($user) {
+                $q->where('divisions.id', $user->division_id);
+            });
+        }
+
+        // Enforce personal scope if has 'pribadi' permission but not 'keseluruhan' or 'divisi'
+        if ($user->can('pencarian_dokumen_pribadi') && 
+            !$user->can('pencarian_dokumen_keseluruhan') && 
+            !$user->can('pencarian_dokumen_divisi')) {
+            $query->whereHas('users', function ($sq) use ($user) {
+                $sq->where('users.id', $user->id);
+            });
+        }
+    }
+
+    private function filterClassificationTree(Collection $classifications, array $counts): Collection
+    {
+        $filtered = collect();
+
+        foreach ($classifications as $item) {
+            // 1. First, recursively filter the children
+            $filteredChildren = collect();
+            if ($item->children && $item->children->isNotEmpty()) {
+                $filteredChildren = $this->filterClassificationTree($item->children, $counts);
+            }
+            
+            // 2. Set the filtered children back to the model
+            $item->setRelation('children', $filteredChildren);
+            
+            // 3. Calculate direct and total docs
+            $directCount = (int)($counts[$item->id] ?? 0);
+            
+            // Use a callback to sum to ensure we get our calculated property
+            $childTotal = $filteredChildren->sum(function($child) {
+                return (int)$child->total_documents_count;
+            });
+            
+            $totalCount = $directCount + $childTotal;
+            
+            // 4. Assign counts to the model
+            $item->direct_documents_count = $directCount;
+            $item->total_documents_count = $totalCount;
+            
+            // 5. Only include this node if it actually contains documents in this branch
+            if ($totalCount > 0) {
+                $filtered->push($item);
+            }
+        }
+
+        return $filtered;
+    }
+
     /**
      * Sync divisions and allocate storage evenly.
      */
@@ -126,12 +305,8 @@ class DocumentService
         foreach ($divisionIds as $divisionId) {
             $divisionData[$divisionId] = ['allocated_size' => $allocatedSizePerDivision];
 
-            // Update division storage used_size
-            $storage = DivisionStorage::firstOrCreate(
-                ['division_id' => $divisionId],
-                ['max_size' => 0, 'used_size' => 0]
-            );
-            $storage->increment('used_size', $allocatedSizePerDivision);
+            // Update division storage used_size using repository
+            $this->storageRepository->incrementUsedSize($divisionId, $allocatedSizePerDivision);
         }
 
         $this->repository->syncDivisions($document, $divisionData);
@@ -151,10 +326,7 @@ class DocumentService
         if (!empty($oldDivisionIds)) {
             $oldAllocatedSize = (int) floor($oldFileSize / count($oldDivisionIds));
             foreach ($oldDivisionIds as $divisionId) {
-                $storage = DivisionStorage::where('division_id', $divisionId)->first();
-                if ($storage) {
-                    $storage->decrement('used_size', min($oldAllocatedSize, $storage->used_size));
-                }
+                $this->storageRepository->decrementUsedSize($divisionId, $oldAllocatedSize);
             }
         }
 
@@ -169,15 +341,7 @@ class DocumentService
     {
         foreach ($document->divisions as $division) {
             $allocatedSize = $division->pivot->allocated_size;
-            $storage = DivisionStorage::where('division_id', $division->id)->first();
-            if ($storage) {
-                $storage->decrement('used_size', min($allocatedSize, $storage->used_size));
-            }
+            $this->storageRepository->decrementUsedSize($division->id, $allocatedSize);
         }
-    }
-
-    public function find(int $id): Document
-    {
-        return $this->repository->find($id);
     }
 }

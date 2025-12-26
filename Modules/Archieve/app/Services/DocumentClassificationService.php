@@ -47,30 +47,6 @@ class DocumentClassificationService
      */
     public function getAllWithHierarchy()
     {
-        return DocumentClassification::whereNull('parent_id')
-            ->with(['children' => function ($query) {
-                $query->orderBy('code');
-            }])
-            ->orderBy('code')
-            ->get()
-            ->map(function ($classification) {
-                return $this->loadChildrenRecursively($classification);
-            });
-    }
-
-    /**
-     * Recursively load children for a classification.
-     */
-    private function loadChildrenRecursively($classification)
-    {
-        if ($classification->children->isNotEmpty()) {
-            $classification->children = $classification->children->map(function ($child) {
-                $child->load(['children' => function ($query) {
-                    $query->orderBy('code');
-                }]);
-                return $this->loadChildrenRecursively($child);
-            });
-        }
-        return $classification;
+        return $this->repository->getAllWithHierarchy();
     }
 }

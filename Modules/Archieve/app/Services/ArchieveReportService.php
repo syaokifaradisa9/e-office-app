@@ -2,16 +2,24 @@
 
 namespace Modules\Archieve\Services;
 
-use App\Models\Division;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Modules\Archieve\Models\Category;
-use Modules\Archieve\Models\Document;
-use Modules\Archieve\Models\DocumentClassification;
-use Modules\Archieve\Models\DivisionStorage;
+use Modules\Archieve\Repositories\Category\CategoryRepository;
+use Modules\Archieve\Repositories\Document\DocumentRepository;
+use Modules\Archieve\Repositories\DocumentClassification\DocumentClassificationRepository;
+use Modules\Archieve\Repositories\DivisionStorage\DivisionStorageRepository;
+use App\Repositories\Division\DivisionRepository;
 
 class ArchieveReportService
 {
+    public function __construct(
+        private DocumentRepository $documentRepository,
+        private CategoryRepository $categoryRepository,
+        private DocumentClassificationRepository $classificationRepository,
+        private DivisionStorageRepository $storageRepository,
+        private DivisionRepository $divisionRepository
+    ) {}
+
     /**
      * Get division report data
      */
@@ -20,7 +28,7 @@ class ArchieveReportService
         $divisionId = $user->division_id;
 
         return [
-            'division_name' => $user->division?->name,
+            'division_name' => $user->division_id ? $this->divisionRepository->find($user->division_id)?->name : null,
             'overview_stats' => $this->getOverviewStats($divisionId),
             'upload_trend' => $this->getMonthlyUploadTrend($divisionId),
             'category_rankings' => [
@@ -43,7 +51,7 @@ class ArchieveReportService
      */
     public function getAllReportData(): array
     {
-        $divisions = Division::all();
+        $divisions = $this->divisionRepository->all();
 
         return [
             'global' => [
@@ -60,7 +68,7 @@ class ArchieveReportService
                 'stagnant_documents' => $this->getStagnantDocuments(null, 6),
                 'top_uploaders' => $this->getTopUploaders(null, 10),
                 'largest_documents' => $this->getLargestDocuments(null, 10),
-                'division_comparison' => $this->getDivisionComparison(),
+                'division_comparison' => $this->getDivisionComparison($divisions),
             ],
             'per_division' => $divisions->map(function ($division) {
                 return [
@@ -82,20 +90,10 @@ class ArchieveReportService
      */
     private function getOverviewStats(?int $divisionId): array
     {
-        $query = Document::query();
-        
-        if ($divisionId) {
-            $query->whereHas('divisions', fn ($q) => $q->where('division_id', $divisionId));
-        }
-
-        $totalDocuments = (clone $query)->count();
-        $totalSize = (clone $query)->sum('file_size');
-        $thisMonthDocuments = (clone $query)->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
-            ->count();
-        $lastMonthDocuments = (clone $query)->whereMonth('created_at', now()->subMonth()->month)
-            ->whereYear('created_at', now()->subMonth()->year)
-            ->count();
+        $totalDocuments = $this->documentRepository->countByDivision($divisionId);
+        $totalSize = $this->documentRepository->sumSizeByDivision($divisionId);
+        $thisMonthDocuments = $this->documentRepository->countThisMonthByDivision($divisionId);
+        $lastMonthDocuments = $this->documentRepository->countLastMonthByDivision($divisionId);
 
         $growthRate = $lastMonthDocuments > 0 
             ? round((($thisMonthDocuments - $lastMonthDocuments) / $lastMonthDocuments) * 100, 1)
@@ -103,7 +101,7 @@ class ArchieveReportService
 
         $storage = null;
         if ($divisionId) {
-            $storage = DivisionStorage::where('division_id', $divisionId)->first();
+            $storage = $this->storageRepository->findByDivision($divisionId);
         }
 
         return [
@@ -126,21 +124,7 @@ class ArchieveReportService
      */
     private function getMonthlyUploadTrend(?int $divisionId): array
     {
-        $query = Document::select(
-            DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
-            DB::raw('COUNT(*) as total_documents'),
-            DB::raw('SUM(file_size) as total_size')
-        );
-
-        if ($divisionId) {
-            $query->whereHas('divisions', fn ($q) => $q->where('division_id', $divisionId));
-        }
-
-        return $query->where('created_at', '>=', now()->subMonths(12))
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get()
-            ->toArray();
+        return $this->documentRepository->getMonthlyTrend($divisionId);
     }
 
     /**
@@ -148,26 +132,7 @@ class ArchieveReportService
      */
     private function getCategoryRankings(?int $divisionId, string $type = 'most', int $limit = 10): array
     {
-        $query = Category::withCount(['documents' => function ($q) use ($divisionId) {
-            if ($divisionId) {
-                $q->whereHas('divisions', fn ($dq) => $dq->where('division_id', $divisionId));
-            }
-        }]);
-
-        if ($type === 'most') {
-            $query->orderByDesc('documents_count');
-        } else {
-            $query->orderBy('documents_count');
-        }
-
-        return $query->limit($limit)
-            ->get()
-            ->map(fn ($cat) => [
-                'id' => $cat->id,
-                'name' => $cat->name,
-                'count' => $cat->documents_count,
-            ])
-            ->toArray();
+        return $this->categoryRepository->getRankings($divisionId, $type, $limit);
     }
 
     /**
@@ -175,22 +140,7 @@ class ArchieveReportService
      */
     private function getClassificationRankings(?int $divisionId, int $limit = 10): array
     {
-        $query = DocumentClassification::withCount(['documents' => function ($q) use ($divisionId) {
-            if ($divisionId) {
-                $q->whereHas('divisions', fn ($dq) => $dq->where('division_id', $divisionId));
-            }
-        }]);
-
-        return $query->orderByDesc('documents_count')
-            ->limit($limit)
-            ->get()
-            ->map(fn ($cls) => [
-                'id' => $cls->id,
-                'code' => $cls->code,
-                'name' => $cls->name,
-                'count' => $cls->documents_count,
-            ])
-            ->toArray();
+        return $this->classificationRepository->getRankings($divisionId, $limit);
     }
 
     /**
@@ -198,30 +148,18 @@ class ArchieveReportService
      */
     private function getStorageTrend(?int $divisionId): array
     {
-        $query = Document::select(
-            DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
-            DB::raw('SUM(file_size) as cumulative_size')
-        );
-
-        if ($divisionId) {
-            $query->whereHas('divisions', fn ($q) => $q->where('division_id', $divisionId));
-        }
-
-        $monthly = $query->where('created_at', '>=', now()->subMonths(12))
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get();
+        $monthly = $this->documentRepository->getMonthlyTrend($divisionId);
 
         // Calculate cumulative
         $cumulative = 0;
-        return $monthly->map(function ($item) use (&$cumulative) {
-            $cumulative += $item->cumulative_size;
+        return array_map(function ($item) use (&$cumulative) {
+            $cumulative += $item['total_size'];
             return [
-                'month' => $item->month,
+                'month' => $item['month'],
                 'size' => $cumulative,
                 'size_label' => $this->formatBytes($cumulative),
             ];
-        })->toArray();
+        }, $monthly);
     }
 
     /**
@@ -229,23 +167,15 @@ class ArchieveReportService
      */
     private function getFileTypeDistribution(?int $divisionId): array
     {
-        $query = Document::select('file_type', DB::raw('COUNT(*) as count'), DB::raw('SUM(file_size) as total_size'));
+        $distribution = $this->documentRepository->getFileTypeDistribution($divisionId);
 
-        if ($divisionId) {
-            $query->whereHas('divisions', fn ($q) => $q->where('division_id', $divisionId));
-        }
-
-        return $query->groupBy('file_type')
-            ->orderByDesc('count')
-            ->get()
-            ->map(fn ($item) => [
-                'type' => $item->file_type ?? 'unknown',
-                'label' => $this->getFileTypeLabel($item->file_type),
-                'count' => $item->count,
-                'total_size' => $item->total_size,
-                'total_size_label' => $this->formatBytes($item->total_size),
-            ])
-            ->toArray();
+        return array_map(fn ($item) => [
+            'type' => $item['file_type'] ?? 'unknown',
+            'label' => $this->getFileTypeLabel($item['file_type']),
+            'count' => $item['count'],
+            'total_size' => $item['total_size'],
+            'total_size_label' => $this->formatBytes($item['total_size']),
+        ], $distribution);
     }
 
     /**
@@ -253,25 +183,14 @@ class ArchieveReportService
      */
     private function getStagnantDocuments(?int $divisionId, int $months = 6): array
     {
-        $dateLimit = now()->subMonths($months);
+        $documents = $this->documentRepository->getStagnantDocuments($divisionId, $months, 10);
 
-        $query = Document::select('id', 'title', 'file_size', 'created_at', 'updated_at')
-            ->where('updated_at', '<', $dateLimit);
-
-        if ($divisionId) {
-            $query->whereHas('divisions', fn ($q) => $q->where('division_id', $divisionId));
-        }
-
-        return $query->orderBy('updated_at')
-            ->limit(10)
-            ->get()
-            ->map(fn ($doc) => [
-                'id' => $doc->id,
-                'title' => $doc->title,
-                'file_size_label' => $this->formatBytes($doc->file_size),
-                'last_activity' => $doc->updated_at->diffForHumans(),
-            ])
-            ->toArray();
+        return $documents->map(fn ($doc) => [
+            'id' => $doc->id,
+            'title' => $doc->title,
+            'file_size_label' => $this->formatBytes($doc->file_size),
+            'last_activity' => $doc->updated_at->diffForHumans(),
+        ])->toArray();
     }
 
     /**
@@ -279,25 +198,15 @@ class ArchieveReportService
      */
     private function getTopUploaders(?int $divisionId, int $limit = 10): array
     {
-        $query = Document::select('uploaded_by', DB::raw('COUNT(*) as total'), DB::raw('SUM(file_size) as total_size'))
-            ->with('uploader:id,name');
+        $uploaders = $this->documentRepository->getTopUploaders($divisionId, $limit);
 
-        if ($divisionId) {
-            $query->whereHas('divisions', fn ($q) => $q->where('division_id', $divisionId));
-        }
-
-        return $query->groupBy('uploaded_by')
-            ->orderByDesc('total')
-            ->limit($limit)
-            ->get()
-            ->map(fn ($item) => [
-                'user_id' => $item->uploaded_by,
-                'user_name' => $item->uploader?->name ?? 'Unknown',
-                'total_documents' => $item->total,
-                'total_size' => $item->total_size,
-                'total_size_label' => $this->formatBytes($item->total_size),
-            ])
-            ->toArray();
+        return $uploaders->map(fn ($item) => [
+            'user_id' => $item->uploaded_by,
+            'user_name' => $item->uploader?->name ?? 'Unknown',
+            'total_documents' => $item->total,
+            'total_size' => $item->total_size,
+            'total_size_label' => $this->formatBytes($item->total_size),
+        ])->toArray();
     }
 
     /**
@@ -305,39 +214,27 @@ class ArchieveReportService
      */
     private function getLargestDocuments(?int $divisionId, int $limit = 10): array
     {
-        $query = Document::with(['classification', 'uploader'])
-            ->orderByDesc('file_size');
+        $documents = $this->documentRepository->getLargestDocuments($divisionId, $limit);
 
-        if ($divisionId) {
-            $query->whereHas('divisions', fn ($q) => $q->where('division_id', $divisionId));
-        }
-
-        return $query->limit($limit)
-            ->get()
-            ->map(fn ($doc) => [
-                'id' => $doc->id,
-                'title' => $doc->title,
-                'classification' => $doc->classification?->name,
-                'uploader' => $doc->uploader?->name,
-                'file_size' => $doc->file_size,
-                'file_size_label' => $this->formatBytes($doc->file_size),
-                'created_at' => $doc->created_at->format('d M Y'),
-            ])
-            ->toArray();
+        return $documents->map(fn ($doc) => [
+            'id' => $doc->id,
+            'title' => $doc->title,
+            'classification' => $doc->classification?->name,
+            'uploader' => $doc->uploader?->name,
+            'file_size' => $doc->file_size,
+            'file_size_label' => $this->formatBytes($doc->file_size),
+            'created_at' => $doc->created_at->format('d M Y'),
+        ])->toArray();
     }
 
     /**
      * Get division comparison
      */
-    private function getDivisionComparison(): array
+    private function getDivisionComparison($divisions): array
     {
-        $divisions = Division::all();
-
         return $divisions->map(function ($division) {
-            $documentCount = Document::whereHas('divisions', fn ($q) => $q->where('division_id', $division->id))
-                ->count();
-            $totalSize = Document::whereHas('divisions', fn ($q) => $q->where('division_id', $division->id))
-                ->sum('file_size');
+            $documentCount = $this->documentRepository->countByDivision($division->id);
+            $totalSize = $this->documentRepository->sumSizeByDivision($division->id);
 
             return [
                 'division_id' => $division->id,
@@ -347,9 +244,9 @@ class ArchieveReportService
                 'total_size_label' => $this->formatBytes($totalSize),
             ];
         })
-            ->sortByDesc('document_count')
-            ->values()
-            ->toArray();
+        ->sortByDesc('document_count')
+        ->values()
+        ->toArray();
     }
 
     /**

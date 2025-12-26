@@ -17,6 +17,12 @@ class CategoryContextService
         return $this->repository->all();
     }
 
+    public function allWithCategories()
+    {
+        return $this->repository->allWithCategories();
+    }
+
+
     public function find(int $id)
     {
         return $this->repository->find($id);

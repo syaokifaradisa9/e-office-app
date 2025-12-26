@@ -12,4 +12,8 @@ interface DocumentClassificationRepository
     public function update(DocumentClassification $classification, array $data);
     public function delete(DocumentClassification $classification);
     public function getRoots();
+    public function getRankings(?int $divisionId = null, int $limit = 10): array;
+    public function getDistribution(?int $divisionId = null, int $limit = 10): array;
+    public function getAllWithHierarchy(): \Illuminate\Database\Eloquent\Collection;
 }
+

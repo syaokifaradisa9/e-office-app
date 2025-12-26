@@ -10,15 +10,17 @@ use Modules\Archieve\DataTransferObjects\StoreCategoryDTO;
 use Modules\Archieve\Http\Requests\StoreCategoryRequest;
 use Modules\Archieve\Models\Category;
 use Modules\Archieve\Services\CategoryService;
+use Modules\Archieve\Services\CategoryContextService;
 use Modules\Archieve\Enums\ArchievePermission;
-use Modules\Archieve\Models\CategoryContext;
+
 use Illuminate\Support\Facades\Gate;
 
 class CategoryController extends Controller
 {
     public function __construct(
         private CategoryService $categoryService,
-        private CategoryDatatableService $datatableService
+        private CategoryDatatableService $datatableService,
+        private CategoryContextService $contextService
     ) {}
 
     public function index()
@@ -26,7 +28,7 @@ class CategoryController extends Controller
         Gate::authorize(ArchievePermission::ViewCategory->value);
 
         return Inertia::render('Archieve/Category/Index', [
-            'contexts' => CategoryContext::all(),
+            'contexts' => $this->contextService->all(),
         ]);
     }
 
@@ -35,9 +37,10 @@ class CategoryController extends Controller
         Gate::authorize(ArchievePermission::ManageCategory->value);
 
         return Inertia::render('Archieve/Category/Create', [
-            'contexts' => CategoryContext::all(),
+            'contexts' => $this->contextService->all(),
         ]);
     }
+
 
     public function store(StoreCategoryRequest $request)
     {
@@ -54,9 +57,10 @@ class CategoryController extends Controller
 
         return Inertia::render('Archieve/Category/Create', [
             'category' => $category,
-            'contexts' => CategoryContext::all(),
+            'contexts' => $this->contextService->all(),
         ]);
     }
+
 
     public function update(StoreCategoryRequest $request, Category $category)
     {

@@ -11,6 +11,14 @@ class EloquentCategoryContextRepository implements CategoryContextRepository
         return CategoryContext::all();
     }
 
+    public function allWithCategories()
+    {
+        return CategoryContext::with(['categories' => function ($q) {
+            $q->orderBy('name');
+        }])->orderBy('name')->get();
+    }
+
+
     public function find(int $id)
     {
         return CategoryContext::findOrFail($id);

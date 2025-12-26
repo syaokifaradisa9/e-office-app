@@ -2,17 +2,24 @@
 
 namespace Modules\Archieve\Services;
 
-use App\Models\Division;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
-use Modules\Archieve\Models\Category;
-use Modules\Archieve\Models\Document;
-use Modules\Archieve\Models\DocumentClassification;
-use Modules\Archieve\Models\DivisionStorage;
+use Modules\Archieve\Repositories\Category\CategoryRepository;
+use Modules\Archieve\Repositories\Document\DocumentRepository;
+use Modules\Archieve\Repositories\DocumentClassification\DocumentClassificationRepository;
+use Modules\Archieve\Repositories\DivisionStorage\DivisionStorageRepository;
+use App\Repositories\Division\DivisionRepository;
 use Modules\Archieve\Enums\ArchievePermission;
 
 class ArchieveDashboardService
 {
+    public function __construct(
+        private DocumentRepository $documentRepository,
+        private CategoryRepository $categoryRepository,
+        private DocumentClassificationRepository $classificationRepository,
+        private DivisionStorageRepository $storageRepository,
+        private DivisionRepository $divisionRepository
+    ) {}
+
     /**
      * Get dashboard tabs for the authenticated user
      */
@@ -41,19 +48,10 @@ class ArchieveDashboardService
     {
         $divisionId = $user->division_id;
 
-        $storage = DivisionStorage::where('division_id', $divisionId)->first();
-        $usedSize = Document::whereHas('divisions', fn ($q) => $q->where('division_id', $divisionId))
-            ->sum('file_size');
-
-        $documentCount = Document::whereHas('divisions', fn ($q) => $q->where('division_id', $divisionId))
-            ->count();
-
-        $recentDocuments = Document::whereHas('divisions', fn ($q) => $q->where('division_id', $divisionId))
-            ->with(['classification', 'uploader'])
-            ->latest()
-            ->limit(5)
-            ->get();
-
+        $storage = $this->storageRepository->findByDivision($divisionId);
+        $usedSize = $this->documentRepository->sumSizeByDivision($divisionId);
+        $documentCount = $this->documentRepository->countByDivision($divisionId);
+        $recentDocuments = $this->documentRepository->getLatestByDivision($divisionId, 5);
         $categoryDistribution = $this->getCategoryDistribution($divisionId);
 
         return [
@@ -84,18 +82,15 @@ class ArchieveDashboardService
      */
     private function getAllTab(): array
     {
-        $totalDocuments = Document::count();
-        $totalSize = Document::sum('file_size');
+        $totalDocuments = $this->documentRepository->countByDivision(null);
+        $totalSize = $this->documentRepository->sumSizeByDivision(null);
         
         $divisionStorageStatus = $this->getDivisionStorageStatus();
-        $uploadTrend = $this->getUploadTrend();
-        $classificationDistribution = $this->getClassificationDistribution();
-        $fileTypeDistribution = $this->getFileTypeDistribution();
-        $topUploaders = $this->getTopUploaders(5);
-        $recentDocuments = Document::with(['classification', 'uploader', 'divisions'])
-            ->latest()
-            ->limit(10)
-            ->get();
+        $uploadTrend = $this->documentRepository->getMonthlyTrend(null);
+        $classificationDistribution = $this->classificationRepository->getDistribution(null);
+        $fileTypeDistribution = $this->documentRepository->getFileTypeDistribution(null);
+        $topUploaders = $this->getTopUploadersFormatted(5);
+        $recentDocuments = $this->documentRepository->getLatestByDivision(null, 10);
 
         return [
             'id' => 'all',
@@ -121,14 +116,13 @@ class ArchieveDashboardService
      */
     private function getDivisionStorageStatus(): array
     {
-        $divisions = Division::with('archieveStorage')->get();
+        $divisions = $this->divisionRepository->all();
         $status = [];
 
         foreach ($divisions as $division) {
-            $usedSize = Document::whereHas('divisions', fn ($q) => $q->where('division_id', $division->id))
-                ->sum('file_size');
-
-            $maxSize = $division->archieveStorage?->max_size ?? 0;
+            $usedSize = $this->documentRepository->sumSizeByDivision($division->id);
+            $storage = $this->storageRepository->findByDivision($division->id);
+            $maxSize = $storage?->max_size ?? 0;
             $percentage = $maxSize > 0 ? round(($usedSize / $maxSize) * 100, 1) : 0;
 
             $status[] = [
@@ -147,96 +141,25 @@ class ArchieveDashboardService
     }
 
     /**
-     * Get monthly upload trend (last 12 months)
-     */
-    private function getUploadTrend(): array
-    {
-        return Document::select(
-            DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
-            DB::raw('COUNT(*) as total_documents'),
-            DB::raw('SUM(file_size) as total_size')
-        )
-            ->where('created_at', '>=', now()->subMonths(12))
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get()
-            ->toArray();
-    }
-
-    /**
      * Get category distribution for a division
      */
     private function getCategoryDistribution(?int $divisionId = null): array
     {
-        $query = Category::withCount(['documents' => function ($q) use ($divisionId) {
-            if ($divisionId) {
-                $q->whereHas('divisions', fn ($dq) => $dq->where('division_id', $divisionId));
-            }
-        }]);
-
-        return $query->having('documents_count', '>', 0)
-            ->orderByDesc('documents_count')
-            ->limit(10)
-            ->get()
-            ->map(fn ($cat) => [
-                'name' => $cat->name,
-                'count' => $cat->documents_count,
-            ])
-            ->toArray();
+        return $this->categoryRepository->getRankings($divisionId, 'most', 10);
     }
 
     /**
-     * Get classification distribution
+     * Get top uploaders formatted for dashboard
      */
-    private function getClassificationDistribution(): array
+    private function getTopUploadersFormatted(int $limit = 5): array
     {
-        return DocumentClassification::whereNull('parent_id')
-            ->withCount('documents')
-            ->having('documents_count', '>', 0)
-            ->orderByDesc('documents_count')
-            ->limit(10)
-            ->get()
-            ->map(fn ($cls) => [
-                'name' => $cls->name,
-                'code' => $cls->code,
-                'count' => $cls->documents_count,
-            ])
-            ->toArray();
-    }
-
-    /**
-     * Get file type distribution
-     */
-    private function getFileTypeDistribution(): array
-    {
-        return Document::select('file_type', DB::raw('COUNT(*) as count'))
-            ->groupBy('file_type')
-            ->orderByDesc('count')
-            ->get()
-            ->map(fn ($item) => [
-                'type' => $item->file_type ?? 'unknown',
-                'count' => $item->count,
-            ])
-            ->toArray();
-    }
-
-    /**
-     * Get top uploaders
-     */
-    private function getTopUploaders(int $limit = 5): array
-    {
-        return Document::select('uploaded_by', DB::raw('COUNT(*) as total'))
-            ->with('uploader:id,name')
-            ->groupBy('uploaded_by')
-            ->orderByDesc('total')
-            ->limit($limit)
-            ->get()
-            ->map(fn ($item) => [
-                'user_id' => $item->uploaded_by,
-                'user_name' => $item->uploader?->name ?? 'Unknown',
-                'total' => $item->total,
-            ])
-            ->toArray();
+        $uploaders = $this->documentRepository->getTopUploaders(null, $limit);
+        
+        return $uploaders->map(fn ($item) => [
+            'user_id' => $item->uploaded_by,
+            'user_name' => $item->uploader?->name ?? 'Unknown',
+            'total' => $item->total,
+        ])->toArray();
     }
 
     /**

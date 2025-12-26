@@ -31,4 +31,29 @@ class EloquentCategoryRepository implements CategoryRepository
     {
         return $category->delete();
     }
+
+    public function getRankings(?int $divisionId = null, string $type = 'most', int $limit = 10): array
+    {
+        $query = Category::withCount(['documents' => function ($q) use ($divisionId) {
+            if ($divisionId) {
+                $q->whereHas('divisions', fn ($dq) => $dq->where('division_id', $divisionId));
+            }
+        }]);
+
+        if ($type === 'most') {
+            $query->orderByDesc('documents_count');
+        } else {
+            $query->orderBy('documents_count');
+        }
+
+        return $query->limit($limit)
+            ->get()
+            ->map(fn ($cat) => [
+                'id' => $cat->id,
+                'name' => $cat->name,
+                'count' => $cat->documents_count,
+            ])
+            ->toArray();
+    }
 }
+
