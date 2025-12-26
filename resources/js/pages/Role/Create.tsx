@@ -241,6 +241,8 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
             lihat_arsip_pribadi: 'Lihat Arsip Pribadi',
             lihat_semua_arsip: 'Lihat Semua Arsip Digital',
             kelola_semua_arsip: 'Kelola Semua Arsip Digital',
+            lihat_klasifikasi_arsip: 'Lihat Data Klasifikasi Dokumen',
+            kelola_klasifikasi_arsip: 'Kelola Data Klasifikasi Dokumen',
         };
 
         if (overrides[permission]) {

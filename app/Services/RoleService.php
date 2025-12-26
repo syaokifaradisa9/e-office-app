@@ -69,6 +69,11 @@ class RoleService
                 'label' => 'Kategori Arsip',
                 'keywords' => ['kategori_arsip'],
             ],
+            'klasifikasi_arsip' => [
+                'module' => 'Sistem Arsip Dokumen',
+                'label' => 'Klasifikasi Dokumen',
+                'keywords' => ['klasifikasi_arsip'],
+            ],
             'arsip' => [
                 'module' => 'Sistem Arsip Dokumen',
                 'label' => 'Manajemen Arsip',

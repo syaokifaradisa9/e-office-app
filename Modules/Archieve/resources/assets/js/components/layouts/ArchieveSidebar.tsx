@@ -6,11 +6,12 @@ export default function ArchieveSidebar() {
     const { permissions } = usePage<{ permissions: string[] }>().props;
 
     const showKategori = permissions?.includes('lihat_kategori_arsip') || permissions?.includes('kelola_kategori_arsip');
+    const showKlasifikasi = permissions?.includes('lihat_klasifikasi_arsip') || permissions?.includes('kelola_klasifikasi_arsip');
     const showArsipDigital = permissions?.includes('lihat_semua_arsip') || permissions?.includes('kelola_semua_arsip');
     const showArsipDivisi = permissions?.includes('lihat_arsip_divisi') || permissions?.includes('kelola_arsip_divisi');
     const showArsipPribadi = permissions?.includes('lihat_arsip_pribadi');
 
-    const hasAnyArchievePermission = showKategori || showArsipDigital || showArsipDivisi || showArsipPribadi;
+    const hasAnyArchievePermission = showKategori || showKlasifikasi || showArsipDigital || showArsipDivisi || showArsipPribadi;
 
     if (!hasAnyArchievePermission) return null;
 
@@ -25,6 +26,10 @@ export default function ArchieveSidebar() {
                     <SidebarLink name="Konteks Arsip" href="/archieve/contexts" icon={Layers} />
                     <SidebarLink name="Kategori Arsip" href="/archieve/categories" icon={Folder} />
                 </>
+            )}
+
+            {showKlasifikasi && (
+                <SidebarLink name="Klasifikasi Dokumen" href="/archieve/classifications" icon={FileText} />
             )}
 
             {showArsipDigital && (
