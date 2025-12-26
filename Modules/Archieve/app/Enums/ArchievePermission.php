@@ -11,6 +11,19 @@ enum ArchievePermission: string
     case ViewDivisionStorage = 'lihat_penyimpanan_divisi';
     case ManageDivisionStorage = 'kelola_penyimpanan_divisi';
 
+    // Dashboard Permissions
+    case ViewDashboardDivision = 'lihat_dashboard_arsip_divisi';
+    case ViewDashboardAll = 'lihat_dashboard_arsip_keseluruhan';
+
+    // Report Permissions
+    case ViewReportDivision = 'lihat_laporan_arsip_divisi';
+    case ViewReportAll = 'lihat_laporan_arsip_keseluruhan';
+
+    // Document Permissions
+    case ViewDocument = 'lihat_arsip_dokumen';
+    case ManageDocument = 'kelola_arsip_dokumen';
+    case SearchDocument = 'cari_arsip_dokumen';
+
     public static function values(): array
     {
         return array_map(fn ($case) => $case->value, self::cases());

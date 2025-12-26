@@ -44,6 +44,19 @@ class PermissionSeeder extends Seeder
             'pencarian_dokumen_keseluruhan',
             'pencarian_dokumen_divisi',
             'pencarian_dokumen_pribadi',
+
+            // Archieve Dashboard Permissions
+            'lihat_dashboard_arsip_divisi',
+            'lihat_dashboard_arsip_keseluruhan',
+
+            // Archieve Report Permissions
+            'lihat_laporan_arsip_divisi',
+            'lihat_laporan_arsip_keseluruhan',
+
+            // Archieve Document Permissions
+            'lihat_arsip_dokumen',
+            'kelola_arsip_dokumen',
+            'cari_arsip_dokumen',
         ];
 
         foreach ($permissions as $permission) {

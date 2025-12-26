@@ -7,9 +7,18 @@ use Modules\Archieve\Http\Controllers\CategoryContextController;
 use Modules\Archieve\Http\Controllers\DocumentClassificationController;
 use Modules\Archieve\Http\Controllers\DivisionStorageController;
 use Modules\Archieve\Http\Controllers\DocumentController;
+use Modules\Archieve\Http\Controllers\DashboardController;
+use Modules\Archieve\Http\Controllers\ReportController;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('archieve')->name('archieve.')->group(function () {
+        // Dashboard
+        Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Reports
+        Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('reports/all', [ReportController::class, 'all'])->name('reports.all');
+
         Route::resource('categories', CategoryController::class)->except(['show']);
         Route::get('categories/datatable', [CategoryController::class, 'datatable'])->name('categories.datatable');
         Route::get('categories/print-excel', [CategoryController::class, 'printExcel'])->name('categories.print-excel');

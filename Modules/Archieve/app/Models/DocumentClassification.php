@@ -36,6 +36,14 @@ class DocumentClassification extends Model
     }
 
     /**
+     * Get documents with this classification.
+     */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Document::class, 'classification_id');
+    }
+
+    /**
      * Get the full hierarchy name or code.
      */
     public function getFullPathAttribute(): string

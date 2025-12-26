@@ -46,12 +46,12 @@ class DashboardController extends Controller
         }
 
         // ========================================
-        // Module: [Future Module]
+        // Module: Archieve
         // ========================================
-        // if (File::isDirectory(base_path('Modules/Finance'))) {
-        //     $financeService = app(\Modules\Finance\Services\FinanceDashboardService::class);
-        //     $dashboardData['finance'] = $financeService->getDashboardTabs();
-        // }
+        if (File::isDirectory(base_path('Modules/Archieve'))) {
+            $archieveService = app(\Modules\Archieve\Services\ArchieveDashboardService::class);
+            $dashboardData['archieve'] = $archieveService->getDashboardTabs();
+        }
 
         return Inertia::render('Dashboard', [
             'statistics' => $statistics,

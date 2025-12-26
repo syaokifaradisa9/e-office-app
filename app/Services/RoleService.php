@@ -99,6 +99,21 @@ class RoleService
                 'keywords' => ['pencarian_dokumen_keseluruhan', 'pencarian_dokumen_divisi', 'pencarian_dokumen_pribadi'],
                 'exclusive' => true,
             ],
+            'dashboard_arsip' => [
+                'module' => 'Sistem Arsip Dokumen',
+                'label' => 'Dashboard Arsip',
+                'keywords' => ['dashboard_arsip'],
+            ],
+            'laporan_arsip' => [
+                'module' => 'Sistem Arsip Dokumen',
+                'label' => 'Laporan Arsip',
+                'keywords' => ['laporan_arsip'],
+            ],
+            'dokumen_arsip' => [
+                'module' => 'Sistem Arsip Dokumen',
+                'label' => 'Akses Dokumen',
+                'keywords' => ['lihat_arsip_dokumen', 'kelola_arsip_dokumen', 'cari_arsip_dokumen'],
+            ],
             'kategori' => [
                 'module' => 'Sistem Manajemen Gudang',
                 'label' => 'Kategori Barang',
@@ -208,12 +223,15 @@ class RoleService
             // Custom order within "Sistem Arsip Dokumen"
             if ($a['module'] === 'Sistem Arsip Dokumen') {
                 $order = [
-                    'Kategori Arsip' => 1,
-                    'Klasifikasi Dokumen' => 2,
-                    'Penyimpanan Divisi' => 3,
-                    'Lihat Arsip Digital' => 4,
-                    'Kelola Arsip Digital' => 5,
-                    'Akses Pencarian Dokumen' => 6
+                    'Dashboard Arsip' => 1,
+                    'Kategori Arsip' => 2,
+                    'Klasifikasi Dokumen' => 3,
+                    'Penyimpanan Divisi' => 4,
+                    'Akses Dokumen' => 5,
+                    'Lihat Arsip Digital' => 6,
+                    'Kelola Arsip Digital' => 7,
+                    'Akses Pencarian Dokumen' => 8,
+                    'Laporan Arsip' => 9,
                 ];
                 
                 $aOrder = $order[$a['label']] ?? 99;
