@@ -6,8 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Modules\Archieve\Enums\CategoryType;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Modules\Archieve\Database\Factories\CategoryFactory;
+
 class Category extends Model
 {
+    use HasFactory;
+
+    protected static function newFactory(): CategoryFactory
+    {
+        return CategoryFactory::new();
+    }
+
     protected $table = 'archieve_categories';
 
     protected $fillable = [

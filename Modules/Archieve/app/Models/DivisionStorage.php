@@ -6,8 +6,18 @@ use App\Models\Division;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Modules\Archieve\Database\Factories\DivisionStorageFactory;
+
 class DivisionStorage extends Model
 {
+    use HasFactory;
+
+    protected static function newFactory(): DivisionStorageFactory
+    {
+        return DivisionStorageFactory::new();
+    }
+
     protected $table = 'archieve_division_storages';
 
     protected $fillable = [

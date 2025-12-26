@@ -70,15 +70,16 @@ class EloquentDocumentRepository implements DocumentRepository
         return Document::with(['classification', 'categories', 'divisions', 'users', 'uploader']);
     }
 
-    public function searchQuery()
+    public function searchQuery(): Builder
     {
         return Document::query();
     }
 
-    public function getClassificationDocumentCounts($query)
+    public function getClassificationDocumentCounts(Builder $query): array
     {
         return (clone $query)->select('classification_id', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
             ->groupBy('classification_id')
+            ->get()
             ->pluck('count', 'classification_id')
             ->toArray();
     }
@@ -125,8 +126,13 @@ class EloquentDocumentRepository implements DocumentRepository
 
     public function getMonthlyTrend(?int $divisionId = null, int $months = 12): array
     {
+        $driver = \Illuminate\Support\Facades\DB::getDriverName();
+        $monthFormat = $driver === 'sqlite' 
+            ? 'strftime("%Y-%m", created_at)' 
+            : 'DATE_FORMAT(created_at, "%Y-%m")';
+
         $query = Document::select(
-            \Illuminate\Support\Facades\DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
+            \Illuminate\Support\Facades\DB::raw("$monthFormat as month"),
             \Illuminate\Support\Facades\DB::raw('COUNT(*) as total_documents'),
             \Illuminate\Support\Facades\DB::raw('SUM(file_size) as total_size')
         );

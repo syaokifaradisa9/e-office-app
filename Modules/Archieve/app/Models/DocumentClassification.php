@@ -6,8 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Modules\Archieve\Database\Factories\DocumentClassificationFactory;
+
 class DocumentClassification extends Model
 {
+    use HasFactory;
+
+    protected static function newFactory(): DocumentClassificationFactory
+    {
+        return DocumentClassificationFactory::new();
+    }
+
     protected $table = 'archieve_document_classifications';
 
     protected $fillable = [

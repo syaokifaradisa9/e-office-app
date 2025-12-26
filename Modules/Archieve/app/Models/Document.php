@@ -8,8 +8,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Modules\Archieve\Database\Factories\DocumentFactory;
+
 class Document extends Model
 {
+    use HasFactory;
+
+    protected static function newFactory(): DocumentFactory
+    {
+        return DocumentFactory::new();
+    }
+
     protected $table = 'archieve_documents';
 
     protected $fillable = [
