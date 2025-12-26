@@ -38,7 +38,10 @@
             "Modules\\Inventory\\": "Modules/Inventory/app/",
             "Modules\\Archieve\\Database\\Seeders\\": "Modules/Archieve/database/seeders/",
             "Modules\\Archieve\\Database\\Factories\\": "Modules/Archieve/database/factories/",
-            "Modules\\Archieve\\": "Modules/Archieve/app/"
+            "Modules\\Archieve\\": "Modules/Archieve/app/",
+            "Modules\\VisitorManagement\\Database\\Seeders\\": "Modules/VisitorManagement/database/seeders/",
+            "Modules\\VisitorManagement\\Database\\Factories\\": "Modules/VisitorManagement/database/factories/",
+            "Modules\\VisitorManagement\\": "Modules/VisitorManagement/app/"
         }
     },
     "autoload-dev": {
