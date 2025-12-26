@@ -74,6 +74,11 @@ class RoleService
                 'label' => 'Klasifikasi Dokumen',
                 'keywords' => ['klasifikasi_arsip'],
             ],
+            'penyimpanan_divisi' => [
+                'module' => 'Sistem Arsip Dokumen',
+                'label' => 'Penyimpanan Divisi',
+                'keywords' => ['penyimpanan_divisi'],
+            ],
             'arsip' => [
                 'module' => 'Sistem Arsip Dokumen',
                 'label' => 'Manajemen Arsip',

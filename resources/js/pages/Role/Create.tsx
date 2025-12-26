@@ -243,6 +243,8 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
             kelola_semua_arsip: 'Kelola Semua Arsip Digital',
             lihat_klasifikasi_arsip: 'Lihat Data Klasifikasi Dokumen',
             kelola_klasifikasi_arsip: 'Kelola Data Klasifikasi Dokumen',
+            lihat_penyimpanan_divisi: 'Lihat Penyimpanan Divisi',
+            kelola_penyimpanan_divisi: 'Kelola Penyimpanan Divisi',
         };
 
         if (overrides[permission]) {

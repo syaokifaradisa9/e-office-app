@@ -52,6 +52,11 @@ class ArchieveServiceProvider extends ServiceProvider
             \Modules\Archieve\Repositories\DocumentClassification\DocumentClassificationRepository::class,
             \Modules\Archieve\Repositories\DocumentClassification\EloquentDocumentClassificationRepository::class
         );
+
+        $this->app->singleton(
+            \Modules\Archieve\Repositories\DivisionStorage\DivisionStorageRepository::class,
+            \Modules\Archieve\Repositories\DivisionStorage\EloquentDivisionStorageRepository::class
+        );
     }
 
     /**

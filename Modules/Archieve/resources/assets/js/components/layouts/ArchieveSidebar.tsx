@@ -1,4 +1,4 @@
-import { Folder, Shield, FileText, User, Users, Layers } from 'lucide-react';
+import { Folder, Shield, FileText, User, Users, Layers, HardDrive } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
 import SidebarLink from '@/components/layouts/SideBarLink';
 
@@ -7,11 +7,12 @@ export default function ArchieveSidebar() {
 
     const showKategori = permissions?.includes('lihat_kategori_arsip') || permissions?.includes('kelola_kategori_arsip');
     const showKlasifikasi = permissions?.includes('lihat_klasifikasi_arsip') || permissions?.includes('kelola_klasifikasi_arsip');
+    const showPenyimpanan = permissions?.includes('lihat_penyimpanan_divisi') || permissions?.includes('kelola_penyimpanan_divisi');
     const showArsipDigital = permissions?.includes('lihat_semua_arsip') || permissions?.includes('kelola_semua_arsip');
     const showArsipDivisi = permissions?.includes('lihat_arsip_divisi') || permissions?.includes('kelola_arsip_divisi');
     const showArsipPribadi = permissions?.includes('lihat_arsip_pribadi');
 
-    const hasAnyArchievePermission = showKategori || showKlasifikasi || showArsipDigital || showArsipDivisi || showArsipPribadi;
+    const hasAnyArchievePermission = showKategori || showKlasifikasi || showPenyimpanan || showArsipDigital || showArsipDivisi || showArsipPribadi;
 
     if (!hasAnyArchievePermission) return null;
 
@@ -30,6 +31,10 @@ export default function ArchieveSidebar() {
 
             {showKlasifikasi && (
                 <SidebarLink name="Klasifikasi Dokumen" href="/archieve/classifications" icon={FileText} />
+            )}
+
+            {showPenyimpanan && (
+                <SidebarLink name="Penyimpanan Divisi" href="/archieve/division-storages" icon={HardDrive} />
             )}
 
             {showArsipDigital && (
