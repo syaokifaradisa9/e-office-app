@@ -3,7 +3,7 @@
 namespace Modules\Archieve\Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Modules\Archieve\Enums\ArchievePermission;
+use Modules\Archieve\Enums\ArchieveUserPermission;
 use Spatie\Permission\Models\Permission;
 
 class ArchievePermissionSeeder extends Seeder
@@ -13,7 +13,7 @@ class ArchievePermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        $permissions = ArchievePermission::values();
+        $permissions = ArchieveUserPermission::values();
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate([

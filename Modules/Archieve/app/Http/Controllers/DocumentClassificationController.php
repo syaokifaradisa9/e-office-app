@@ -10,7 +10,7 @@ use Modules\Archieve\DataTransferObjects\StoreDocumentClassificationDTO;
 use Modules\Archieve\Http\Requests\StoreDocumentClassificationRequest;
 use Modules\Archieve\Models\DocumentClassification;
 use Modules\Archieve\Services\DocumentClassificationService;
-use Modules\Archieve\Enums\ArchievePermission;
+use Modules\Archieve\Enums\ArchieveUserPermission;
 use Illuminate\Support\Facades\Gate;
 
 class DocumentClassificationController extends Controller
@@ -22,7 +22,7 @@ class DocumentClassificationController extends Controller
 
     public function index()
     {
-        Gate::authorize(ArchievePermission::ViewClassification->value);
+        Gate::authorize(ArchieveUserPermission::ViewClassification->value);
 
         return Inertia::render('Archieve/Classification/Index', [
             'classifications' => $this->classificationService->all(),
@@ -31,7 +31,7 @@ class DocumentClassificationController extends Controller
 
     public function create()
     {
-        Gate::authorize(ArchievePermission::ManageClassification->value);
+        Gate::authorize(ArchieveUserPermission::ManageClassification->value);
 
         return Inertia::render('Archieve/Classification/Create', [
             'classifications' => $this->classificationService->all(),
@@ -49,7 +49,7 @@ class DocumentClassificationController extends Controller
 
     public function edit(DocumentClassification $classification)
     {
-        Gate::authorize(ArchievePermission::ManageClassification->value);
+        Gate::authorize(ArchieveUserPermission::ManageClassification->value);
 
         return Inertia::render('Archieve/Classification/Create', [
             'classification' => $classification,
@@ -68,7 +68,7 @@ class DocumentClassificationController extends Controller
 
     public function destroy(DocumentClassification $classification)
     {
-        Gate::authorize(ArchievePermission::ManageClassification->value);
+        Gate::authorize(ArchieveUserPermission::ManageClassification->value);
 
         $this->classificationService->delete($classification);
 
@@ -78,14 +78,14 @@ class DocumentClassificationController extends Controller
 
     public function datatable(DatatableRequest $request)
     {
-        Gate::authorize(ArchievePermission::ViewClassification->value);
+        Gate::authorize(ArchieveUserPermission::ViewClassification->value);
 
         return $this->datatableService->getDatatable($request, $request->user());
     }
 
     public function printExcel(DatatableRequest $request)
     {
-        Gate::authorize(ArchievePermission::ViewClassification->value);
+        Gate::authorize(ArchieveUserPermission::ViewClassification->value);
 
         return $this->datatableService->printExcel($request, $request->user());
     }

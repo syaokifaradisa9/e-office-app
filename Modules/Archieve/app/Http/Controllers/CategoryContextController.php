@@ -10,7 +10,7 @@ use Modules\Archieve\DataTransferObjects\StoreCategoryContextDTO;
 use Modules\Archieve\Http\Requests\StoreCategoryContextRequest;
 use Modules\Archieve\Models\CategoryContext;
 use Modules\Archieve\Services\CategoryContextService;
-use Modules\Archieve\Enums\ArchievePermission;
+use Modules\Archieve\Enums\ArchieveUserPermission;
 use Illuminate\Support\Facades\Gate;
 
 class CategoryContextController extends Controller
@@ -22,14 +22,14 @@ class CategoryContextController extends Controller
 
     public function index()
     {
-        Gate::authorize(ArchievePermission::ViewCategory->value);
+        Gate::authorize(ArchieveUserPermission::ViewCategory->value);
 
         return Inertia::render('Archieve/Context/Index');
     }
 
     public function create()
     {
-        Gate::authorize(ArchievePermission::ManageCategory->value);
+        Gate::authorize(ArchieveUserPermission::ManageCategory->value);
 
         return Inertia::render('Archieve/Context/Create');
     }
@@ -45,7 +45,7 @@ class CategoryContextController extends Controller
 
     public function edit(CategoryContext $context)
     {
-        Gate::authorize(ArchievePermission::ManageCategory->value);
+        Gate::authorize(ArchieveUserPermission::ManageCategory->value);
 
         return Inertia::render('Archieve/Context/Create', [
             'context' => $context,
@@ -63,7 +63,7 @@ class CategoryContextController extends Controller
 
     public function destroy(CategoryContext $context)
     {
-        Gate::authorize(ArchievePermission::ManageCategory->value);
+        Gate::authorize(ArchieveUserPermission::ManageCategory->value);
 
         $this->contextService->delete($context);
 
@@ -73,14 +73,14 @@ class CategoryContextController extends Controller
 
     public function datatable(DatatableRequest $request)
     {
-        Gate::authorize(ArchievePermission::ViewCategory->value);
+        Gate::authorize(ArchieveUserPermission::ViewCategory->value);
 
         return $this->datatableService->getDatatable($request, $request->user());
     }
 
     public function printExcel(DatatableRequest $request)
     {
-        Gate::authorize(ArchievePermission::ViewCategory->value);
+        Gate::authorize(ArchieveUserPermission::ViewCategory->value);
 
         return $this->datatableService->printExcel($request, $request->user());
     }

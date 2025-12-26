@@ -3,9 +3,7 @@
 namespace Modules\Archieve\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
-use Modules\Archieve\Enums\CategoryType;
-use Modules\Archieve\Enums\ArchievePermission;
+use Modules\Archieve\Enums\ArchieveUserPermission;
 
 class StoreCategoryRequest extends FormRequest
 {
@@ -14,7 +12,7 @@ class StoreCategoryRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->can(ArchievePermission::ManageCategory->value);
+        return $this->user()->can(ArchieveUserPermission::ManageCategory->value);
     }
 
     /**
@@ -25,9 +23,9 @@ class StoreCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'context_id' => ['required', 'exists:archieve_category_contexts,id'],
-            'description' => ['nullable', 'string'],
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'context_id' => 'required|exists:archieve_category_contexts,id',
         ];
     }
 }

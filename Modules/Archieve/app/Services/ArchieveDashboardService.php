@@ -8,7 +8,7 @@ use Modules\Archieve\Repositories\Document\DocumentRepository;
 use Modules\Archieve\Repositories\DocumentClassification\DocumentClassificationRepository;
 use Modules\Archieve\Repositories\DivisionStorage\DivisionStorageRepository;
 use App\Repositories\Division\DivisionRepository;
-use Modules\Archieve\Enums\ArchievePermission;
+use Modules\Archieve\Enums\ArchieveUserPermission;
 
 class ArchieveDashboardService
 {
@@ -29,12 +29,12 @@ class ArchieveDashboardService
         $tabs = [];
 
         // Tab: Arsip Divisi Saya
-        if ($user->can(ArchievePermission::ViewDashboardDivision->value) && $user->division_id) {
+        if ($user->can(ArchieveUserPermission::ViewDashboardDivision->value) && $user->division_id) {
             $tabs[] = $this->getDivisionTab($user);
         }
 
         // Tab: Arsip Keseluruhan
-        if ($user->can(ArchievePermission::ViewDashboardAll->value)) {
+        if ($user->can(ArchieveUserPermission::ViewDashboardAll->value)) {
             $tabs[] = $this->getAllTab();
         }
 

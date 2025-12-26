@@ -5,7 +5,7 @@ namespace Modules\Archieve\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Inertia\Inertia;
 use Modules\Archieve\Services\ArchieveReportService;
-use Modules\Archieve\Enums\ArchievePermission;
+use Modules\Archieve\Enums\ArchieveUserPermission;
 
 class ReportController extends Controller
 {
@@ -20,7 +20,7 @@ class ReportController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user->can(ArchievePermission::ViewReportDivision->value)) {
+        if (!$user->can(ArchieveUserPermission::ViewReportDivision->value)) {
             abort(403, 'Anda tidak memiliki akses ke laporan arsip divisi.');
         }
 
@@ -43,7 +43,7 @@ class ReportController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user->can(ArchievePermission::ViewReportAll->value)) {
+        if (!$user->can(ArchieveUserPermission::ViewReportAll->value)) {
             abort(403, 'Anda tidak memiliki akses ke laporan arsip keseluruhan.');
         }
 

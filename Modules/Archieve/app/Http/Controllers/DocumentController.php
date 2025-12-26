@@ -13,6 +13,7 @@ use Modules\Archieve\Http\Requests\SearchDocumentRequest;
 use Modules\Archieve\Models\Document;
 use Modules\Archieve\Services\DocumentService;
 use Modules\Archieve\Services\DocumentClassificationService;
+use Modules\Archieve\Enums\ArchieveUserPermission;
 use Illuminate\Support\Facades\Gate;
 
 class DocumentController extends Controller
@@ -27,11 +28,11 @@ class DocumentController extends Controller
     {
         $user = auth()->user();
         
-        if ($user->can('lihat_semua_arsip')) {
+        if ($user->can(ArchieveUserPermission::ViewAll->value)) {
             $viewType = 'all';
-        } elseif ($user->can('lihat_arsip_divisi')) {
+        } elseif ($user->can(ArchieveUserPermission::ViewDivision->value)) {
             $viewType = 'division';
-        } elseif ($user->can('lihat_arsip_pribadi')) {
+        } elseif ($user->can(ArchieveUserPermission::ViewPersonal->value)) {
             $viewType = 'personal';
         } else {
             abort(403);
@@ -50,9 +51,9 @@ class DocumentController extends Controller
     public function create()
     {
         $user = auth()->user();
-        $canManageAll = $user->can('kelola_semua_arsip');
+        $canManageAll = $user->can(ArchieveUserPermission::ManageAll->value);
         
-        if (!$canManageAll && !auth()->user()->can('kelola_arsip_divisi')) {
+        if (!$canManageAll && !auth()->user()->can(ArchieveUserPermission::ManageDivision->value)) {
             abort(403);
         }
 
@@ -78,9 +79,9 @@ class DocumentController extends Controller
     public function edit(Document $document)
     {
         $user = auth()->user();
-        $canManageAll = $user->can('kelola_semua_arsip');
+        $canManageAll = $user->can(ArchieveUserPermission::ManageAll->value);
         
-        if (!$canManageAll && !auth()->user()->can('kelola_arsip_divisi')) {
+        if (!$canManageAll && !auth()->user()->can(ArchieveUserPermission::ManageDivision->value)) {
             abort(403);
         }
 
@@ -108,7 +109,8 @@ class DocumentController extends Controller
 
     public function destroy(Document $document)
     {
-        if (!auth()->user()->can('kelola_semua_arsip') && !auth()->user()->can('kelola_arsip_divisi')) {
+        if (!auth()->user()->can(ArchieveUserPermission::ManageAll->value) && 
+            !auth()->user()->can(ArchieveUserPermission::ManageDivision->value)) {
             abort(403);
         }
 
@@ -123,12 +125,12 @@ class DocumentController extends Controller
         $viewType = $request->view_type ?? 'all';
 
         if ($viewType === 'personal') {
-            Gate::authorize('lihat_arsip_pribadi');
+            Gate::authorize(ArchieveUserPermission::ViewPersonal->value);
             return $this->datatableService->getDatatableForUser($request, $user->id);
         }
 
         if ($viewType === 'division') {
-            Gate::authorize('lihat_arsip_divisi');
+            Gate::authorize(ArchieveUserPermission::ViewDivision->value);
             if (!$user->division_id) {
                 return response()->json([
                     'data' => [],
@@ -143,7 +145,7 @@ class DocumentController extends Controller
             return $this->datatableService->getDatatableForDivision($request, $user->division_id);
         }
 
-        Gate::authorize('lihat_semua_arsip');
+        Gate::authorize(ArchieveUserPermission::ViewAll->value);
         return $this->datatableService->getDatatableAll($request, $user);
     }
 
@@ -153,19 +155,19 @@ class DocumentController extends Controller
         $viewType = $request->view_type ?? 'all';
 
         if ($viewType === 'personal') {
-            Gate::authorize('lihat_arsip_pribadi');
+            Gate::authorize(ArchieveUserPermission::ViewPersonal->value);
             return $this->datatableService->printExcel($request, $user, null, $user->id);
         }
 
         if ($viewType === 'division') {
-            Gate::authorize('lihat_arsip_divisi');
+            Gate::authorize(ArchieveUserPermission::ViewDivision->value);
             if (!$user->division_id) {
                 abort(400, 'User tidak memiliki divisi.');
             }
             return $this->datatableService->printExcel($request, $user, $user->division_id, null);
         }
 
-        Gate::authorize('lihat_semua_arsip');
+        Gate::authorize(ArchieveUserPermission::ViewAll->value);
         return $this->datatableService->printExcel($request, $user);
     }
 

@@ -16,6 +16,7 @@ use Modules\Archieve\Repositories\Document\DocumentRepository;
 use Modules\Archieve\Repositories\DivisionStorage\DivisionStorageRepository;
 use App\Repositories\Division\DivisionRepository;
 use App\Repositories\User\UserRepository;
+use Modules\Archieve\Enums\ArchieveUserPermission;
 
 class DocumentService
 {
@@ -128,7 +129,7 @@ class DocumentService
 
     public function getFormDivisions(User $user): Collection
     {
-        if ($user->can('kelola_semua_arsip')) {
+        if ($user->can(ArchieveUserPermission::ManageAll->value)) {
             return $this->divisionRepository->all();
         }
         
@@ -138,7 +139,7 @@ class DocumentService
 
     public function getFormUsers(User $user): Collection
     {
-        if ($user->can('kelola_semua_arsip')) {
+        if ($user->can(ArchieveUserPermission::ManageAll->value)) {
             return $this->userRepository->all();
         }
         
@@ -236,16 +237,17 @@ class DocumentService
     private function applySearchScope($query, User $user): void
     {
         // Enforce division scope if has 'divisi' permission but not 'keseluruhan'
-        if ($user->can('pencarian_dokumen_divisi') && !$user->can('pencarian_dokumen_keseluruhan')) {
+        if ($user->can(ArchieveUserPermission::SearchDivisionScope->value) && 
+            !$user->can(ArchieveUserPermission::SearchAllScope->value)) {
             $query->whereHas('divisions', function ($q) use ($user) {
                 $q->where('divisions.id', $user->division_id);
             });
         }
 
         // Enforce personal scope if has 'pribadi' permission but not 'keseluruhan' or 'divisi'
-        if ($user->can('pencarian_dokumen_pribadi') && 
-            !$user->can('pencarian_dokumen_keseluruhan') && 
-            !$user->can('pencarian_dokumen_divisi')) {
+        if ($user->can(ArchieveUserPermission::SearchPersonalScope->value) && 
+            !$user->can(ArchieveUserPermission::SearchAllScope->value) && 
+            !$user->can(ArchieveUserPermission::SearchDivisionScope->value)) {
             $query->whereHas('users', function ($sq) use ($user) {
                 $sq->where('users.id', $user->id);
             });

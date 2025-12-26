@@ -5,7 +5,7 @@ namespace Modules\Archieve\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Inertia\Inertia;
 use Modules\Archieve\Services\ArchieveDashboardService;
-use Modules\Archieve\Enums\ArchievePermission;
+use Modules\Archieve\Enums\ArchieveUserPermission;
 
 class DashboardController extends Controller
 {
@@ -18,8 +18,8 @@ class DashboardController extends Controller
         $user = auth()->user();
 
         // Check if user has any dashboard permission
-        $hasAnyPermission = $user->can(ArchievePermission::ViewDashboardDivision->value) ||
-                           $user->can(ArchievePermission::ViewDashboardAll->value);
+        $hasAnyPermission = $user->can(ArchieveUserPermission::ViewDashboardDivision->value) ||
+                           $user->can(ArchieveUserPermission::ViewDashboardAll->value);
 
         if (!$hasAnyPermission) {
             abort(403, 'Anda tidak memiliki akses ke dashboard arsip.');

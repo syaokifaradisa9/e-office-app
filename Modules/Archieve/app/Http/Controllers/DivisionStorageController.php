@@ -8,7 +8,7 @@ use Modules\Archieve\DataTransferObjects\StoreDivisionStorageDTO;
 use Modules\Archieve\Http\Requests\StoreDivisionStorageRequest;
 use Modules\Archieve\Models\DivisionStorage;
 use Modules\Archieve\Services\DivisionStorageService;
-use Modules\Archieve\Enums\ArchievePermission;
+use Modules\Archieve\Enums\ArchieveUserPermission;
 use Illuminate\Support\Facades\Gate;
 
 class DivisionStorageController extends Controller
@@ -19,7 +19,7 @@ class DivisionStorageController extends Controller
 
     public function index()
     {
-        Gate::authorize(ArchievePermission::ViewDivisionStorage->value);
+        Gate::authorize(ArchieveUserPermission::ViewDivisionStorage->value);
 
         return Inertia::render('Archieve/DivisionStorage/Index', [
             'divisionsWithStorage' => $this->storageService->getDivisionsWithStorage(),
@@ -44,7 +44,7 @@ class DivisionStorageController extends Controller
 
     public function destroy(DivisionStorage $divisionStorage)
     {
-        Gate::authorize(ArchievePermission::ManageDivisionStorage->value);
+        Gate::authorize(ArchieveUserPermission::ManageDivisionStorage->value);
 
         $this->storageService->delete($divisionStorage);
 
