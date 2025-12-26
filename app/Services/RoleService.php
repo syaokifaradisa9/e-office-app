@@ -64,6 +64,16 @@ class RoleService
                 'label' => 'Role & Permission',
                 'keywords' => ['lihat_role', 'kelola_role'],
             ],
+            'kategori_arsip' => [
+                'module' => 'Sistem Arsip Dokumen',
+                'label' => 'Kategori Arsip',
+                'keywords' => ['kategori_arsip'],
+            ],
+            'arsip' => [
+                'module' => 'Sistem Arsip Dokumen',
+                'label' => 'Manajemen Arsip',
+                'keywords' => ['arsip'],
+            ],
             'kategori' => [
                 'module' => 'Sistem Manajemen Gudang',
                 'label' => 'Kategori Barang',
@@ -161,7 +171,7 @@ class RoleService
 
         // Sort groups by module then by label
         uasort($grouped, function ($a, $b) {
-            $moduleOrder = ['Data Master' => 1, 'Sistem Manajemen Gudang' => 2, 'Lainnya' => 99];
+            $moduleOrder = ['Data Master' => 1, 'Sistem Manajemen Gudang' => 2, 'Sistem Arsip Dokumen' => 3, 'Lainnya' => 99];
             $aOrder = $moduleOrder[$a['module']] ?? 50;
             $bOrder = $moduleOrder[$b['module']] ?? 50;
 

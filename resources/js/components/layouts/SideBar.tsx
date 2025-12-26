@@ -3,6 +3,7 @@ import { usePage } from '@inertiajs/react';
 import { useLayoutEffect, useRef } from 'react';
 
 import InventorySidebar from '../../../../Modules/Inventory/resources/assets/js/components/layouts/InventorySidebar';
+import ArchieveSidebar from '../../../../Modules/Archieve/resources/assets/js/components/layouts/ArchieveSidebar';
 import { SidebarCollapseContext } from './SidebarContext';
 import SidebarLink from '@/components/layouts/SideBarLink';
 
@@ -84,6 +85,9 @@ export default function SideBar({ isOpen, setIsOpen, isCollapsed, hasMobileSearc
 
                                     {/* Inventory */}
                                     <InventorySidebar />
+
+                                    {/* Archieve */}
+                                    <ArchieveSidebar />
                                 </div>
                             </div>
                         </div>

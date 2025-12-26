@@ -36,6 +36,17 @@ class ArchieveServiceProvider extends ServiceProvider
     {
         $this->app->register(EventServiceProvider::class);
         $this->app->register(RouteServiceProvider::class);
+
+        // Repository Bindings
+        $this->app->singleton(
+            \Modules\Archieve\Repositories\Category\CategoryRepository::class,
+            \Modules\Archieve\Repositories\Category\EloquentCategoryRepository::class
+        );
+
+        $this->app->singleton(
+            \Modules\Archieve\Repositories\CategoryContext\CategoryContextRepository::class,
+            \Modules\Archieve\Repositories\CategoryContext\EloquentCategoryContextRepository::class
+        );
     }
 
     /**

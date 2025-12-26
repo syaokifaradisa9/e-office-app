@@ -11,6 +11,9 @@ class ArchieveDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
+        $this->call([
+            ArchievePermissionSeeder::class,
+            ArchieveCategorySeeder::class,
+        ]);
     }
 }

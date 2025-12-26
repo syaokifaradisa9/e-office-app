@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Save, Shield, Search, CheckSquare, Square, ChevronDown, ChevronRight, Database, Warehouse, Check, X, Filter } from 'lucide-react';
 
 import Button from '../../components/buttons/Button';
@@ -36,6 +36,7 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
     const isEdit = !!role;
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(Object.keys(permissionsGrouped)));
+    const [activeTab, setActiveTab] = useState('');
 
     const isExclusiveGroup = (groupKey: string) => EXCLUSIVE_GROUPS.includes(groupKey);
 
@@ -133,7 +134,6 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
         return filtered;
     }, [permissionsGrouped, searchQuery]);
 
-    // Group permissions by module
     const groupedByModule = useMemo(() => {
         const moduleGroups: Record<string, { key: string; group: PermissionGroup }[]> = {};
 
@@ -148,6 +148,16 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
         return moduleGroups;
     }, [filteredGroups]);
 
+    // Available modules for tabs
+    const availableModules = useMemo(() => Object.keys(groupedByModule), [groupedByModule]);
+
+    // Set default active tab
+    useEffect(() => {
+        if (availableModules.length > 0 && !activeTab) {
+            setActiveTab(availableModules[0]);
+        }
+    }, [availableModules, activeTab]);
+
     const totalPermissions = Object.values(permissionsGrouped).reduce((acc, g) => acc + g.permissions.length, 0);
 
     const getModuleIcon = (moduleName: string) => {
@@ -157,6 +167,8 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                 return <Database className="size-5" />;
             case 'Sistem Manajemen Gudang':
                 return <Warehouse className="size-5" />;
+            case 'Sistem Arsip Dokumen':
+                return <Shield className="size-5 text-indigo-500" />;
             default:
                 return <Shield className="size-5" />;
         }
@@ -176,6 +188,8 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                 return 'from-blue-500 to-blue-600';
             case 'Sistem Manajemen Gudang':
                 return 'from-emerald-500 to-emerald-600';
+            case 'Sistem Arsip Dokumen':
+                return 'from-indigo-500 to-indigo-600';
             default:
                 return 'from-slate-500 to-slate-600';
         }
@@ -220,6 +234,13 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
             monitor_semua_transaksi_barang: 'Monitor Semua Transaksi Barang',
             lihat_laporan_gudang_divisi: 'Lihat Laporan Gudang Divisi',
             lihat_laporan_gudang_semua: 'Lihat Semua Laporan Gudang',
+            lihat_kategori_arsip: 'Lihat Data Kategori Arsip',
+            kelola_kategori_arsip: 'Kelola Data Kategori Arsip',
+            lihat_arsip_divisi: 'Lihat Arsip Divisi',
+            kelola_arsip_divisi: 'Kelola Arsip Divisi',
+            lihat_arsip_pribadi: 'Lihat Arsip Pribadi',
+            lihat_semua_arsip: 'Lihat Semua Arsip Digital',
+            kelola_semua_arsip: 'Kelola Semua Arsip Digital',
         };
 
         if (overrides[permission]) {
@@ -320,21 +341,47 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                             </div>
                         </div>
 
-                        {/* Permission Groups by Module */}
-                        <div className="space-y-10">
-                            {Object.entries(groupedByModule).map(([moduleName, groups]) => (
-                                <div key={moduleName} className="space-y-6">
-                                    {/* Module Header */}
-                                    <div className="flex items-center gap-3">
-                                        <h4 className="text-base font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                            {moduleName}
-                                        </h4>
-                                        <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700/50" />
-                                    </div>
+                        {/* Module Tabs */}
+                        <div className="border-b border-slate-200 dark:border-slate-800">
+                            <div className="flex flex-wrap gap-1">
+                                {availableModules.map((module) => {
+                                    const displayLabels: Record<string, string> = {
+                                        'Data Master': 'Modules Data Master',
+                                        'Sistem Manajemen Gudang': 'Module Gudang',
+                                        'Sistem Arsip Dokumen': 'Module Arsip',
+                                    };
+                                    const label = displayLabels[module] || module;
 
+                                    return (
+                                        <button
+                                            key={module}
+                                            type="button"
+                                            onClick={() => setActiveTab(module)}
+                                            className={`px-6 py-4 text-sm font-bold transition-all relative border-b-2 ${activeTab === module
+                                                ? 'text-primary border-primary'
+                                                : 'text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300'
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                {getModuleIcon(module)}
+                                                {label}
+                                                <span className={`ml-1 text-[10px] rounded-full px-1.5 py-0.5 ${activeTab === module ? 'bg-primary/10' : 'bg-slate-100 dark:bg-slate-800'}`}>
+                                                    {groupedByModule[module]?.length || 0}
+                                                </span>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Permission Groups by Module */}
+                        <div className="space-y-6 min-h-[400px]">
+                            {activeTab && groupedByModule[activeTab] && (
+                                <div className="space-y-6">
                                     {/* Permission Groups Grid */}
                                     <div className="grid gap-6 md:grid-cols-2">
-                                        {groups.map(({ key, group }) => {
+                                        {groupedByModule[activeTab].map(({ key, group }) => {
                                             const isExpanded = expandedGroups.has(key);
                                             const checkedCount = group.permissions.filter((p) => data.permissions.includes(p)).length;
                                             const progress = Math.round((checkedCount / group.permissions.length) * 100);
@@ -439,7 +486,7 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                                         })}
                                     </div>
                                 </div>
-                            ))}
+                            )}
                         </div>
 
                         {Object.keys(filteredGroups).length === 0 && (
