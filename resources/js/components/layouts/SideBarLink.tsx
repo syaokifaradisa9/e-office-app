@@ -9,17 +9,18 @@ interface SidebarLinkProps {
     href: string;
     icon: LucideIcon;
     exactMatch?: boolean;
+    active?: boolean;
     children?: { name: string; href: string }[];
 }
 
-export default function SidebarLink({ name, href, icon: Icon, exactMatch = false, children }: SidebarLinkProps) {
+export default function SidebarLink({ name, href, icon: Icon, exactMatch = false, active, children }: SidebarLinkProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [isTooltipVisible, setIsTooltipVisible] = useState(false);
     const { url } = usePage();
     const isCollapsed = useSidebarCollapse();
 
     const hasChildren = children && children.length > 0;
-    const isActive = exactMatch ? url === href : url === href || url.startsWith(href + '/');
+    const isActive = active !== undefined ? active : (exactMatch ? url === href : url === href || url.startsWith(href + '/'));
     // If exactMatch is true, we probably don't want child activation to trigger parent active state unless logic dictates.
     // But usually for valid sidebar, if child is active, parent is active (expanded).
     const isChildActive = hasChildren && children.some((child) => url === child.href || url.startsWith(child.href + '/'));

@@ -28,7 +28,6 @@ interface PageProps {
 export default function DivisionStorageIndex() {
     const { permissions, divisionsWithStorage } = usePage<PageProps>().props;
     const hasViewPermission = permissions?.includes('lihat_penyimpanan_divisi');
-    const hasManagePermission = permissions?.includes('kelola_penyimpanan_divisi');
 
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editValue, setEditValue] = useState<string>('');
@@ -73,112 +72,136 @@ export default function DivisionStorageIndex() {
         }
     }
 
-    function getProgressColor(percentage: number) {
-        if (percentage >= 90) return 'bg-red-500';
-        if (percentage >= 70) return 'bg-amber-500';
-        return 'bg-emerald-500';
-    }
-
     return (
         <RootLayout title="Penyimpanan Divisi">
-            <ContentCard title="Kuota Penyimpanan Divisi" mobileFullWidth>
-                <p className="mb-6 text-sm text-gray-500 dark:text-slate-400">
-                    Atur batas maksimal penyimpanan arsip untuk setiap divisi
-                </p>
-
-                {!hasViewPermission ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <div className="mb-4 rounded-full bg-red-100 p-3 text-red-600 dark:bg-red-900/30 dark:text-red-400">
-                            <Shield className="size-8" />
+            {!hasViewPermission ? (
+                <ContentCard title="Kuota Penyimpanan Divisi">
+                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                        <div className="mb-4 rounded-full bg-slate-100 p-4 text-slate-400 dark:bg-slate-800">
+                            <Shield className="size-10" />
                         </div>
-                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Akses Ditolak</h3>
-                        <p className="mt-1 text-slate-500 dark:text-slate-400">Anda tidak memiliki akses untuk melihat data penyimpanan divisi</p>
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">Akses Terbatas</h3>
+                        <p className="mt-2 text-slate-500 dark:text-slate-400">Silahkan hubungi administrator untuk akses penyimpanan divisi.</p>
                     </div>
-                ) : (
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {divisionsWithStorage.map((division) => (
-                            <div
-                                key={division.id}
-                                className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-primary/30 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50"
-                            >
-                                <div className="mb-4 flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                                            <Building2 className="size-5" />
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold text-slate-800 dark:text-white">{division.name}</h4>
-                                            <p className="text-xs text-slate-500">
-                                                {division.used_size_label} / {division.max_size > 0 ? division.max_size_label : 'Tidak terbatas'}
-                                            </p>
-                                        </div>
+                </ContentCard>
+            ) : (
+                <div className="space-y-8 pb-12">
+                    {/* Header Minimalist */}
+                    <div className="flex flex-col gap-6 border-b border-slate-200 pb-8 dark:border-slate-800 lg:flex-row lg:items-end lg:justify-between">
+                        <div>
+                            <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Penyimpanan Divisi</h2>
+                            <p className="mt-2 text-sm font-medium text-slate-500">Alokasikan kapasitas ruang arsip digital untuk setiap divisi.</p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-3">
+                            {[
+                                { label: 'Total Divisi', value: divisionsWithStorage.length, icon: Building2 },
+                                { label: 'Kritis', value: divisionsWithStorage.filter(d => d.usage_percentage >= 90).length, color: 'text-rose-500', icon: Shield },
+                            ].map((stat, i) => (
+                                <div key={i} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 dark:border-slate-800 dark:bg-slate-900/50">
+                                    <stat.icon className="size-4 text-slate-400" />
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-none mb-1">{stat.label}</span>
+                                        <span className={`text-base font-black leading-none ${stat.color || 'text-slate-900 dark:text-white'}`}>{stat.value}</span>
                                     </div>
                                 </div>
+                            ))}
+                        </div>
+                    </div>
 
-                                {/* Progress Bar */}
-                                {division.max_size > 0 && (
-                                    <div className="mb-4">
-                                        <div className="mb-1 flex justify-between text-xs">
-                                            <span className="text-slate-500">Penggunaan</span>
-                                            <span className={`font-bold ${division.usage_percentage >= 90 ? 'text-red-500' : division.usage_percentage >= 70 ? 'text-amber-500' : 'text-emerald-500'}`}>
+                    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                        {divisionsWithStorage.map((division) => {
+                            const isEditing = editingId === division.id;
+                            const percentage = Math.min(division.usage_percentage, 100);
+                            const status = percentage >= 90 ? 'critical' : percentage >= 70 ? 'warning' : 'stable';
+
+                            return (
+                                <div
+                                    key={division.id}
+                                    className={`group flex flex-col rounded-3xl border border-slate-200 bg-white p-6 transition-all duration-300 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/40 dark:hover:border-slate-700 ${isEditing ? 'ring-2 ring-primary ring-offset-4 dark:ring-offset-slate-950' : ''
+                                        }`}
+                                >
+                                    <div className="mb-6 flex items-start justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex size-14 items-center justify-center rounded-2xl bg-slate-50 text-slate-300 transition-colors group-hover:bg-primary/5 group-hover:text-primary dark:bg-slate-800">
+                                                <Building2 className="size-7" strokeWidth={1.5} />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
+                                                    {division.name}
+                                                </h4>
+                                                <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                                    {division.used_size_label} <span className="opacity-20 mx-1">/</span> {division.max_size > 0 ? division.max_size_label : '∞'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Progress Area */}
+                                    <div className="mb-8 flex-1">
+                                        <div className="mb-2.5 flex items-center justify-between">
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Penyimpanan Terpakai</span>
+                                            <span className={`text-sm font-black tabular-nums ${status === 'critical' ? 'text-rose-500' : status === 'warning' ? 'text-amber-500' : 'text-emerald-500'
+                                                }`}>
                                                 {division.usage_percentage}%
                                             </span>
                                         </div>
-                                        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                                        <div className="relative h-1 w-full rounded-full bg-slate-100 dark:bg-slate-800">
                                             <div
-                                                className={`h-full transition-all ${getProgressColor(division.usage_percentage)}`}
-                                                style={{ width: `${Math.min(division.usage_percentage, 100)}%` }}
+                                                className={`absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-in-out ${status === 'critical' ? 'bg-rose-500' : status === 'warning' ? 'bg-amber-500' : 'bg-primary'
+                                                    }`}
+                                                style={{ width: `${percentage}%` }}
                                             />
                                         </div>
                                     </div>
-                                )}
 
-                                {/* Edit Form or Display */}
-                                {editingId === division.id ? (
-                                    <div className="space-y-3">
-                                        <div className="flex items-center gap-2">
-                                            <FormInput
-                                                name="max_size_gb"
-                                                type="number"
-                                                placeholder="0"
-                                                value={editValue}
-                                                onChange={(e) => setEditValue(e.target.value)}
-                                                className="!py-2"
-                                            />
-                                            <span className="text-sm font-medium text-slate-500">GB</span>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <Button
-                                                label="Simpan"
-                                                icon={<Save className="size-3.5" />}
-                                                onClick={() => saveEdit(division)}
-                                                isLoading={processing}
-                                                className="flex-1 !py-2 text-xs"
-                                            />
-                                            <Button
-                                                label="Batal"
-                                                variant="secondary"
-                                                onClick={cancelEdit}
-                                                className="!py-2 text-xs"
-                                            />
-                                        </div>
+                                    <div className="mt-auto">
+                                        {isEditing ? (
+                                            <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200">
+                                                <div className="relative">
+                                                    <FormInput
+                                                        name="max_size_gb"
+                                                        type="number"
+                                                        placeholder="0"
+                                                        value={editValue}
+                                                        onChange={(e) => setEditValue(e.target.value)}
+                                                        className="!py-2.5 !text-sm font-bold focus:!border-primary"
+                                                    />
+                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 uppercase tracking-tighter">GB</span>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <Button
+                                                        label="Simpan"
+                                                        onClick={() => saveEdit(division)}
+                                                        isLoading={processing}
+                                                        className="flex-1 !py-2.5 text-xs font-bold"
+                                                    />
+                                                    <Button
+                                                        label="Batal"
+                                                        variant="secondary"
+                                                        onClick={cancelEdit}
+                                                        className="!py-2.5 text-xs font-bold"
+                                                    />
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <CheckPermissions permissions={['kelola_penyimpanan_divisi']}>
+                                                <button
+                                                    onClick={() => startEdit(division)}
+                                                    className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary hover:opacity-70 transition-opacity"
+                                                >
+                                                    <HardDrive className="size-3.5" />
+                                                    {division.max_size > 0 ? 'Edit Kuota' : 'Setel Kuota'}
+                                                </button>
+                                            </CheckPermissions>
+                                        )}
                                     </div>
-                                ) : (
-                                    <CheckPermissions permissions={['kelola_penyimpanan_divisi']}>
-                                        <Button
-                                            label={division.max_size > 0 ? 'Ubah Kuota' : 'Atur Kuota'}
-                                            icon={<HardDrive className="size-3.5" />}
-                                            onClick={() => startEdit(division)}
-                                            variant={division.max_size > 0 ? 'secondary' : 'primary'}
-                                            className="w-full !py-2 text-xs"
-                                        />
-                                    </CheckPermissions>
-                                )}
-                            </div>
-                        ))}
+                                </div>
+                            );
+                        })}
                     </div>
-                )}
-            </ContentCard>
+                </div>
+            )}
         </RootLayout>
     );
 }

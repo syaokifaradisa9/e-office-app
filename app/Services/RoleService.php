@@ -79,10 +79,25 @@ class RoleService
                 'label' => 'Penyimpanan Divisi',
                 'keywords' => ['penyimpanan_divisi'],
             ],
-            'arsip' => [
+            'arsip_lihat' => [
                 'module' => 'Sistem Arsip Dokumen',
-                'label' => 'Manajemen Arsip',
-                'keywords' => ['arsip'],
+                'label' => 'Lihat Arsip Digital',
+                'keywords' => ['lihat_semua_arsip', 'lihat_arsip_divisi', 'lihat_arsip_pribadi'],
+                'exclusive' => true,
+                'columns' => 3,
+            ],
+            'arsip_kelola' => [
+                'module' => 'Sistem Arsip Dokumen',
+                'label' => 'Kelola Arsip Digital',
+                'keywords' => ['kelola_semua_arsip', 'kelola_arsip_divisi'],
+                'exclusive' => true,
+                'columns' => 2,
+            ],
+            'pencarian_dokumen' => [
+                'module' => 'Sistem Arsip Dokumen',
+                'label' => 'Akses Pencarian Dokumen',
+                'keywords' => ['pencarian_dokumen_keseluruhan', 'pencarian_dokumen_divisi', 'pencarian_dokumen_pribadi'],
+                'exclusive' => true,
             ],
             'kategori' => [
                 'module' => 'Sistem Manajemen Gudang',
@@ -135,6 +150,7 @@ class RoleService
                             'module' => $rule['module'],
                             'label' => $rule['label'],
                             'permissions' => [],
+                            'exclusive' => $rule['exclusive'] ?? false,
                         ];
                     }
                     $grouped[$groupKey]['permissions'][] = $permission->name;
@@ -179,14 +195,33 @@ class RoleService
         }
         unset($group);
 
-        // Sort groups by module then by label
-        uasort($grouped, function ($a, $b) {
+        // Sort groups by module then by custom priority or label
+        uasort($grouped, function ($a, $b) use ($groupingRules) {
             $moduleOrder = ['Data Master' => 1, 'Sistem Manajemen Gudang' => 2, 'Sistem Arsip Dokumen' => 3, 'Lainnya' => 99];
-            $aOrder = $moduleOrder[$a['module']] ?? 50;
-            $bOrder = $moduleOrder[$b['module']] ?? 50;
+            $aModuleOrder = $moduleOrder[$a['module']] ?? 50;
+            $bModuleOrder = $moduleOrder[$b['module']] ?? 50;
 
-            if ($aOrder !== $bOrder) {
-                return $aOrder - $bOrder;
+            if ($aModuleOrder !== $bModuleOrder) {
+                return $aModuleOrder - $bModuleOrder;
+            }
+
+            // Custom order within "Sistem Arsip Dokumen"
+            if ($a['module'] === 'Sistem Arsip Dokumen') {
+                $order = [
+                    'Kategori Arsip' => 1,
+                    'Klasifikasi Dokumen' => 2,
+                    'Penyimpanan Divisi' => 3,
+                    'Lihat Arsip Digital' => 4,
+                    'Kelola Arsip Digital' => 5,
+                    'Akses Pencarian Dokumen' => 6
+                ];
+                
+                $aOrder = $order[$a['label']] ?? 99;
+                $bOrder = $order[$b['label']] ?? 99;
+
+                if ($aOrder !== $bOrder) {
+                    return $aOrder - $bOrder;
+                }
             }
 
             return strcmp($a['label'], $b['label']);

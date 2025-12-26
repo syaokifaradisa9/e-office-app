@@ -6,24 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('archieve_category_contexts', function (Blueprint $table) {
+        Schema::create('archieve_categories', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
+            $table->string('name');
             $table->text('description')->nullable();
+            $table->foreignId('context_id')->constrained('archieve_category_contexts')->onDelete('cascade');
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('archieve_category_contexts');
+        Schema::dropIfExists('archieve_categories');
     }
 };
