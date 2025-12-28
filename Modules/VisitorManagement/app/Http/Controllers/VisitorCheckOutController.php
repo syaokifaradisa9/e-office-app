@@ -10,6 +10,7 @@ use Modules\VisitorManagement\DataTransferObjects\FeedbackDTO;
 use Modules\VisitorManagement\Models\Visitor;
 use Modules\VisitorManagement\Services\FeedbackQuestionService;
 use Modules\VisitorManagement\Services\VisitorService;
+use Modules\VisitorManagement\Enums\VisitorStatus;
 
 class VisitorCheckOutController extends Controller
 {
@@ -21,10 +22,7 @@ class VisitorCheckOutController extends Controller
 
     public function index()
     {
-        return Inertia::render('VisitorManagement/CheckOut/List', [
-            'divisions' => $this->divisionRepository->all(['id', 'name']),
-            'activeVisitors' => $this->visitorService->getCheckOutList(),
-        ]);
+        return redirect()->route('visitor.check-in.list');
     }
 
     public function search(Request $request)
@@ -40,7 +38,7 @@ class VisitorCheckOutController extends Controller
 
     public function show(Visitor $visitor)
     {
-        if (!in_array($visitor->status, ['approved', 'pending', 'invited'])) {
+        if (!in_array($visitor->status, [VisitorStatus::Approved, VisitorStatus::Pending, VisitorStatus::Invited])) {
             return redirect()->route('visitor.check-out.index');
         }
 
@@ -52,7 +50,7 @@ class VisitorCheckOutController extends Controller
 
     public function store(Request $request, Visitor $visitor)
     {
-        if (!in_array($visitor->status, ['approved', 'pending', 'invited'])) {
+        if (!in_array($visitor->status, [VisitorStatus::Approved, VisitorStatus::Pending, VisitorStatus::Invited])) {
             return back()->withErrors(['error' => 'Checkout tidak dapat dilakukan.']);
         }
 
@@ -73,7 +71,7 @@ class VisitorCheckOutController extends Controller
 
     public function cancel(Visitor $visitor)
     {
-        if ($visitor->status !== 'pending') {
+        if ($visitor->status !== VisitorStatus::Pending) {
             return back()->withErrors(['error' => 'Kunjungan tidak dapat dibatalkan.']);
         }
 

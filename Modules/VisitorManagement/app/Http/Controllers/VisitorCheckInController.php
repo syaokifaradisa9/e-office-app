@@ -11,6 +11,7 @@ use Modules\VisitorManagement\Http\Requests\CheckInRequest;
 use Modules\VisitorManagement\Models\Visitor;
 use Modules\VisitorManagement\Services\PurposeService;
 use Modules\VisitorManagement\Services\VisitorService;
+use Modules\VisitorManagement\Enums\VisitorStatus;
 
 class VisitorCheckInController extends Controller
 {
@@ -58,7 +59,7 @@ class VisitorCheckInController extends Controller
 
     public function edit(Visitor $visitor)
     {
-        if ($visitor->status !== 'pending') {
+        if ($visitor->status !== VisitorStatus::Pending) {
             return redirect()->route('visitor.check-in.list')
                 ->withErrors(['error' => 'Hanya data kunjungan pending yang dapat diedit.']);
         }
@@ -73,7 +74,7 @@ class VisitorCheckInController extends Controller
 
     public function update(CheckInRequest $request, Visitor $visitor)
     {
-        if ($visitor->status !== 'pending') {
+        if ($visitor->status !== VisitorStatus::Pending) {
             return back()->withErrors(['error' => 'Hanya data kunjungan pending yang dapat diedit.']);
         }
 
