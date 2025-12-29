@@ -8,6 +8,7 @@ use Modules\Inventory\Database\Seeders\CategoryItemSeeder;
 use Modules\Inventory\Database\Seeders\InventoryPermissionSeeder;
 use Modules\Archieve\Database\Seeders\CategoryContextSeeder;
 use Modules\Archieve\Database\Seeders\DocumentClassificationSeeder;
+use Modules\VisitorManagement\Database\Seeders\VisitorManagementDatabaseSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -24,6 +25,7 @@ class DatabaseSeeder extends Seeder
             InventoryPermissionSeeder::class,
             CategoryContextSeeder::class,
             DocumentClassificationSeeder::class,
+            VisitorManagementDatabaseSeeder::class,
             RoleSeeder::class,
             SuperAdminSeeder::class,
         ]);

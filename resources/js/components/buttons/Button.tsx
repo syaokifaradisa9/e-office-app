@@ -12,6 +12,7 @@ interface ButtonProps {
     target?: string;
     disabled?: boolean;
     variant?: 'primary' | 'secondary' | 'outline' | 'dashed' | 'ghost' | 'link' | 'danger' | 'success';
+    title?: string;
 }
 
 export default function Button({

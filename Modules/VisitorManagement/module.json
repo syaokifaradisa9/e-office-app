@@ -1,0 +1,11 @@
+{
+    "name": "VisitorManagement",
+    "alias": "visitormanagement",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\VisitorManagement\\Providers\\VisitorManagementServiceProvider"
+    ],
+    "files": []
+}

@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Modules\Inventory\Enums\InventoryPermission;
+use Modules\VisitorManagement\Enums\VisitorUserPermission;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -28,9 +29,10 @@ class SuperAdminSeeder extends Seeder
             'kelola_role',
         ];
 
-        // 2. Add all Inventory Permissions from Enum
+        // 2. Add all Module Permissions from Enums
         $inventoryPermissions = InventoryPermission::values();
-        $allPermissions = array_unique(array_merge($permissions, $inventoryPermissions));
+        $visitorPermissions = VisitorUserPermission::values();
+        $allPermissions = array_unique(array_merge($permissions, $inventoryPermissions, $visitorPermissions));
 
         foreach ($allPermissions as $permission) {
             Permission::firstOrCreate([

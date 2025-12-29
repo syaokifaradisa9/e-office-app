@@ -254,6 +254,17 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
             pencarian_dokumen_keseluruhan: 'Pencarian Dokumen Keseluruhan',
             pencarian_dokumen_divisi: 'Pencarian Dokumen Divisi',
             pencarian_dokumen_pribadi: 'Pencarian Dokumen Pribadi',
+            // Visitor Management
+            lihat_data_pengunjung: 'Lihat Data Pengunjung',
+            konfirmasi_kunjungan: 'Konfirmasi Kunjungan',
+            lihat_ulasan_pengunjung: 'Lihat Ulasan Pengunjung',
+            lihat_laporan_pengunjung: 'Lihat Laporan Pengunjung',
+            lihat_dashboard_pengunjung: 'Lihat Dashboard Pengunjung',
+            lihat_master_manajemen_pengunjung: 'Lihat Data Keperluan Kunjungan',
+            kelola_master_manajemen_pengunjung: 'Kelola Data Keperluan Kunjungan',
+            buat_undangan_tamu: 'Buat Undangan Tamu',
+            lihat_pertanyaan_feedback: 'Lihat Pertanyaan Feedback',
+            kelola_pertanyaan_feedback: 'Kelola Pertanyaan Feedback',
         };
 
         if (overrides[permission]) {
@@ -362,6 +373,7 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                                         'Data Master': 'Data Master',
                                         'Sistem Manajemen Gudang': 'Gudang',
                                         'Sistem Arsip Dokumen': 'Arsip',
+                                        'Pengunjung': 'Pengunjung',
                                     };
                                     const label = displayLabels[module] || module;
                                     const isActive = activeTab === module;
