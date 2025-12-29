@@ -16,6 +16,11 @@ class VisitorFeedback extends Model
     protected $fillable = [
         'visitor_id',
         'feedback_note',
+        'is_read',
+    ];
+
+    protected $casts = [
+        'is_read' => 'boolean',
     ];
 
     public function visitor(): BelongsTo

@@ -11,6 +11,48 @@ class VisitorDashboardService
         private VisitorRepository $visitorRepository
     ) {}
 
+    /**
+     * Get visitor dashboard tabs for the unified dashboard
+     */
+    public function getDashboardTabs(): array
+    {
+        $user = auth()->user();
+        $tabs = [];
+
+        // Check if user has permission to view visitor dashboard
+        if ($user->can('lihat_dashboard_pengunjung')) {
+            $tabs[] = $this->getVisitorOverviewTab();
+        }
+
+        return $tabs;
+    }
+
+    /**
+     * Get visitor overview tab data
+     */
+    private function getVisitorOverviewTab(): array
+    {
+        $statistics = $this->getStatistics();
+        $recentVisitors = $this->visitorRepository->getRecentVisitors(5);
+        $pendingVisitors = $this->visitorRepository->getPendingVisitors(5);
+        $monthlyTrend = $this->getMonthlyTrend();
+        $purposeDistribution = $this->getPurposeDistribution();
+
+        return [
+            'id' => 'overview',
+            'label' => 'Pengunjung',
+            'icon' => 'users',
+            'type' => 'overview',
+            'data' => [
+                'statistics' => $statistics,
+                'recent_visitors' => $recentVisitors,
+                'pending_visitors' => $pendingVisitors,
+                'monthly_trend' => $monthlyTrend,
+                'purpose_distribution' => $purposeDistribution,
+            ],
+        ];
+    }
+
     public function getStatistics(): array
     {
         return [
@@ -26,18 +68,18 @@ class VisitorDashboardService
         return $this->visitorRepository->getPurposeDistribution();
     }
 
-    public function getWeeklyTrend(): array
+    public function getMonthlyTrend(): array
     {
-        $last7Days = collect(range(6, 0))->map(function ($days) {
-            return Carbon::today()->subDays($days)->format('Y-m-d');
+        $last12Months = collect(range(11, 0))->map(function ($months) {
+            return Carbon::today()->subMonths($months)->format('Y-m');
         });
 
-        $data = $this->visitorRepository->getWeeklyTrendData(7);
+        $data = $this->visitorRepository->getMonthlyTrendData(12);
 
-        return $last7Days->map(function ($date) use ($data) {
+        return $last12Months->map(function ($month) use ($data) {
             return [
-                'date' => Carbon::parse($date)->format('d M'),
-                'count' => $data[$date] ?? 0,
+                'month' => Carbon::parse($month . '-01')->format('M Y'),
+                'count' => $data[$month] ?? 0,
             ];
         })->toArray();
     }

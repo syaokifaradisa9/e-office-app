@@ -36,4 +36,33 @@ class EloquentPurposeRepository implements PurposeRepository
     {
         return $purpose->visitors()->exists();
     }
+
+    public function getDatatableQuery(array $params): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = VisitorPurpose::query();
+
+        if (isset($params['search']) && !empty($params['search'])) {
+            $search = $params['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if (isset($params['name']) && !empty($params['name'])) {
+            $query->where('name', 'like', '%' . $params['name'] . '%');
+        }
+
+        if (isset($params['status']) && !empty($params['status'])) {
+            $query->where('is_active', $params['status'] === 'active');
+        }
+
+        if (isset($params['sort_by']) && isset($params['sort_direction'])) {
+            $query->orderBy($params['sort_by'], $params['sort_direction']);
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+
+        return $query;
+    }
 }

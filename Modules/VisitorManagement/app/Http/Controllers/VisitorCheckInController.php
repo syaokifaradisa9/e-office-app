@@ -3,7 +3,7 @@
 namespace Modules\VisitorManagement\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Repositories\Division\DivisionRepository;
+use App\Services\DivisionService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Modules\VisitorManagement\DataTransferObjects\CheckInDTO;
@@ -18,7 +18,7 @@ class VisitorCheckInController extends Controller
     public function __construct(
         private VisitorService $visitorService,
         private PurposeService $purposeService,
-        private DivisionRepository $divisionRepository
+        private DivisionService $divisionService
     ) {}
 
     public function index(Request $request)
@@ -29,7 +29,7 @@ class VisitorCheckInController extends Controller
         }
 
         return Inertia::render('VisitorManagement/CheckIn/Create', [
-            'divisions' => $this->divisionRepository->all(['id', 'name']),
+            'divisions' => $this->divisionService->getAll(),
             'purposes' => $this->purposeService->getActivePurposes(),
             'visitor' => $visitor,
         ]);
@@ -59,23 +59,28 @@ class VisitorCheckInController extends Controller
 
     public function edit(Visitor $visitor)
     {
-        if ($visitor->status !== VisitorStatus::Pending) {
+        // Allow both pending and invited visitors to access this page
+        if (!in_array($visitor->status, [VisitorStatus::Pending, VisitorStatus::Invited])) {
             return redirect()->route('visitor.check-in.list')
-                ->withErrors(['error' => 'Hanya data kunjungan pending yang dapat diedit.']);
+                ->withErrors(['error' => 'Hanya data kunjungan pending atau invited yang dapat diedit.']);
         }
 
+        $isInvited = $visitor->status === VisitorStatus::Invited;
+
         return Inertia::render('VisitorManagement/CheckIn/Create', [
-            'divisions' => $this->divisionRepository->all(['id', 'name']),
+            'divisions' => $this->divisionService->getAll(),
             'purposes' => $this->purposeService->getActivePurposes(),
             'visitor' => $this->visitorService->findVisitor($visitor->id, ['division', 'purpose']),
-            'isEdit' => true,
+            'isEdit' => !$isInvited, // Edit mode for pending, Check-in mode for invited
+            'isInvited' => $isInvited,
         ]);
     }
 
     public function update(CheckInRequest $request, Visitor $visitor)
     {
-        if ($visitor->status !== VisitorStatus::Pending) {
-            return back()->withErrors(['error' => 'Hanya data kunjungan pending yang dapat diedit.']);
+        // Allow both pending and invited visitors
+        if (!in_array($visitor->status, [VisitorStatus::Pending, VisitorStatus::Invited])) {
+            return back()->withErrors(['error' => 'Hanya data kunjungan pending atau invited yang dapat diproses.']);
         }
 
         $dto = CheckInDTO::fromRequest($request);

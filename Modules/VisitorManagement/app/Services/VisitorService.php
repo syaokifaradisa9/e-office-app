@@ -14,7 +14,8 @@ use Illuminate\Support\Str;
 class VisitorService
 {
     public function __construct(
-        private VisitorRepository $visitorRepository
+        private VisitorRepository $visitorRepository,
+        private \Modules\VisitorManagement\Repositories\Feedback\VisitorFeedbackRepository $feedbackRepository
     ) {}
 
     public function getCheckOutList(): \Illuminate\Database\Eloquent\Collection
@@ -70,6 +71,11 @@ class VisitorService
         $data = $dto->toArray();
         unset($data['invited_id']); // Not relevant for update
 
+        // If visitor was invited, set check_in_at now (they're completing check-in)
+        if ($visitor->status->value === 'invited') {
+            $data['check_in_at'] = now();
+        }
+
         // Handle photo upload if photo_url is base64 and different from current
         if (isset($data['photo_url']) && str_starts_with($data['photo_url'], 'data:image')) {
             $data['photo_url'] = $this->saveBase64Photo($data['photo_url']);
@@ -91,26 +97,15 @@ class VisitorService
 
     public function submitFeedback(Visitor $visitor, FeedbackDTO $dto): bool
     {
-        return DB::transaction(function () use ($visitor, $dto) {
-            // Create overall feedback
-            $feedback = $visitor->feedback()->create([
-                'feedback_note' => $dto->feedback_note,
-            ]);
+        $this->feedbackRepository->saveFeedback($visitor, [
+            'feedback_note' => $dto->feedback_note,
+        ], $dto->ratings);
 
-            // Save individual ratings
-            foreach ($dto->ratings as $questionId => $rating) {
-                $feedback->ratings()->create([
-                    'question_id' => $questionId,
-                    'rating' => (int) $rating,
-                ]);
-            }
-
-            // Update visitor status to completed and set check_out_at if not set
-            return $this->visitorRepository->update($visitor, [
-                'status' => 'completed',
-                'check_out_at' => $visitor->check_out_at ?? now(),
-            ]);
-        });
+        // Update visitor status to completed and set check_out_at if not set
+        return $this->visitorRepository->update($visitor, [
+            'status' => 'completed',
+            'check_out_at' => $visitor->check_out_at ?? now(),
+        ]);
     }
 
     public function checkOut(Visitor $visitor): bool
@@ -118,6 +113,14 @@ class VisitorService
         return $this->visitorRepository->update($visitor, [
             'status' => 'completed',
             'check_out_at' => now(),
+        ]);
+    }
+
+    public function cancelVisit(Visitor $visitor): bool
+    {
+        return $this->visitorRepository->update($visitor, [
+            'status' => 'cancelled',
+            'admin_note' => 'Dibatalkan oleh pengunjung',
         ]);
     }
 

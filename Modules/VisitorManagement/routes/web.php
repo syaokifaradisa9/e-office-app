@@ -70,10 +70,24 @@ Route::middleware(['auth', 'verified'])->prefix('visitor')->name('visitor.')->gr
         Route::post('/{question}/toggle', 'toggleStatus')->name('toggle');
     });
 
+    // Reports (must be before /{visitor} wildcard)
+    Route::controller(\Modules\VisitorManagement\Http\Controllers\VisitorReportController::class)->prefix('reports')->name('reports.')->group(function () {
+        Route::get('/', 'index')->name('index');
+    });
+    
+    // Criticism and Suggestions
+    Route::controller(\Modules\VisitorManagement\Http\Controllers\VisitorFeedbackController::class)->prefix('criticism-suggestions')->name('criticism-suggestions.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/datatable', 'datatable')->name('datatable');
+        Route::get('/export', 'export')->name('export');
+        Route::post('/{id}/mark-as-read', 'markAsRead')->name('mark-as-read');
+    });
+
     Route::controller(VisitorController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/datatable', 'datatable')->name('datatable');
         Route::get('/export', 'export')->name('export');
+        Route::get('/create', 'create')->name('create');
         Route::post('/store-invitation', 'storeInvitation')->name('store-invitation');
         Route::get('/{visitor}', 'show')->name('show');
         Route::post('/{visitor}/confirm', 'confirm')->name('confirm');

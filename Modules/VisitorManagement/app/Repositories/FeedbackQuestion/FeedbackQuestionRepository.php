@@ -13,4 +13,5 @@ interface FeedbackQuestionRepository
     public function update(VisitorFeedbackQuestion $question, array $data): bool;
     public function delete(VisitorFeedbackQuestion $question): bool;
     public function hasRatings(VisitorFeedbackQuestion $question): bool;
+    public function getDatatableQuery(array $params): \Illuminate\Database\Eloquent\Builder;
 }

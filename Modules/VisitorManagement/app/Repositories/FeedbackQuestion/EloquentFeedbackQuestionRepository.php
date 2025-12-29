@@ -36,4 +36,30 @@ class EloquentFeedbackQuestionRepository implements FeedbackQuestionRepository
     {
         return $question->ratings()->exists();
     }
+
+    public function getDatatableQuery(array $params): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = VisitorFeedbackQuestion::query();
+
+        if (isset($params['search']) && !empty($params['search'])) {
+            $search = $params['search'];
+            $query->where('question', 'like', "%{$search}%");
+        }
+
+        if (isset($params['question']) && !empty($params['question'])) {
+            $query->where('question', 'like', '%' . $params['question'] . '%');
+        }
+
+        if (isset($params['status']) && !empty($params['status'])) {
+            $query->where('is_active', $params['status'] === 'active');
+        }
+
+        if (isset($params['sort_by']) && isset($params['sort_direction'])) {
+            $query->orderBy($params['sort_by'], $params['sort_direction']);
+        } else {
+            $query->orderBy('id', 'desc');
+        }
+
+        return $query;
+    }
 }

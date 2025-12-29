@@ -9,6 +9,7 @@ enum VisitorStatus: string
     case Rejected = 'rejected';
     case Completed = 'completed';
     case Invited = 'invited';
+    case Cancelled = 'cancelled';
 
     public function label(): string
     {
@@ -18,6 +19,7 @@ enum VisitorStatus: string
             self::Rejected => 'Ditolak',
             self::Completed => 'Selesai',
             self::Invited => 'Diundang',
+            self::Cancelled => 'Dibatalkan',
         };
     }
 
@@ -29,6 +31,7 @@ enum VisitorStatus: string
             self::Rejected => 'red',
             self::Completed => 'blue',
             self::Invited => 'indigo',
+            self::Cancelled => 'slate',
         };
     }
 

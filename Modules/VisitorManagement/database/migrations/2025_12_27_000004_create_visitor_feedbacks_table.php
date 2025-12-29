@@ -15,6 +15,7 @@ return new class extends Migration
             $blueprint->id();
             $blueprint->foreignId('visitor_id')->constrained('visitors')->onDelete('cascade');
             $blueprint->text('feedback_note')->nullable();
+            $blueprint->boolean('is_read')->default(false);
             $blueprint->timestamps();
         });
     }

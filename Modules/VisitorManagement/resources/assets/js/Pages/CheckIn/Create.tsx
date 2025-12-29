@@ -18,15 +18,17 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import PublicLayout from '../../Layouts/PublicLayout';
+import VisitorBackground from '../../components/VisitorBackground';
 
 interface CheckInProps {
     divisions: Array<{ id: number; name: string }>;
     purposes: Array<{ id: number; name: string }>;
     visitor?: any;
     isEdit?: boolean;
+    isInvited?: boolean;
 }
 
-export default function CheckIn({ divisions, purposes, visitor, isEdit = false }: CheckInProps) {
+export default function CheckIn({ divisions, purposes, visitor, isEdit = false, isInvited = false }: CheckInProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
@@ -116,7 +118,8 @@ export default function CheckIn({ divisions, purposes, visitor, isEdit = false }
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (isEdit && visitor?.id) {
+        // Use POST to update route for both edit and invited visitors
+        if ((isEdit || isInvited) && visitor?.id) {
             post(`/visitor/check-in/${visitor.id}`);
         } else {
             post('/visitor/check-in');
@@ -144,12 +147,21 @@ export default function CheckIn({ divisions, purposes, visitor, isEdit = false }
         );
     };
 
+    const getPageTitle = () => {
+        if (isInvited) return "Lanjutkan Check-In";
+        if (isEdit) return "Edit Data Kunjungan";
+        return "Check-In Pengunjung";
+    };
+
     return (
-        <PublicLayout title={isEdit ? "Edit Data Kunjungan" : "Check-In Pengunjung"} fullWidth hideHeader>
-            <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+        <PublicLayout title={getPageTitle()} fullWidth hideHeader>
+            <div className="relative min-h-screen w-full overflow-hidden bg-slate-100 dark:bg-slate-900">
+                {/* Abstract Background */}
+                <VisitorBackground />
+
                 {/* Main Content */}
-                <div className="flex flex-1 flex-col overflow-auto">
-                    <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
+                <div className="relative z-10 flex min-h-screen">
+                    <form onSubmit={handleSubmit} className="flex flex-1">
                         <div className="flex flex-1 items-start justify-center px-4 py-6 sm:items-center sm:px-6 sm:py-8 lg:px-8">
                             {/* Step 1: Form */}
                             {currentStep === 1 && (
@@ -181,7 +193,7 @@ export default function CheckIn({ divisions, purposes, visitor, isEdit = false }
                                     <div className="overflow-hidden rounded-2xl bg-white shadow-xl shadow-slate-200/50 ring-1 ring-slate-200/50 dark:bg-slate-900 dark:shadow-none dark:ring-slate-800">
                                         {/* Header */}
                                         <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-5 dark:border-slate-800 dark:from-slate-900 dark:to-slate-800/50">
-                                            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
                                                 {isEdit ? 'Edit Data Kunjungan' : 'Formulir Check-In'}
                                             </h2>
                                             <p className="mt-1 text-sm text-slate-500">
@@ -293,10 +305,7 @@ export default function CheckIn({ divisions, purposes, visitor, isEdit = false }
                                                         href="/visitor/check-in/list"
                                                         className="text-sm text-slate-500 transition-colors hover:text-emerald-600"
                                                     >
-                                                        <span className="block mb-1">Lihat Daftar Pengunjung atau Mau Edit Data?</span>
-                                                        <span className="font-medium text-emerald-600 hover:underline">
-                                                            Klik di sini
-                                                        </span>
+                                                        Lihat Daftar Pengunjung atau Mau Edit Data? <span className="font-medium text-emerald-600 hover:underline">Klik di sini</span>
                                                     </Link>
                                                 </div>
                                             )}
@@ -335,7 +344,7 @@ export default function CheckIn({ divisions, purposes, visitor, isEdit = false }
                                     <div className="overflow-hidden rounded-2xl bg-white shadow-xl shadow-slate-200/50 ring-1 ring-slate-200/50 dark:bg-slate-900 dark:shadow-none dark:ring-slate-800">
                                         {/* Header */}
                                         <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-5 dark:border-slate-800 dark:from-slate-900 dark:to-slate-800/50">
-                                            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
                                                 {isEdit ? 'Update Foto' : 'Foto Pengunjung'}
                                             </h2>
                                             <p className="mt-1 text-sm text-slate-500">

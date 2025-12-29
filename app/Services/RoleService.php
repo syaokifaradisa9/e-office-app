@@ -160,6 +160,11 @@ class RoleService
                 'label' => 'Pertanyaan Feedback',
                 'keywords' => ['lihat_pertanyaan_feedback', 'kelola_pertanyaan_feedback'],
             ],
+            'kritik_saran' => [
+                'module' => 'Pengunjung',
+                'label' => 'Kritik dan Saran',
+                'keywords' => ['lihat_kritik_saran_pengunjung', 'kelola_kritik_saran_pengunjung'],
+            ],
         ];
 
         foreach ($permissions as $permission) {

@@ -14,6 +14,8 @@ enum VisitorUserPermission: string
     case CreateInvitation = 'buat_undangan_tamu';
     case ViewFeedbackQuestion = 'lihat_pertanyaan_feedback';
     case ManageFeedbackQuestion = 'kelola_pertanyaan_feedback';
+    case ViewCriticismFeedback = 'lihat_kritik_saran_pengunjung';
+    case ManageCriticismFeedback = 'kelola_kritik_saran_pengunjung';
 
     public static function values(): array
     {

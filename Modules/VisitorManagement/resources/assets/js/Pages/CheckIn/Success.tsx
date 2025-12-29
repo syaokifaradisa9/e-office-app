@@ -1,5 +1,6 @@
 import React from 'react';
 import PublicLayout from '../../Layouts/PublicLayout';
+import VisitorBackground from '../../components/VisitorBackground';
 import Button from '@/components/buttons/Button';
 import {
     CheckCircle2,
@@ -29,8 +30,11 @@ export default function Success({ visitor }: SuccessProps) {
 
     return (
         <PublicLayout title="Check-In Berhasil" hideHeader fullWidth>
-            <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-                <div className="flex flex-1 items-start justify-center px-4 py-6 sm:items-center sm:px-6 sm:py-8 lg:px-8">
+            <div className="relative min-h-screen w-full overflow-hidden bg-slate-100 dark:bg-slate-900">
+                {/* Abstract Background */}
+                <VisitorBackground />
+
+                <div className="relative z-10 flex min-h-screen items-start justify-center px-4 py-6 sm:items-center sm:px-6 sm:py-8 lg:px-8">
                     <div className="w-full max-w-5xl animate-in fade-in zoom-in duration-500">
                         {/* Step Indicator - Completed */}
                         <div className="mb-6 flex items-center justify-center">
@@ -80,8 +84,8 @@ export default function Success({ visitor }: SuccessProps) {
                                         <div className="absolute inset-0 animate-ping rounded-full bg-emerald-400/30" style={{ animationDuration: '2s' }} />
                                     </div>
                                     <div>
-                                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Check-In Berhasil!</h1>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                                        <h1 className="text-lg font-semibold text-slate-900 dark:text-white">Check-In Berhasil!</h1>
+                                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                                             Data kunjungan Anda telah terdaftar dalam sistem
                                         </p>
                                     </div>
@@ -227,13 +231,6 @@ export default function Success({ visitor }: SuccessProps) {
                                     className="h-12 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 text-sm font-semibold shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40 active:scale-[0.98]"
                                 />
                             </div>
-                        </div>
-
-                        {/* Footer text */}
-                        <div className="mt-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
-                            <p className="text-xs font-medium text-slate-400">
-                                &copy; {new Date().getFullYear()} E-Office Digital Visitor System
-                            </p>
                         </div>
                     </div>
                 </div>

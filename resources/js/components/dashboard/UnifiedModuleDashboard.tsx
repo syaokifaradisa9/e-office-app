@@ -19,6 +19,9 @@ import {
     AlertTriangle,
     Users,
     FileArchive,
+    UserCheck,
+    UserX,
+    Star,
 } from 'lucide-react';
 
 // ============================================
@@ -134,6 +137,61 @@ interface ArchieveTab {
 }
 
 // ============================================
+// VISITOR TYPES
+// ============================================
+interface VisitorStatistics {
+    today_visitors: number;
+    active_visitors: number;
+    rejected_visits: number;
+    average_rating: number;
+}
+
+interface RecentVisitor {
+    id: number;
+    name: string;
+    organization: string;
+    division: string;
+    purpose: string;
+    status: string;
+    check_in_at: string;
+}
+
+interface PendingVisitor {
+    id: number;
+    name: string;
+    organization: string;
+    division: string;
+    purpose: string;
+    check_in_at: string;
+}
+
+interface MonthlyTrend {
+    month: string;
+    count: number;
+}
+
+interface PurposeDistribution {
+    name: string;
+    count: number;
+}
+
+interface VisitorTabData {
+    statistics?: VisitorStatistics;
+    recent_visitors?: RecentVisitor[];
+    pending_visitors?: PendingVisitor[];
+    monthly_trend?: MonthlyTrend[];
+    purpose_distribution?: PurposeDistribution[];
+}
+
+interface VisitorTab {
+    id: string;
+    label: string;
+    icon: string;
+    type: string;
+    data: VisitorTabData;
+}
+
+// ============================================
 // UNIFIED TAB TYPE
 // ============================================
 interface UnifiedTab {
@@ -141,14 +199,15 @@ interface UnifiedTab {
     label: string;
     icon: string;
     type: string;
-    module: 'inventory' | 'archieve';
-    originalData: InventoryTabData | ArchieveTabData;
+    module: 'inventory' | 'archieve' | 'visitor';
+    originalData: InventoryTabData | ArchieveTabData | VisitorTabData;
     stock_opname_link?: string;
 }
 
 interface DashboardData {
     inventory?: InventoryTab[];
     archieve?: ArchieveTab[];
+    visitor?: VisitorTab[];
     [key: string]: unknown;
 }
 
@@ -190,6 +249,19 @@ export default function UnifiedModuleDashboard() {
         });
     });
 
+    // Add Visitor tabs
+    const visitorTabs = dashboardData?.visitor || [];
+    visitorTabs.forEach((tab) => {
+        unifiedTabs.push({
+            id: `visitor-${tab.id}`,
+            label: tab.label,
+            icon: tab.icon,
+            type: tab.type,
+            module: 'visitor',
+            originalData: tab.data,
+        });
+    });
+
     const [activeTabIndex, setActiveTabIndex] = useState(0);
 
     if (unifiedTabs.length === 0) {
@@ -220,6 +292,9 @@ export default function UnifiedModuleDashboard() {
     const getTabIcon = (tab: UnifiedTab) => {
         if (tab.module === 'archieve') {
             return tab.icon === 'globe' ? Globe : FileArchive;
+        }
+        if (tab.module === 'visitor') {
+            return Users;
         }
         switch (tab.icon) {
             case 'building':
@@ -725,18 +800,210 @@ export default function UnifiedModuleDashboard() {
     // ============================================
     // RENDER TAB CONTENT
     // ============================================
+    // ============================================
+    // VISITOR RENDER FUNCTIONS
+    // ============================================
+    const renderVisitorOverviewContent = (tab: UnifiedTab) => {
+        const data = tab.originalData as VisitorTabData;
+        const {
+            statistics,
+            recent_visitors = [],
+            pending_visitors = [],
+            monthly_trend = [],
+            purpose_distribution = [],
+        } = data;
+
+        const getStatusBadgeColor = (status: string) => {
+            switch (status) {
+                case 'pending': return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+                case 'approved': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+                case 'rejected': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+                case 'completed': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+                default: return 'bg-slate-100 text-slate-700';
+            }
+        };
+
+        const getStatusLabel = (status: string) => {
+            switch (status) {
+                case 'pending': return 'Menunggu';
+                case 'approved': return 'Disetujui';
+                case 'rejected': return 'Ditolak';
+                case 'completed': return 'Selesai';
+                default: return status;
+            }
+        };
+
+        return (
+            <div className="space-y-5 animate-in fade-in duration-300">
+                {/* Statistics */}
+                <div className="grid gap-4 md:grid-cols-4">
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                        <div className="flex items-center gap-3">
+                            <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                <Users className="size-5" />
+                            </div>
+                            <div>
+                                <p className="text-xs font-medium text-slate-500">Pengunjung Hari Ini</p>
+                                <p className="text-xl font-bold text-slate-900 dark:text-white">{statistics?.today_visitors || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                        <div className="flex items-center gap-3">
+                            <div className="flex size-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+                                <UserCheck className="size-5" />
+                            </div>
+                            <div>
+                                <p className="text-xs font-medium text-slate-500">Sedang Berkunjung</p>
+                                <p className="text-xl font-bold text-slate-900 dark:text-white">{statistics?.active_visitors || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                        <div className="flex items-center gap-3">
+                            <div className="flex size-10 items-center justify-center rounded-lg bg-red-100 text-red-600">
+                                <UserX className="size-5" />
+                            </div>
+                            <div>
+                                <p className="text-xs font-medium text-slate-500">Ditolak Hari Ini</p>
+                                <p className="text-xl font-bold text-slate-900 dark:text-white">{statistics?.rejected_visits || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                        <div className="flex items-center gap-3">
+                            <div className="flex size-10 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+                                <Star className="size-5" />
+                            </div>
+                            <div>
+                                <p className="text-xs font-medium text-slate-500">Rata-rata Rating</p>
+                                <p className="text-xl font-bold text-slate-900 dark:text-white">{statistics?.average_rating || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Pending & Recent Visitors */}
+                <div className="grid gap-5 lg:grid-cols-2">
+                    {/* Pending Visitors */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
+                        <div className="mb-4 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Clock className="size-5 text-amber-600" />
+                                <h3 className="font-semibold text-slate-800 dark:text-white">Menunggu Konfirmasi</h3>
+                            </div>
+                            <Link href="/visitor" className="text-xs text-primary hover:underline">Lihat Semua</Link>
+                        </div>
+                        <div className="space-y-3">
+                            {pending_visitors.length > 0 ? pending_visitors.map((visitor) => (
+                                <Link key={visitor.id} href={`/visitor/${visitor.id}`} className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 transition-colors hover:bg-slate-100 dark:bg-slate-700/50 dark:hover:bg-slate-700">
+                                    <div>
+                                        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{visitor.name}</p>
+                                        <p className="text-xs text-slate-400">{visitor.organization} • {visitor.division}</p>
+                                    </div>
+                                    <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Menunggu</span>
+                                </Link>
+                            )) : <p className="py-4 text-center text-sm text-slate-400">Tidak ada pengunjung menunggu</p>}
+                        </div>
+                    </div>
+
+                    {/* Recent Visitors */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
+                        <div className="mb-4 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <History className="size-5 text-violet-600" />
+                                <h3 className="font-semibold text-slate-800 dark:text-white">Pengunjung Terbaru</h3>
+                            </div>
+                            <Link href="/visitor" className="text-xs text-primary hover:underline">Lihat Semua</Link>
+                        </div>
+                        <div className="space-y-3">
+                            {recent_visitors.length > 0 ? recent_visitors.map((visitor) => (
+                                <div key={visitor.id} className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 dark:bg-slate-700/50">
+                                    <div>
+                                        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{visitor.name}</p>
+                                        <p className="text-xs text-slate-400">{visitor.check_in_at}</p>
+                                    </div>
+                                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${getStatusBadgeColor(visitor.status)}`}>
+                                        {getStatusLabel(visitor.status)}
+                                    </span>
+                                </div>
+                            )) : <p className="py-4 text-center text-sm text-slate-400">Tidak ada pengunjung</p>}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Monthly Trend & Purpose Distribution */}
+                <div className="grid gap-5 lg:grid-cols-2">
+                    {/* Monthly Trend */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
+                        <div className="mb-4 flex items-center gap-2">
+                            <TrendingUp className="size-5 text-primary" />
+                            <h3 className="font-semibold text-slate-800 dark:text-white">Tren Bulanan</h3>
+                        </div>
+                        <div className="flex items-end justify-between gap-1 h-32 overflow-x-auto">
+                            {monthly_trend.map((item, idx) => {
+                                const maxCount = Math.max(...monthly_trend.map(d => d.count), 1);
+                                const height = (item.count / maxCount) * 100;
+                                return (
+                                    <div key={idx} className="flex flex-1 flex-col items-center gap-1 min-w-6">
+                                        <div className="w-full flex items-end justify-center" style={{ height: '80px' }}>
+                                            <div
+                                                className="w-full max-w-6 rounded-t bg-primary/80 transition-all hover:bg-primary"
+                                                style={{ height: `${Math.max(height, 5)}%` }}
+                                            />
+                                        </div>
+                                        <span className="text-[10px] text-slate-500 whitespace-nowrap">{item.month.split(' ')[0]}</span>
+                                        <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300">{item.count}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Purpose Distribution */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
+                        <div className="mb-4 flex items-center gap-2">
+                            <ClipboardCheck className="size-5 text-emerald-600" />
+                            <h3 className="font-semibold text-slate-800 dark:text-white">Keperluan Kunjungan</h3>
+                        </div>
+                        <div className="space-y-3">
+                            {purpose_distribution.length > 0 ? purpose_distribution.slice(0, 5).map((purpose, idx) => (
+                                <div key={idx} className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 dark:bg-slate-700/50">
+                                    <div className="flex items-center gap-3">
+                                        <span className="flex size-7 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">{idx + 1}</span>
+                                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{purpose.name}</span>
+                                    </div>
+                                    <span className="text-sm font-bold text-emerald-600">{purpose.count}</span>
+                                </div>
+                            )) : <p className="py-4 text-center text-sm text-slate-400">Tidak ada data</p>}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // ============================================
+    // RENDER TAB CONTENT
+    // ============================================
     const renderTabContent = (tab: UnifiedTab) => {
         if (tab.module === 'inventory') {
             if (tab.type === 'overview') {
                 return renderInventoryOverviewContent(tab);
             }
             return renderInventoryWarehouseContent(tab);
-        } else {
+        } else if (tab.module === 'archieve') {
             if (tab.type === 'overview') {
                 return renderArchieveOverviewContent(tab);
             }
             return renderArchieveDivisionContent(tab);
+        } else if (tab.module === 'visitor') {
+            return renderVisitorOverviewContent(tab);
         }
+        return null;
     };
 
     return (

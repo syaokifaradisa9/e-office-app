@@ -3,7 +3,6 @@
 namespace Modules\VisitorManagement\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Repositories\Division\DivisionRepository;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Modules\VisitorManagement\DataTransferObjects\FeedbackDTO;
@@ -16,8 +15,7 @@ class VisitorCheckOutController extends Controller
 {
     public function __construct(
         private VisitorService $visitorService,
-        private FeedbackQuestionService $feedbackQuestionService,
-        private DivisionRepository $divisionRepository
+        private FeedbackQuestionService $feedbackQuestionService
     ) {}
 
     public function index()
@@ -71,16 +69,14 @@ class VisitorCheckOutController extends Controller
 
     public function cancel(Visitor $visitor)
     {
-        if ($visitor->status !== VisitorStatus::Pending) {
+        // Allow cancellation for pending and invited visitors
+        if (!in_array($visitor->status, [VisitorStatus::Pending, VisitorStatus::Invited])) {
             return back()->withErrors(['error' => 'Kunjungan tidak dapat dibatalkan.']);
         }
 
-        $visitor->update([
-            'status' => 'rejected',
-            'admin_note' => 'Dibatalkan oleh pengunjung',
-        ]);
+        $this->visitorService->cancelVisit($visitor);
 
-        return redirect()->route('visitor.check-out.index')
+        return redirect()->route('visitor.check-in.list')
             ->with('success', 'Kunjungan berhasil dibatalkan.');
     }
 

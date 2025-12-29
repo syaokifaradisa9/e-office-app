@@ -1,8 +1,11 @@
 import { Link, router } from '@inertiajs/react';
-import { ArrowLeft, Ban, Clock, DoorOpen, Search, User, Building2, Calendar, Users, MapPin, Edit, LogOut } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, Ban, Clock, DoorOpen, Search, User, Building2, Calendar, Users, MapPin, Edit, LogOut } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import PublicLayout from '../../Layouts/PublicLayout';
+import VisitorBackground from '../../components/VisitorBackground';
 import ConfirmationAlert from '@/components/alerts/ConfirmationAlert';
+import FormInput from '@/components/forms/FormInput';
+import Button from '@/components/buttons/Button';
 
 interface Division {
     id: number;
@@ -19,7 +22,7 @@ interface Visitor {
     visitor_name: string;
     phone_number: string;
     organization: string;
-    status: 'pending' | 'approved' | 'rejected' | 'completed' | 'invited';
+    status: 'pending' | 'approved' | 'rejected' | 'completed' | 'invited' | 'cancelled';
     check_in_at: string | null;
     photo_url: string | null;
     division?: Division;
@@ -52,10 +55,9 @@ export default function VisitorList({ visitors }: VisitorListProps) {
     }, [searchQuery, visitors]);
 
     const handleEditOrCheckIn = (visitor: Visitor) => {
-        if (visitor.status === 'pending') {
+        // Both pending and invited visitors use the same route pattern
+        if (visitor.status === 'pending' || visitor.status === 'invited') {
             router.get(`/visitor/check-in/${visitor.id}`);
-        } else if (visitor.status === 'invited') {
-            router.get(`/visitor/check-in?visitor_id=${visitor.id}`);
         }
     };
 
@@ -112,6 +114,13 @@ export default function VisitorList({ visitors }: VisitorListProps) {
                         Berkunjung
                     </span>
                 );
+            case 'cancelled':
+                return (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                        <Ban className="size-3" />
+                        Dibatalkan
+                    </span>
+                );
             default:
                 return null;
         }
@@ -160,41 +169,44 @@ export default function VisitorList({ visitors }: VisitorListProps) {
             </div>
             <div className="flex shrink-0 gap-2 pl-16 sm:pl-0">
                 {visitor.status === 'invited' && (
-                    <button
-                        onClick={() => handleEditOrCheckIn(visitor)}
-                        className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:scale-[1.02] hover:shadow-blue-500/40 active:scale-[0.98]"
-                    >
-                        <Calendar className="size-4" />
-                        Lanjut Check-In
-                    </button>
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={() => handleEditOrCheckIn(visitor)}
+                            label="Lanjut Check-In"
+                            icon={<Calendar className="size-4" />}
+                        />
+                        <Button
+                            onClick={() => handleCancelVisit(visitor)}
+                            disabled={cancellingId === visitor.id}
+                            label="Batal"
+                            icon={<Ban className="size-4" />}
+                            variant="danger"
+                        />
+                    </div>
                 )}
                 {visitor.status === 'pending' && (
                     <div className="flex gap-2">
-                        <button
+                        <Button
                             onClick={() => handleEditOrCheckIn(visitor)}
-                            className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:shadow dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-                        >
-                            <Edit className="size-4" />
-                            Edit Data
-                        </button>
-                        <button
+                            label="Edit Data"
+                            icon={<Edit className="size-4" />}
+                            variant="outline"
+                        />
+                        <Button
                             onClick={() => handleCancelVisit(visitor)}
                             disabled={cancellingId === visitor.id}
-                            className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 transition-all hover:bg-rose-100 disabled:opacity-50 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-400"
-                        >
-                            <Ban className="size-4" />
-                            Batal
-                        </button>
+                            label="Batal"
+                            icon={<Ban className="size-4" />}
+                            variant="danger"
+                        />
                     </div>
                 )}
                 {visitor.status === 'approved' && (
-                    <button
+                    <Button
                         onClick={() => handleCheckout(visitor.id)}
-                        className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:scale-[1.02] hover:shadow-emerald-500/40 active:scale-[0.98]"
-                    >
-                        <LogOut className="size-4" />
-                        Check-Out
-                    </button>
+                        label="Check-Out"
+                        icon={<LogOut className="size-4" />}
+                    />
                 )}
             </div>
         </div>
@@ -212,40 +224,35 @@ export default function VisitorList({ visitors }: VisitorListProps) {
                 type="danger"
                 onConfirm={confirmCancelVisit}
             />
-            <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-                {/* Main Content */}
-                <div className="flex flex-1 items-start justify-center px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-                    <div className="w-full max-w-5xl animate-in fade-in zoom-in duration-300">
-                        {/* Navigation */}
-                        <div className="mb-6 flex items-center justify-between">
-                            <Link
-                                href="/visitor/check-in"
-                                className="flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-medium text-slate-600 shadow-lg ring-1 ring-slate-200/50 backdrop-blur-sm transition-all hover:text-slate-900 dark:bg-slate-800/80 dark:text-slate-400 dark:ring-slate-700 dark:hover:text-white"
-                            >
-                                <ArrowLeft className="size-4" />
-                                <span>Kembali ke Check-In</span>
-                            </Link>
+            <div className="relative min-h-screen w-full overflow-hidden bg-slate-100 dark:bg-slate-900">
+                {/* Abstract Background */}
+                <VisitorBackground />
 
-                            <div className="flex items-center gap-3 rounded-full bg-white/80 px-4 py-2 shadow-lg ring-1 ring-slate-200/50 backdrop-blur-sm dark:bg-slate-800/80 dark:ring-slate-700">
-                                <div className="flex size-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 text-white shadow-md shadow-indigo-500/30">
-                                    <Users className="size-4" />
-                                </div>
-                                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Daftar Pengunjung & Check-Out</span>
-                            </div>
-                        </div>
+                {/* Main Content */}
+                <div className="relative z-10 flex min-h-screen items-start justify-center px-4 py-6 sm:items-center sm:px-6 sm:py-8 lg:px-8">
+                    <div className="w-full max-w-5xl animate-in fade-in zoom-in duration-300">
 
                         {/* Main Card */}
                         <div className="overflow-hidden rounded-2xl bg-white shadow-xl shadow-slate-200/50 ring-1 ring-slate-200/50 dark:bg-slate-900 dark:shadow-none dark:ring-slate-800">
                             {/* Header */}
                             <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-5 dark:border-slate-800 dark:from-slate-900 dark:to-slate-800/50">
                                 <div className="flex items-center justify-between">
-                                    <div>
-                                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                                            Daftar Pengunjung Aktif
-                                        </h2>
-                                        <p className="mt-1 text-sm text-slate-500">
-                                            Cari nama Anda untuk Check-Out, Edit Data, atau Melanjutkan Undangan
-                                        </p>
+                                    <div className="flex items-center gap-3">
+                                        <Link
+                                            href="/visitor/check-in"
+                                            className="-ml-2 flex size-10 items-center justify-center rounded-full text-slate-500 transition-all hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                                            title="Kembali ke Check-In"
+                                        >
+                                            <ChevronLeft className="size-6" />
+                                        </Link>
+                                        <div>
+                                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                                                Daftar Pengunjung Aktif
+                                            </h2>
+                                            <p className="mt-1 text-sm text-slate-500">
+                                                Cari nama Anda untuk Check-Out, Edit Data, atau Melanjutkan Undangan
+                                            </p>
+                                        </div>
                                     </div>
                                     <div className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 dark:bg-slate-800">
                                         <Users className="size-4 text-slate-500" />
@@ -258,27 +265,24 @@ export default function VisitorList({ visitors }: VisitorListProps) {
 
                             {/* Search Input */}
                             <div className="border-b border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/30">
-                                <div className="relative">
-                                    <Search className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
-                                    <input
-                                        type="text"
-                                        className="w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-12 pr-4 text-base text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                                        placeholder="Cari nama atau nomor telepon..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                    />
-                                </div>
+                                <FormInput
+                                    name="search"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Cari nama atau nomor telepon..."
+                                    icon={<Search className="size-4" />}
+                                />
                             </div>
 
                             {/* Results List */}
                             {filteredVisitors.length > 0 ? (
-                                <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                                <div className="divide-y divide-slate-100 dark:divide-slate-800 min-h-[320px]">
                                     {filteredVisitors.map((visitor) => (
                                         <VisitorCard key={visitor.id} visitor={visitor} />
                                     ))}
                                 </div>
                             ) : (
-                                <div className="p-12 text-center">
+                                <div className="flex flex-col items-center justify-center p-12 text-center min-h-[320px]">
                                     <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
                                         <Search className="size-10 text-slate-400" />
                                     </div>
@@ -292,13 +296,6 @@ export default function VisitorList({ visitors }: VisitorListProps) {
                                     </p>
                                 </div>
                             )}
-                        </div>
-
-                        {/* Footer text */}
-                        <div className="mt-6 text-center">
-                            <p className="text-xs font-medium text-slate-400">
-                                &copy; {new Date().getFullYear()} E-Office Digital Visitor System
-                            </p>
                         </div>
                     </div>
                 </div>

@@ -13,4 +13,5 @@ interface PurposeRepository
     public function update(VisitorPurpose $purpose, array $data): bool;
     public function delete(VisitorPurpose $purpose): bool;
     public function hasVisitors(VisitorPurpose $purpose): bool;
+    public function getDatatableQuery(array $params): \Illuminate\Database\Eloquent\Builder;
 }

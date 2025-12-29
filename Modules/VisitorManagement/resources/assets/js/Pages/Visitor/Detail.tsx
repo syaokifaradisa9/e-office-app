@@ -21,7 +21,7 @@ interface Visitor {
     purpose: { name: string };
     purpose_detail: string;
     visitor_count: number;
-    status: 'pending' | 'approved' | 'rejected' | 'completed';
+    status: 'pending' | 'approved' | 'rejected' | 'completed' | 'invited' | 'cancelled';
     check_in_at: string;
     check_out_at: string | null;
     admin_note: string | null;
@@ -44,6 +44,8 @@ export default function VisitorDetail({ visitor }: DetailProps) {
             case 'approved': return 'success';
             case 'rejected': return 'danger';
             case 'completed': return 'primary';
+            case 'invited': return 'info';
+            case 'cancelled': return 'secondary';
             default: return 'secondary';
         }
     };
@@ -73,7 +75,11 @@ export default function VisitorDetail({ visitor }: DetailProps) {
                         <div className="mt-8 space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                             <div className="flex items-center gap-3">
                                 <Phone className="size-4 text-emerald-500" />
-                                <span className="text-sm font-medium">{visitor.phone_number}</span>
+                                <span className="text-sm font-medium">
+                                    {visitor.phone_number.startsWith('+62') || visitor.phone_number.startsWith('62')
+                                        ? visitor.phone_number
+                                        : `+62 ${visitor.phone_number}`}
+                                </span>
                             </div>
                             <div className="flex items-center gap-3">
                                 <Building className="size-4 text-emerald-500" />
@@ -151,7 +157,7 @@ export default function VisitorDetail({ visitor }: DetailProps) {
                         <ContentCard title="Ulasan Pengunjung">
                             <div className="space-y-8">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {visitor.feedback.ratings.map((rating) => (
+                                    {visitor.feedback?.ratings.map((rating) => (
                                         <div key={rating.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
                                             <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{rating.question.question}</p>
                                             <div className="flex gap-1">
@@ -166,21 +172,11 @@ export default function VisitorDetail({ visitor }: DetailProps) {
                                     ))}
                                 </div>
 
-                                {visitor.feedback.feedback_note && (
-                                    <div className="p-6 bg-pink-50/30 dark:bg-pink-900/10 rounded-3xl border border-pink-100/50 dark:border-pink-900/20">
-                                        <h4 className="text-sm font-bold text-pink-600 dark:text-pink-400 mb-2 flex items-center gap-2">
-                                            <MessageSquare className="size-4" /> Kritik & Saran Pengunjung
-                                        </h4>
-                                        <p className="text-sm text-slate-700 dark:text-slate-200 italic leading-relaxed">
-                                            "{visitor.feedback.feedback_note}"
-                                        </p>
-                                    </div>
-                                )}
+
                             </div>
                         </ContentCard>
                     )}
                 </div>
-
             </div>
         </RootLayout>
     );

@@ -12,18 +12,30 @@ use Modules\VisitorManagement\Http\Requests\ConfirmVisitRequest;
 use Modules\VisitorManagement\Http\Requests\CreateInvitationRequest;
 use Modules\VisitorManagement\Models\Visitor;
 use Modules\VisitorManagement\Services\VisitorService;
+use Modules\VisitorManagement\Services\PurposeService;
+use App\Services\DivisionService;
 
 class VisitorController extends Controller
 {
     public function __construct(
         private VisitorService $visitorService,
-        private VisitorDataTableService $dataTableService
+        private VisitorDataTableService $dataTableService,
+        private PurposeService $purposeService,
+        private DivisionService $divisionService
     ) {}
 
     public function index(DatatableRequest $request)
     {
         return Inertia::render('VisitorManagement/Visitor/Index', [
             'initialVisitors' => $this->dataTableService->getDatatable($request, auth()->user()),
+        ]);
+    }
+
+    public function create()
+    {
+        return Inertia::render('VisitorManagement/Visitor/Create', [
+            'divisions' => $this->divisionService->getAll(),
+            'purposes' => $this->purposeService->getActivePurposes(),
         ]);
     }
 
@@ -59,6 +71,6 @@ class VisitorController extends Controller
         
         $this->visitorService->registerVisitorFromData($data);
 
-        return redirect()->back()->with('success', 'Undangan tamu berhasil dibuat.');
+        return redirect()->route('visitor.index')->with('success', 'Undangan tamu berhasil dibuat.');
     }
 }

@@ -3,10 +3,11 @@ import RootLayout from '@/components/layouts/RootLayout';
 import DataTable from '@/components/tables/Datatable';
 import { useEffect, useState } from 'react';
 import { usePage, router } from '@inertiajs/react';
-import { User, Check, X, Eye } from 'lucide-react';
+import { User, Check, X, Eye, FileSpreadsheet } from 'lucide-react';
 import Button from '@/components/buttons/Button';
 import CheckPermissions from '@/components/utils/CheckPermissions';
 import FormSelect from '@/components/forms/FormSelect';
+import FormSearch from '@/components/forms/FormSearch';
 import Badge from '@/components/badges/Badge';
 import Modal from '@/components/modals/Modal';
 import FormInput from '@/components/forms/FormInput';
@@ -22,7 +23,7 @@ interface Visitor {
     phone_number: string;
     division: { name: string };
     purpose: { name: string };
-    status: 'pending' | 'approved' | 'rejected' | 'completed';
+    status: 'pending' | 'approved' | 'rejected' | 'completed' | 'invited' | 'cancelled';
     check_in_at: string;
     photo_url: string | null;
 }
@@ -41,6 +42,9 @@ interface PaginationData {
 interface Params {
     search: string;
     status: string;
+    visitor_name: string;
+    division: string;
+    month: string;
     limit: number;
     page: number;
     sort_by: string;
@@ -52,6 +56,9 @@ export default function VisitorIndex({ initialVisitors }: { initialVisitors: Pag
     const [params, setParams] = useState<Params>({
         search: '',
         status: '',
+        visitor_name: '',
+        division: '',
+        month: '',
         limit: 20,
         page: 1,
         sort_by: 'created_at',
@@ -61,17 +68,8 @@ export default function VisitorIndex({ initialVisitors }: { initialVisitors: Pag
     const [isLoading, setIsLoading] = useState(true);
     const [confirmModal, setConfirmModal] = useState({ open: false, type: 'approved' as 'approved' | 'rejected', visitor: null as Visitor | null });
     const [adminNote, setAdminNote] = useState('');
-    const [isInvitationModalOpen, setIsInvitationModalOpen] = useState(false);
 
-    const { data, setData, post, processing, reset, errors } = useForm({
-        visitor_name: '',
-        phone_number: '',
-        organization: '',
-        division_id: '',
-        purpose_id: '',
-        purpose_detail: '',
-        visitor_count: 1,
-    });
+
 
     async function loadDatatable() {
         setIsLoading(true);
@@ -126,8 +124,27 @@ export default function VisitorIndex({ initialVisitors }: { initialVisitors: Pag
             case 'approved': return 'success';
             case 'rejected': return 'danger';
             case 'completed': return 'primary';
+            case 'invited': return 'info';
+            case 'cancelled': return 'secondary';
             default: return 'secondary';
         }
+    };
+
+    const getStatusLabel = (status: string) => {
+        switch (status) {
+            case 'pending': return 'Menunggu';
+            case 'approved': return 'Disetujui';
+            case 'rejected': return 'Ditolak';
+            case 'completed': return 'Selesai';
+            case 'invited': return 'Diundang';
+            case 'cancelled': return 'Dibatalkan';
+            default: return status;
+        }
+    };
+
+    const onParamsChange = (e: { preventDefault: () => void; target: { name: string; value: string } }) => {
+        e.preventDefault();
+        setParams({ ...params, [e.target.name]: e.target.value, page: 1 });
     };
 
     return (
@@ -181,6 +198,7 @@ export default function VisitorIndex({ initialVisitors }: { initialVisitors: Pag
 
             <ContentCard
                 title="Daftar Pengunjung"
+                subtitle="Kelola dan pantau data kunjungan tamu di instansi Anda"
                 additionalButton={
                     <div className="flex gap-2">
                         <CheckPermissions permissions={['buat_undangan_tamu']}>
@@ -188,7 +206,7 @@ export default function VisitorIndex({ initialVisitors }: { initialVisitors: Pag
                                 variant="primary"
                                 label="Buat Undangan"
                                 icon={<User className="size-4" />}
-                                onClick={() => setIsInvitationModalOpen(true)}
+                                href="/visitor/create"
                             />
                         </CheckPermissions>
                     </div>
@@ -214,6 +232,16 @@ export default function VisitorIndex({ initialVisitors }: { initialVisitors: Pag
                         const page = new URL(e.currentTarget.href).searchParams.get('page');
                         if (page) setParams({ ...params, page: parseInt(page) });
                     }}
+                    additionalHeaderElements={
+                        <Button
+                            href="/visitor/export"
+                            variant="ghost"
+                            className="flex h-9 w-9 items-center justify-center p-0 hover:bg-slate-50 dark:hover:bg-slate-800"
+                            icon={<FileSpreadsheet className="size-4" />}
+                            target="_blank"
+                            title="Export Excel"
+                        />
+                    }
                     columns={[
                         {
                             header: 'Pengunjung',
@@ -231,7 +259,8 @@ export default function VisitorIndex({ initialVisitors }: { initialVisitors: Pag
                                         <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">{item.organization}</p>
                                     </div>
                                 </div>
-                            )
+                            ),
+                            footer: <FormSearch name="visitor_name" onChange={onParamsChange} placeholder="Filter Nama" value={params.visitor_name} />
                         },
                         {
                             header: 'Tujuan',
@@ -240,7 +269,8 @@ export default function VisitorIndex({ initialVisitors }: { initialVisitors: Pag
                                     <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{item.division.name}</p>
                                     <p className="text-xs text-slate-500 dark:text-slate-400">{item.purpose?.name}</p>
                                 </div>
-                            )
+                            ),
+                            footer: <FormSearch name="division" onChange={onParamsChange} placeholder="Filter Divisi" value={params.division} />
                         },
                         {
                             header: 'Waktu Masuk',
@@ -248,14 +278,31 @@ export default function VisitorIndex({ initialVisitors }: { initialVisitors: Pag
                                 <p className="text-xs text-slate-600 dark:text-slate-400">
                                     {new Date(item.check_in_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                 </p>
-                            )
+                            ),
+                            footer: <FormSearch name="month" type="month" onChange={onParamsChange} value={params.month} />
                         },
                         {
                             header: 'Status',
                             render: (item: Visitor) => (
                                 <Badge color={getStatusBadgeVariant(item.status)}>
-                                    {item.status.toUpperCase()}
+                                    {getStatusLabel(item.status)}
                                 </Badge>
+                            ),
+                            footer: (
+                                <select
+                                    name="status"
+                                    value={params.status}
+                                    onChange={(e) => onParamsChange({ preventDefault: () => { }, target: { name: 'status', value: e.target.value } })}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-xs text-gray-900 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                >
+                                    <option value="">Semua Status</option>
+                                    <option value="pending">Menunggu</option>
+                                    <option value="approved">Disetujui</option>
+                                    <option value="rejected">Ditolak</option>
+                                    <option value="completed">Selesai</option>
+                                    <option value="invited">Diundang</option>
+                                    <option value="cancelled">Dibatalkan</option>
+                                </select>
                             )
                         },
                         {
@@ -274,15 +321,15 @@ export default function VisitorIndex({ initialVisitors }: { initialVisitors: Pag
                                         <CheckPermissions permissions={['konfirmasi_kunjungan']}>
                                             <Tooltip text="Setujui">
                                                 <Button
-                                                    className="!bg-transparent !p-1 text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
-                                                    icon={<Check className="size-4" />}
+                                                    className="!bg-transparent hover:!bg-transparent !p-1.5"
+                                                    icon={<Check className="size-4 text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300" />}
                                                     onClick={() => setConfirmModal({ open: true, type: 'approved', visitor: item })}
                                                 />
                                             </Tooltip>
                                             <Tooltip text="Tolak">
                                                 <Button
-                                                    className="!bg-transparent !p-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                                                    icon={<X className="size-4" />}
+                                                    className="!bg-transparent hover:!bg-transparent !p-1.5"
+                                                    icon={<X className="size-4 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" />}
                                                     onClick={() => setConfirmModal({ open: true, type: 'rejected', visitor: item })}
                                                 />
                                             </Tooltip>
@@ -293,105 +340,9 @@ export default function VisitorIndex({ initialVisitors }: { initialVisitors: Pag
                         }
                     ]}
                 />
-            </ContentCard>
+            </ContentCard >
 
-            <Modal
-                show={isInvitationModalOpen}
-                onClose={() => setIsInvitationModalOpen(false)}
-                title="Buat Undangan Tamu"
-                maxWidth="lg"
-            >
-                <form onSubmit={(e) => {
-                    e.preventDefault();
-                    post('/visitor/store-invitation', {
-                        onSuccess: () => {
-                            setIsInvitationModalOpen(false);
-                            reset();
-                            toast.success('Undangan berhasil dibuat');
-                            loadDatatable();
-                        }
-                    });
-                }} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormInput
-                            label="Nama Pengunjung"
-                            name="visitor_name"
-                            value={data.visitor_name}
-                            onChange={(e) => setData('visitor_name', e.target.value)}
-                            error={errors.visitor_name}
-                            required
-                        />
-                        <FormInput
-                            label="Nomor Telepon"
-                            name="phone_number"
-                            value={data.phone_number}
-                            onChange={(e) => setData('phone_number', e.target.value)}
-                            error={errors.phone_number}
-                            required
-                        />
-                    </div>
-                    <FormInput
-                        label="Asal Instansi/Organisasi"
-                        name="organization"
-                        value={data.organization}
-                        onChange={(e) => setData('organization', e.target.value)}
-                        error={errors.organization}
-                        required
-                    />
-                    <div className="grid grid-cols-1 gap-4">
-                        <FormSelect
-                            label="Divisi Tujuan"
-                            name="division_id"
-                            value={data.division_id}
-                            options={(usePage().props.divisions as any[] || []).map(d => ({ label: d.name, value: d.id }))}
-                            onChange={(e) => setData('division_id', e.target.value)}
-                            error={errors.division_id}
-                            required
-                        />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormSelect
-                            label="Kategori Keperluan"
-                            name="purpose_id"
-                            value={data.purpose_id}
-                            options={(usePage().props.purposes as any[] || []).map(p => ({ label: p.name, value: p.id }))}
-                            onChange={(e) => setData('purpose_id', e.target.value)}
-                            error={errors.purpose_id}
-                            required
-                        />
-                        <FormInput
-                            label="Jumlah Tamu"
-                            name="visitor_count"
-                            type="number"
-                            value={data.visitor_count}
-                            onChange={(e) => setData('visitor_count', parseInt(e.target.value))}
-                            error={errors.visitor_count}
-                            required
-                        />
-                    </div>
-                    <FormTextArea
-                        label="Detail Keperluan"
-                        name="purpose_detail"
-                        value={data.purpose_detail}
-                        onChange={(e) => setData('purpose_detail', e.target.value)}
-                        error={errors.purpose_detail}
-                    />
-                    <div className="flex justify-end gap-3 pt-4 border-t dark:border-slate-800">
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            label="Batal"
-                            onClick={() => setIsInvitationModalOpen(false)}
-                        />
-                        <Button
-                            type="submit"
-                            variant="primary"
-                            label="Simpan Undangan"
-                            isLoading={processing}
-                        />
-                    </div>
-                </form>
-            </Modal>
-        </RootLayout>
+
+        </RootLayout >
     );
 }
