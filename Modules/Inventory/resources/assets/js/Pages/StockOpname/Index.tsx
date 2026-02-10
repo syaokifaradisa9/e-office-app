@@ -47,13 +47,17 @@ interface Params {
 }
 
 const statusColors: Record<string, string> = {
-    Draft: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+    Pending: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+    Proses: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
     Confirmed: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    Selesai: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
 };
 
 const statusLabels: Record<string, string> = {
-    Draft: 'Draf',
+    Pending: 'Pending',
+    Proses: 'Dalam Proses',
     Confirmed: 'Dikonfirmasi',
+    Selesai: 'Selesai',
 };
 
 export default function StockOpnameIndex() {
@@ -131,28 +135,13 @@ export default function StockOpnameIndex() {
     }
 
     // Global Permission Checks
-    const hasWarehouseManage = permissions?.includes('kelola_stock_opname_gudang');
-    const hasDivisionManage = permissions?.includes('kelola_stock_opname_divisi');
-    const hasWarehouseView = permissions?.includes('lihat_stock_opname_gudang');
-    const hasDivisionView = permissions?.includes('lihat_stock_opname_divisi');
-    const canConfirm = permissions?.includes('konfirmasi_stock_opname');
+    const hasCreate = permissions?.includes('tambah_stock_opname');
+    const hasProcess = permissions?.includes('proses_stock_opname');
+    const hasFinalize = permissions?.includes('finalisasi_stock_opname');
+    const hasAllView = permissions?.includes('lihat_semua_stock_opname');
 
-    // For action buttons in table, we check per row. 
     // For the "Create" button:
-    const canCreateWarehouse = hasWarehouseManage;
-    const canCreateDivision = hasDivisionManage;
-
-    // Determine the type for "Create" button link
-    const createType = type !== 'all'
-        ? type
-        : canCreateDivision
-            ? 'division'
-            : 'warehouse';
-
-    const showCreate = type !== 'all' && (
-        (type === 'warehouse' && hasWarehouseManage) ||
-        (type === 'division' && hasDivisionManage)
-    );
+    const showCreate = type !== 'all' && hasCreate;
 
     const titleMap = {
         warehouse: 'Stock Opname Gudang',
@@ -213,7 +202,7 @@ export default function StockOpnameIndex() {
                 mobileFullWidth
                 additionalButton={
                     showCreate && (
-                        <Button className="hidden w-full md:flex" label="Buat Stock Opname" href={`/inventory/stock-opname/${createType}/create`} icon={<Plus className="size-4" />} />
+                        <Button className="hidden w-full md:flex" label="Buat Stock Opname" href={`/inventory/stock-opname/${type}/create`} icon={<Plus className="size-4" />} />
                     )
                 }
             >
@@ -285,7 +274,7 @@ export default function StockOpnameIndex() {
                                                 icon={<Eye className="size-4" />}
                                             />
                                         </Tooltip>
-                                        {type !== 'all' && canManageRow && opname.status === 'Draft' && (
+                                        {type !== 'all' && hasCreate && opname.status === 'Pending' && (
                                             <>
                                                 <Tooltip text="Edit">
                                                     <Button
@@ -306,15 +295,21 @@ export default function StockOpnameIndex() {
                                                 </Tooltip>
                                             </>
                                         )}
-                                        {type !== 'all' && canConfirm && opname.status === 'Draft' && (
-                                            <Tooltip text="Konfirmasi">
+                                        {type !== 'all' && hasProcess && ['Pending', 'Proses'].includes(opname.status) && (
+                                            <Tooltip text="Proses Stock Opname">
                                                 <Button
-                                                    onClick={() => {
-                                                        setSelectedOpname(opname);
-                                                        setOpenConfirmOpname(true);
-                                                    }}
-                                                    className="!bg-transparent !p-1 text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20"
-                                                    icon={<Check className="size-4" />}
+                                                    href={`/inventory/stock-opname/${rowType}/${opname.id}/process`}
+                                                    className="!bg-transparent !p-1 text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20"
+                                                    icon={<ClipboardCheck className="size-4" />}
+                                                />
+                                            </Tooltip>
+                                        )}
+                                        {type !== 'all' && hasFinalize && opname.status === 'Confirmed' && (
+                                            <Tooltip text="Finalisasi">
+                                                <Button
+                                                    href={`/inventory/stock-opname/${rowType}/${opname.id}/finalize`}
+                                                    className="!bg-transparent !p-1 text-purple-600 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-900/20"
+                                                    icon={<Check className="size-4 text-purple-600" />}
                                                 />
                                             </Tooltip>
                                         )}
@@ -327,7 +322,7 @@ export default function StockOpnameIndex() {
             </ContentCard>
 
             {showCreate && (
-                <FloatingActionButton href={`/inventory/stock-opname/${createType}/create`} label="Buat Stock Opname" />
+                <FloatingActionButton href={`/inventory/stock-opname/${type}/create`} label="Buat Stock Opname" />
             )}
         </RootLayout>
     );

@@ -31,9 +31,9 @@ enum InventoryPermission: string
     case ViewWarehouseStockOpname = 'lihat_stock_opname_gudang';
     case ViewDivisionStockOpname = 'lihat_stock_opname_divisi';
     case ViewAllStockOpname = 'lihat_semua_stock_opname';
-    case ManageWarehouseStockOpname = 'kelola_stock_opname_gudang';
-    case ManageDivisionStockOpname = 'kelola_stock_opname_divisi';
-    case ConfirmStockOpname = 'konfirmasi_stock_opname';
+    case CreateStockOpname = 'tambah_stock_opname';
+    case ProcessStockOpname = 'proses_stock_opname';
+    case FinalizeStockOpname = 'finalisasi_stock_opname';
 
     // Monitoring
     case MonitorItemTransaction = 'monitor_transaksi_barang';

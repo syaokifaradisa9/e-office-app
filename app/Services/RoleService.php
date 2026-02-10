@@ -132,7 +132,8 @@ class RoleService
             'stok_opname' => [
                 'module' => 'Sistem Manajemen Gudang',
                 'label' => 'Stok Opname',
-                'keywords' => ['stock_opname'],
+                'keywords' => ['stock_opname', 'stok_opname', 'opname'],
+                'columns' => 2,
             ],
             'laporan' => [
                 'module' => 'Sistem Manajemen Gudang',
@@ -187,6 +188,7 @@ class RoleService
                             'label' => $rule['label'],
                             'permissions' => [],
                             'exclusive' => $rule['exclusive'] ?? false,
+                            'columns' => $rule['columns'] ?? 2,
                         ];
                     }
                     $grouped[$groupKey]['permissions'][] = $permission->name;

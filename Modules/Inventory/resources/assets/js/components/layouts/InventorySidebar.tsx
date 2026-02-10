@@ -3,7 +3,7 @@ import { usePage } from '@inertiajs/react';
 import SidebarLink from '@/components/layouts/SideBarLink';
 
 export default function InventorySidebar() {
-    const { permissions } = usePage<{ permissions: string[] }>().props;
+    const { permissions, is_stock_opname_pending } = usePage<{ permissions: string[], is_stock_opname_pending: boolean }>().props;
 
     const hasAnyInventoryPermission =
         // Dashboard
@@ -39,7 +39,7 @@ export default function InventorySidebar() {
                 {(permissions?.includes('lihat_barang') || permissions?.includes('kelola_barang') || permissions?.includes('konversi_barang_gudang') || permissions?.includes('pengeluaran_barang_gudang')) && (
                     <SidebarLink name="Barang Gudang" href="/inventory/items" icon={Package} />
                 )}
-                {(permissions?.includes('lihat_stok_divisi') || permissions?.includes('lihat_semua_stok')) && (
+                {!is_stock_opname_pending && (permissions?.includes('lihat_stok_divisi') || permissions?.includes('lihat_semua_stok')) && (
                     <SidebarLink name="Monitoring Stok Barang" href="/inventory/stock-monitoring" icon={BarChart3} />
                 )}
             </div>
@@ -49,7 +49,7 @@ export default function InventorySidebar() {
                 <div className="py-2">
                     <h3 className="inventory-sidebar-label text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">Pengolahan Data Barang</h3>
                 </div>
-                {(permissions?.includes('lihat_permintaan_barang_divisi') || permissions?.includes('lihat_semua_permintaan_barang') || permissions?.includes('buat_permintaan_barang')) && (
+                {!is_stock_opname_pending && (permissions?.includes('lihat_permintaan_barang_divisi') || permissions?.includes('lihat_semua_permintaan_barang') || permissions?.includes('buat_permintaan_barang')) && (
                     <SidebarLink name="Permintaan Barang" href="/inventory/warehouse-orders" icon={ShoppingCart} />
                 )}
                 {(permissions?.includes('monitor_transaksi_barang') || permissions?.includes('monitor_semua_transaksi_barang')) && (

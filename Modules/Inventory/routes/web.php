@@ -37,7 +37,7 @@ Route::prefix('inventory')->name('inventory.')->middleware(['auth'])->group(func
             Route::get('/{type?}', 'index')->name('index');
         });
 
-        Route::middleware('permission:kelola_stock_opname_gudang|kelola_stock_opname_divisi')->group(function () {
+        Route::middleware('permission:tambah_stock_opname')->group(function () {
             Route::get('/{type}/create', 'create')->name('create');
             Route::post('/{type}/store', 'store')->name('store');
             Route::get('/{type}/{stockOpname}/edit', 'edit')->name('edit');
@@ -45,8 +45,14 @@ Route::prefix('inventory')->name('inventory.')->middleware(['auth'])->group(func
             Route::delete('/{type}/{stockOpname}/delete', 'delete')->name('delete');
         });
 
-        Route::middleware('permission:konfirmasi_stock_opname')->group(function () {
-            Route::post('/{stockOpname}/confirm', 'confirm')->name('confirm'); // Frontend uses POST (router.post) baris 194
+        Route::middleware('permission:proses_stock_opname')->group(function () {
+            Route::get('/{type}/{stockOpname}/process', 'process')->name('process');
+            Route::post('/{type}/{stockOpname}/process', 'storeProcess')->name('store-process');
+        });
+
+        Route::middleware('permission:finalisasi_stock_opname')->group(function () {
+            Route::get('/{type}/{stockOpname}/finalize', 'finalize')->name('finalize');
+            Route::post('/{type}/{stockOpname}/finalize', 'storeFinalize')->name('store-finalize');
         });
     });
 

@@ -57,11 +57,12 @@ class HandleInertiaRequests extends Middleware
                 'division_id' => $user->division_id,
                 'position' => $user->position?->name,
             ] : null,
-            'permissions' => $user ? $user->getAllPermissions()->pluck('name')->toArray() : [],
+            'permissions' => $user ? cache()->remember("user_perms_{$user->id}", 3600, fn() => $user->getAllPermissions()->pluck('name')->toArray()) : [],
             'flash' => [
                 'message' => $successMessage ?? $errorMessage ?? null,
                 'type' => $successMessage ? 'success' : ($errorMessage ? 'error' : null),
-            ]
+            ],
+            'is_stock_opname_pending' => $user ? cache()->remember("user_so_pending_{$user->division_id}", 60, fn() => app(\Modules\Inventory\Services\StockOpnameService::class)->isMenuHidden($user->division_id)) : false,
         ];
     }
 }

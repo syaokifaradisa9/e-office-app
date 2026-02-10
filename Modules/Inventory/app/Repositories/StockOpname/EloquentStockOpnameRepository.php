@@ -24,8 +24,26 @@ class EloquentStockOpnameRepository implements StockOpnameRepository
         return $query->exists();
     }
 
+    public function hasActiveOpname(?int $divisionId = null): bool
+    {
+        $query = StockOpname::whereIn('status', ['Pending', 'Proses']);
+
+        if ($divisionId) {
+            $query->where('division_id', $divisionId);
+        } else {
+            $query->whereNull('division_id');
+        }
+
+        return $query->exists();
+    }
+
     public function create(array $data): StockOpname
     {
         return StockOpname::create($data);
+    }
+
+    public function findById(int $id): ?StockOpname
+    {
+        return StockOpname::find($id);
     }
 }

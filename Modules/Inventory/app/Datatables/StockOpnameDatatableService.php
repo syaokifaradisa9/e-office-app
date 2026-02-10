@@ -153,8 +153,10 @@ class StockOpnameDatatableService
                 'Nama Barang',
                 'Stok Sistem',
                 'Stok Fisik',
+                'Stok Final',
                 'Selisih',
                 'Catatan Item',
+                'Catatan Final',
             ]);
             $writer->addRow($detailHeaderRow);
 
@@ -167,8 +169,10 @@ class StockOpnameDatatableService
                         $item->item?->name ?? '-',
                         $item->system_stock,
                         $item->physical_stock,
+                        $opname->status === 'Selesai' ? $item->final_stock : '-',
                         $item->difference,
                         $item->notes ?? '-',
+                        $item->final_notes ?? '-',
                     ]);
                     $writer->addRow($row);
                 }

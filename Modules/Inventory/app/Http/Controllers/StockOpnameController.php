@@ -25,9 +25,14 @@ class StockOpnameController extends Controller
 
     public function index(Request $request, string $type = 'all')
     {
+        /** @var User $user */
+        $user = auth()->user();
+        $divisionId = $type === 'division' ? $user->division_id : null;
+
         return Inertia::render('Inventory/StockOpname/Index', [
             'type' => $type,
             'divisions' => $this->lookupService->getActiveDivisions(),
+            'isMenuHidden' => $this->stockOpnameService->isMenuHidden($divisionId),
         ]);
     }
 
@@ -40,18 +45,14 @@ class StockOpnameController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        // Check permission based on type
-        if ($type === 'warehouse' && ! $user->can(InventoryPermission::ManageWarehouseStockOpname->value)) {
+        if ($type === 'warehouse' && ! $user->can(InventoryPermission::CreateStockOpname->value)) {
             abort(403);
         }
-        if ($type === 'division' && ! $user->can(InventoryPermission::ManageDivisionStockOpname->value)) {
+        if ($type === 'division' && ! $user->can(InventoryPermission::CreateStockOpname->value)) {
             abort(403);
         }
-
-        $items = $this->stockOpnameService->getItemsForOpname($user, $type);
 
         return Inertia::render('Inventory/StockOpname/Create', [
-            'items' => $items,
             'type' => $type,
             'divisions' => $this->lookupService->getActiveDivisions(),
         ]);
@@ -59,31 +60,76 @@ class StockOpnameController extends Controller
 
     public function store(StoreStockOpnameRequest $request, string $type = 'warehouse')
     {
-        if (! in_array($type, ['warehouse', 'division'])) {
-            abort(404);
-        }
-
         $user = $request->user();
+        $dto = StockOpnameDTO::fromStoreRequest($request);
 
-        // Check permission based on type
-        if ($type === 'warehouse' && ! $user->can(InventoryPermission::ManageWarehouseStockOpname->value)) {
-            abort(403);
+        try {
+            $this->stockOpnameService->initializeOpname($dto, $user);
+            $message = $type === 'warehouse' ? 'Stok Opname Gudang berhasil diinisialisasi.' : 'Stok Opname Divisi berhasil diinisialisasi.';
+
+            return to_route('inventory.stock-opname.index', ['type' => $type])->with('success', $message);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
-        if ($type === 'division' && ! $user->can(InventoryPermission::ManageDivisionStockOpname->value)) {
-            abort(403);
+    }
+
+    public function process(string $type, StockOpname $stockOpname)
+    {
+        $user = auth()->user();
+
+        if (! $this->stockOpnameService->canProcess($stockOpname, $user)) {
+            abort(403, 'Anda tidak memiliki akses untuk memproses opname ini.');
         }
 
-        $validated = $request->validated();
+        $items = $this->stockOpnameService->getItemsForOpname($user, $stockOpname->division_id);
 
-        if ($type === 'warehouse') {
-            $this->stockOpnameService->createWarehouse($validated, $user);
-            $message = 'Stok Opname Gudang berhasil disimpan.';
-        } else {
-            $this->stockOpnameService->createDivision($validated, $user);
-            $message = 'Stok Opname Divisi berhasil disimpan.';
+        return Inertia::render('Inventory/StockOpname/Process', [
+            'opname' => $stockOpname->load(['items.item']),
+            'items' => $items,
+            'type' => $type,
+        ]);
+    }
+
+    public function storeProcess(ProcessStockOpnameRequest $request, string $type, StockOpname $stockOpname)
+    {
+        $user = $request->user();
+        $dto = StockOpnameDTO::fromProcessRequest($request);
+
+        try {
+            $this->stockOpnameService->savePhysicalStock($stockOpname, $dto, $user);
+            $message = $dto->status === 'Confirmed' ? 'Stok Opname berhasil dikonfirmasi.' : 'Proses Stok Opname berhasil disimpan.';
+
+            return to_route('inventory.stock-opname.index', ['type' => $type])->with('success', $message);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function finalize(string $type, StockOpname $stockOpname)
+    {
+        $user = auth()->user();
+
+        if (! $this->stockOpnameService->canFinalize($stockOpname, $user)) {
+            abort(403, 'Anda tidak memiliki akses untuk finalisasi opname ini.');
         }
 
-        return to_route('inventory.stock-opname.index', ['type' => $type])->with('success', $message);
+        return Inertia::render('Inventory/StockOpname/Finalize', [
+            'opname' => $stockOpname->load(['items.item', 'division']),
+            'type' => $type,
+        ]);
+    }
+
+    public function storeFinalize(FinalizeStockOpnameRequest $request, string $type, StockOpname $stockOpname)
+    {
+        $user = $request->user();
+        $dto = StockOpnameDTO::fromFinalizeRequest($request);
+
+        try {
+            $this->stockOpnameService->finalizeStock($stockOpname, $dto, $user);
+            return to_route('inventory.stock-opname.index', ['type' => $type])->with('success', 'Stok Opname berhasil difinalisasi.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     public function show(string $type, StockOpname $stockOpname)
@@ -101,39 +147,28 @@ class StockOpnameController extends Controller
 
     public function edit(Request $request, string $type, StockOpname $stockOpname)
     {
-        if (! in_array($type, ['warehouse', 'division'])) {
-            abort(404);
-        }
-
+        /** @var User $user */
         $user = $request->user();
 
         if (! $this->stockOpnameService->canManage($stockOpname, $user)) {
             abort(403, 'Unauthorized');
         }
 
-        $items = $this->stockOpnameService->getItemsForOpname($user, $type);
-
         return Inertia::render('Inventory/StockOpname/Create', [
-            'opname' => $stockOpname->load('items.item'),
-            'items' => $items,
+            'opname' => $stockOpname,
             'type' => $type,
             'divisions' => $this->lookupService->getActiveDivisions(),
         ]);
     }
 
-    public function update(UpdateStockOpnameRequest $request, string $type, StockOpname $stockOpname)
+    public function update(StoreStockOpnameRequest $request, string $type, StockOpname $stockOpname)
     {
-        if (! in_array($type, ['warehouse', 'division'])) {
-            abort(404);
-        }
-
-        $validated = $request->validated();
+        // Using StoreStockOpnameRequest because rules are same for updating Pending opname
+        $dto = StockOpnameDTO::fromStoreRequest($request);
 
         try {
-            $this->stockOpnameService->update($stockOpname, $validated, $request->user());
-            $message = $type === 'warehouse' ? 'Stok Opname Gudang berhasil diperbarui.' : 'Stok Opname Divisi berhasil diperbarui.';
-
-            return to_route('inventory.stock-opname.index', ['type' => $type])->with('success', $message);
+            $stockOpname->update($dto->toArray());
+            return to_route('inventory.stock-opname.index', ['type' => $type])->with('success', 'Stok Opname berhasil diperbarui.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -141,15 +176,14 @@ class StockOpnameController extends Controller
 
     public function delete(Request $request, string $type, StockOpname $stockOpname)
     {
-        if (! in_array($type, ['warehouse', 'division'])) {
-            abort(404);
+        if (! $this->stockOpnameService->canManage($stockOpname, $request->user())) {
+            abort(403);
         }
 
         try {
-            $this->stockOpnameService->delete($stockOpname, $request->user());
-            $message = $type === 'warehouse' ? 'Stok Opname Gudang berhasil dihapus.' : 'Stok Opname Divisi berhasil dihapus.';
-
-            return to_route('inventory.stock-opname.index', ['type' => $type])->with('success', $message);
+            $stockOpname->items()->delete();
+            $stockOpname->delete();
+            return to_route('inventory.stock-opname.index', ['type' => $type])->with('success', 'Stok Opname berhasil dihapus.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -163,24 +197,5 @@ class StockOpnameController extends Controller
     public function printExcel(DatatableRequest $request, string $type = 'all')
     {
         return $this->datatableService->printExcel($request, $request->user(), $type);
-    }
-
-    public function confirm(Request $request, StockOpname $stockOpname)
-    {
-        $user = $request->user();
-
-        if (! $user->can(InventoryPermission::ConfirmStockOpname->value)) {
-            abort(403);
-        }
-
-        try {
-            $this->stockOpnameService->confirm($stockOpname, $user);
-            $type = $this->stockOpnameService->getType($stockOpname);
-
-            return to_route('inventory.stock-opname.index', ['type' => $type])
-                ->with('success', 'Stock opname berhasil dikonfirmasi.');
-        } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
-        }
     }
 }
