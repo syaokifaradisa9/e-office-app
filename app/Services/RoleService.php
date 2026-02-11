@@ -37,12 +37,12 @@ class RoleService
             'permintaan' => [
                 'module' => 'Sistem Manajemen Gudang',
                 'label' => 'Permintaan Barang',
-                'keywords' => ['permintaan', 'serah_terima_barang', 'terima_barang'],
+                'keywords' => ['permintaan', 'serah_terima_barang', 'terima_barang', 'Permintaan Barang', 'Serah Terima Barang', 'Terima Barang'],
             ],
             'stok' => [
                 'module' => 'Sistem Manajemen Gudang',
                 'label' => 'Data Stok',
-                'keywords' => ['lihat_stok_divisi', 'lihat_semua_stok', 'konversi_stok_barang', 'pengeluaran_stok_barang'],
+                'keywords' => ['lihat_stok_divisi', 'lihat_semua_stok', 'konversi_stok_barang', 'pengeluaran_stok_barang', 'Stok Divisi', 'Stok Keseluruhan', 'Konversi Stok', 'Pengeluaran Stok'],
             ],
             'divisi' => [
                 'module' => 'Data Master',
@@ -117,33 +117,33 @@ class RoleService
             'kategori' => [
                 'module' => 'Sistem Manajemen Gudang',
                 'label' => 'Kategori Barang',
-                'keywords' => ['kategori'],
+                'keywords' => ['kategori', 'Kategori'],
             ],
             'barang' => [
                 'module' => 'Sistem Manajemen Gudang',
                 'label' => 'Barang',
-                'keywords' => ['lihat_barang', 'kelola_barang', 'konversi_barang_gudang', 'pengeluaran_barang_gudang'],
+                'keywords' => ['barang', 'Barang'],
             ],
             'transaksi' => [
                 'module' => 'Sistem Manajemen Gudang',
                 'label' => 'Monitor Transaksi',
-                'keywords' => ['transaksi_barang'],
+                'keywords' => ['transaksi_barang', 'Transaksi Barang'],
             ],
             'stok_opname' => [
                 'module' => 'Sistem Manajemen Gudang',
                 'label' => 'Stok Opname',
-                'keywords' => ['stock_opname', 'stok_opname', 'opname'],
+                'keywords' => ['stock_opname', 'stok_opname', 'opname', 'Stock Opname'],
                 'columns' => 2,
             ],
             'laporan' => [
                 'module' => 'Sistem Manajemen Gudang',
                 'label' => 'Laporan Gudang',
-                'keywords' => ['laporan_gudang'],
+                'keywords' => ['laporan_gudang', 'Laporan Gudang'],
             ],
             'dashboard' => [
                 'module' => 'Sistem Manajemen Gudang',
                 'label' => 'Dashboard Gudang',
-                'keywords' => ['dashboard_gudang'],
+                'keywords' => ['dashboard_gudang', 'Dashboard Gudang'],
             ],
             // Visitor Management
             'master_keperluan_kunjungan' => [
@@ -175,7 +175,7 @@ class RoleService
                 $hasKeyword = false;
 
                 foreach ($rule['keywords'] as $keyword) {
-                    if (str_contains($permission->name, $keyword)) {
+                    if (str_contains(strtolower($permission->name), strtolower($keyword))) {
                         $hasKeyword = true;
                         break;
                     }

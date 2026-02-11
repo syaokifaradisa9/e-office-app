@@ -4,6 +4,7 @@ import DataTable from '@/components/tables/Datatable';
 import { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import { Package, Edit, Plus, Trash2, FileSpreadsheet, ArrowRightLeft, LogOut } from 'lucide-react';
+import { InventoryPermission } from '../../types/permissions';
 import { router } from '@inertiajs/react';
 import ConfirmationAlert from '@/components/alerts/ConfirmationAlert';
 import FormSearch from '@/components/forms/FormSearch';
@@ -47,6 +48,10 @@ interface Params {
     page: number;
     sort_by: string;
     sort_direction: 'asc' | 'desc';
+    name?: string;
+    category?: string;
+    unit_of_measure?: string;
+    stock?: string;
 }
 
 export default function ItemIndex() {
@@ -63,8 +68,8 @@ export default function ItemIndex() {
         search: '',
         limit: 20,
         page: 1,
-        sort_by: 'created_at',
-        sort_direction: 'desc',
+        sort_by: 'name',
+        sort_direction: 'asc',
     });
 
     const [openConfirm, setOpenConfirm] = useState(false);
@@ -77,7 +82,10 @@ export default function ItemIndex() {
         const queryParams: string[] = [];
 
         Object.keys(params).forEach((key) => {
-            queryParams.push(`${key}=${params[key as keyof Params]}`);
+            const value = params[key as keyof Params];
+            if (value !== undefined && value !== null && value !== '') {
+                queryParams.push(`${key}=${value}`);
+            }
         });
 
         if (queryParams.length > 0) {
@@ -99,19 +107,24 @@ export default function ItemIndex() {
         e.preventDefault();
         const href = e.currentTarget.href;
         let page = href.split('page=')[1];
-        page = page.split('&')[0];
-        setParams({ ...params, page: parseInt(page) });
+        if (page) {
+            page = page.split('&')[0];
+            setParams({ ...params, page: parseInt(page) });
+        }
     }
 
     function onParamsChange(e: { target: { name: string; value: string } }) {
-        setParams({ ...params, [e.target.name]: e.target.value });
+        setParams({ ...params, [e.target.name]: e.target.value, page: 1 });
     }
 
     function getPrintUrl() {
         let url = `/inventory/items/print-excel`;
         const queryParams: string[] = [];
         Object.keys(params).forEach((key) => {
-            queryParams.push(`${key}=${params[key as keyof Params]}`);
+            const value = params[key as keyof Params];
+            if (value !== undefined && value !== null && value !== '') {
+                queryParams.push(`${key}=${value}`);
+            }
         });
         if (queryParams.length > 0) {
             url += `?${queryParams.join('&')}`;
@@ -120,9 +133,9 @@ export default function ItemIndex() {
     }
 
     const pageProps = usePage<PageProps>().props;
-    const canManage = pageProps.permissions?.includes('kelola_barang');
-    const canIssue = pageProps.permissions?.includes('pengeluaran_barang_gudang');
-    const canConvert = pageProps.permissions?.includes('konversi_barang_gudang');
+    const canManage = pageProps.permissions?.includes(InventoryPermission.ManageItem);
+    const canIssue = pageProps.permissions?.includes(InventoryPermission.IssueItemGudang);
+    const canConvert = pageProps.permissions?.includes(InventoryPermission.ConvertItemGudang);
 
     return (
         <RootLayout
@@ -140,7 +153,7 @@ export default function ItemIndex() {
                 />
             }
         >
-            {!(pageProps.permissions?.includes('lihat_barang') || pageProps.permissions?.includes('kelola_barang') || pageProps.permissions?.includes('pengeluaran_barang_gudang') || pageProps.permissions?.includes('konversi_barang_gudang')) ? (
+            {!(pageProps.permissions?.includes(InventoryPermission.ViewItem) || pageProps.permissions?.includes(InventoryPermission.ManageItem) || pageProps.permissions?.includes(InventoryPermission.IssueItemGudang) || pageProps.permissions?.includes(InventoryPermission.ConvertItemGudang)) ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="mb-4 rounded-full bg-red-100 p-3 text-red-600 dark:bg-red-900/30 dark:text-red-400">
                         <Package className="size-8" />
@@ -170,7 +183,7 @@ export default function ItemIndex() {
                         title="Barang Gudang Utama"
                         mobileFullWidth
                         additionalButton={
-                            <CheckPermissions permissions={['kelola_barang']}>
+                            <CheckPermissions permissions={[InventoryPermission.ManageItem]}>
                                 <Button className="hidden w-full md:flex" label="Tambah Barang" href="/inventory/items/create" icon={<Plus className="size-4" />} />
                             </CheckPermissions>
                         }
@@ -272,6 +285,7 @@ export default function ItemIndex() {
                                     name: 'category',
                                     header: 'Kategori',
                                     render: (item: Item) => <span className="text-gray-500 dark:text-slate-400">{item.category || '-'}</span>,
+                                    footer: <FormSearch name="category" onChange={onParamsChange} placeholder="Filter Kategori" />,
                                 },
                                 {
                                     name: 'unit_of_measure',
@@ -286,6 +300,7 @@ export default function ItemIndex() {
                                             )}
                                         </div>
                                     ),
+                                    footer: <FormSearch name="unit_of_measure" onChange={onParamsChange} placeholder="Filter Satuan" />,
                                 },
                                 {
                                     name: 'stock',
@@ -295,6 +310,7 @@ export default function ItemIndex() {
                                             {item.stock}
                                         </span>
                                     ),
+                                    footer: <FormSearch name="stock" onChange={onParamsChange} placeholder="Filter Stok" />,
                                 },
                                 ...((canManage || canIssue || canConvert)
                                     ? [
@@ -350,7 +366,7 @@ export default function ItemIndex() {
                         />
                     </ContentCard>
 
-                    <CheckPermissions permissions={['kelola_barang']}>
+                    <CheckPermissions permissions={[InventoryPermission.ManageItem]}>
                         <FloatingActionButton href="/inventory/items/create" label="Tambah Barang" />
                     </CheckPermissions>
                 </>

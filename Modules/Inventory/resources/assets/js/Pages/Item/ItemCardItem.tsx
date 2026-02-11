@@ -1,5 +1,6 @@
 import { Edit, Trash2, RefreshCw, LogOut } from 'lucide-react';
 import { Link, usePage } from '@inertiajs/react';
+import { InventoryPermission } from '../../types/permissions';
 
 interface Item {
     id: number;
@@ -24,9 +25,9 @@ interface Props {
 
 export default function ItemCardItem({ item, onDelete }: Props) {
     const { permissions } = usePage<PageProps>().props;
-    const hasManagePermission = permissions?.includes('kelola_barang');
-    const hasIssuePermission = permissions?.includes('pengeluaran_barang_gudang');
-    const hasConvertPermission = permissions?.includes('konversi_barang_gudang');
+    const hasManagePermission = permissions?.includes(InventoryPermission.ManageItem);
+    const hasIssuePermission = permissions?.includes(InventoryPermission.IssueItemGudang);
+    const hasConvertPermission = permissions?.includes(InventoryPermission.ConvertItemGudang);
 
     const hasConvertAction = hasConvertPermission && item.multiplier > 1 && item.reference_item_id;
     const hasIssueAction = hasIssuePermission && item.stock > 0;

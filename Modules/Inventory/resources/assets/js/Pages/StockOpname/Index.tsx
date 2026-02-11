@@ -4,6 +4,7 @@ import DataTable from '@/components/tables/Datatable';
 import { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import { ClipboardCheck, Eye, Plus, Trash2, FileSpreadsheet, Check, Edit } from 'lucide-react';
+import { InventoryPermission } from '../../types/permissions';
 import { router } from '@inertiajs/react';
 import ConfirmationAlert from '@/components/alerts/ConfirmationAlert';
 import Button from '@/components/buttons/Button';
@@ -135,10 +136,12 @@ export default function StockOpnameIndex() {
     }
 
     // Global Permission Checks
-    const hasCreate = permissions?.includes('tambah_stock_opname');
-    const hasProcess = permissions?.includes('proses_stock_opname');
-    const hasFinalize = permissions?.includes('finalisasi_stock_opname');
-    const hasAllView = permissions?.includes('lihat_semua_stock_opname');
+    const hasCreate = permissions?.includes(InventoryPermission.CreateStockOpname);
+    const hasProcess = permissions?.includes(InventoryPermission.ProcessStockOpname);
+    const hasFinalize = permissions?.includes(InventoryPermission.FinalizeStockOpname);
+    const hasAllView = permissions?.includes(InventoryPermission.ViewAllStockOpname);
+    const hasWarehouseView = permissions?.includes(InventoryPermission.ViewWarehouseStockOpname);
+    const hasDivisionView = permissions?.includes(InventoryPermission.ViewDivisionStockOpname);
 
     // For the "Create" button:
     const showCreate = type !== 'all' && hasCreate;
@@ -263,7 +266,7 @@ export default function StockOpnameIndex() {
                             header: 'Aksi',
                             render: (opname: StockOpname) => {
                                 const rowType = opname.division ? 'division' : 'warehouse';
-                                const canManageRow = rowType === 'warehouse' ? hasWarehouseManage : hasDivisionManage;
+                                const canManageRow = rowType === 'warehouse' ? (hasWarehouseView || hasCreate || hasProcess || hasFinalize) : (hasDivisionView || hasCreate || hasProcess || hasFinalize);
 
                                 return (
                                     <div className="flex justify-end gap-1">

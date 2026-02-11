@@ -17,8 +17,7 @@ class ItemDatatableService
 
         $limit = $request->input('limit', 10);
 
-        $data = $query->orderBy('name')
-            ->paginate($limit)
+        $data = $query->paginate($limit)
             ->through(fn ($item) => [
                 'id' => $item->id,
                 'name' => $item->name,
@@ -32,12 +31,13 @@ class ItemDatatableService
 
         return [
             'data' => $data->items(),
-            'meta' => [
-                'current_page' => $data->currentPage(),
-                'last_page' => $data->lastPage(),
-                'per_page' => $data->perPage(),
-                'total' => $data->total(),
-            ],
+            'links' => $data->linkCollection()->toArray(),
+            'current_page' => $data->currentPage(),
+            'last_page' => $data->lastPage(),
+            'per_page' => $data->perPage(),
+            'from' => $data->firstItem(),
+            'to' => $data->lastItem(),
+            'total' => $data->total(),
         ];
     }
 
@@ -85,20 +85,43 @@ class ItemDatatableService
         $query = Item::with(['category', 'referenceItem']);
 
         // Menu Barang hanya menampilkan barang gudang utama (division_id = null)
-        // Untuk melihat stok di semua divisi, gunakan menu Monitoring Stok
         $query->whereNull('division_id');
 
-        // Search filter
+        // Global Search
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('unit_of_measure', 'like', "%{$search}%")
+                    ->orWhere('stock', 'like', "%{$search}%")
                     ->orWhereHas('category', fn ($q) => $q->where('name', 'like', "%{$search}%"));
             });
         }
 
-        // Category filter
-        if ($categoryId = $request->input('category_id')) {
-            $query->where('category_id', $categoryId);
+        // Individual Filters
+        if ($name = $request->input('name')) {
+            $query->where('name', 'like', "%{$name}%");
+        }
+
+        if ($category = $request->input('category')) {
+            $query->whereHas('category', fn ($q) => $q->where('name', 'like', "%{$category}%"));
+        }
+
+        if ($unitOfMeasure = $request->input('unit_of_measure')) {
+            $query->where('unit_of_measure', 'like', "%{$unitOfMeasure}%");
+        }
+
+        if ($stock = $request->input('stock')) {
+            $query->where('stock', $stock);
+        }
+
+        // Sorting
+        $sortBy = $request->input('sort_by', 'name');
+        $sortDirection = $request->input('sort_direction', 'asc');
+
+        if (in_array($sortBy, ['name', 'unit_of_measure', 'stock', 'created_at'])) {
+            $query->orderBy($sortBy, $sortDirection);
+        } else {
+            $query->orderBy('name', 'asc');
         }
 
         return $query;

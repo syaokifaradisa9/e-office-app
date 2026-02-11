@@ -67,6 +67,10 @@ class CategoryItemDatatableService
             $query->where('description', 'like', '%'.$request->description.'%');
         }
 
+        if ($request->has('is_active') && $request->is_active !== '' && $request->is_active !== null) {
+            $query->where('is_active', $request->is_active);
+        }
+
         if ($request->has('search') && $request->search != '') {
             $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', '%'.$request->search.'%')

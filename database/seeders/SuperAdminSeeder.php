@@ -17,32 +17,27 @@ class SuperAdminSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Base Permissions
-        $permissions = [
-            'lihat_divisi',
-            'kelola_divisi',
-            'lihat_jabatan',
-            'kelola_jabatan',
-            'lihat_pengguna',
-            'kelola_pengguna',
-            'lihat_role',
-            'kelola_role',
+        // 1. Ensure all permissions from Enums and base are created
+        $basePermissions = [
+            'lihat_divisi', 'kelola_divisi', 'lihat_jabatan', 'kelola_jabatan',
+            'lihat_pengguna', 'kelola_pengguna', 'lihat_role', 'kelola_role'
         ];
-
-        // 2. Add all Module Permissions from Enums
+        
+        // Modules usually have their own seeders, but we ensure they exist here too
         $inventoryPermissions = InventoryPermission::values();
         $visitorPermissions = VisitorUserPermission::values();
-        $allPermissions = array_unique(array_merge($permissions, $inventoryPermissions, $visitorPermissions));
-
-        foreach ($allPermissions as $permission) {
-            Permission::firstOrCreate([
-                'name' => $permission,
-                'guard_name' => 'web',
-            ]);
+        
+        // Also include Archieve permissions (which are currently snake_case in its seeder)
+        // We'll just fetch all from DB at the end to be safe, but let's create these first.
+        foreach (array_merge($basePermissions, $inventoryPermissions, $visitorPermissions) as $name) {
+            Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
         }
 
-        // 3. Create Role and Assign Permissions
-        $role = Role::firstOrCreate(['name' => 'superadmin', 'guard_name' => 'web']);
+        // 2. Create/Get Role
+        $role = Role::firstOrCreate(['name' => 'Superadmin', 'guard_name' => 'web']);
+        
+        // 3. Assign ALL permissions in the system to Superadmin
+        $allPermissions = Permission::all();
         $role->syncPermissions($allPermissions);
 
         // 4. Create SuperAdmin User

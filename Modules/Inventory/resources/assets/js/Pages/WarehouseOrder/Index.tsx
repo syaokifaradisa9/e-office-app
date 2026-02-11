@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import Button from '@/components/buttons/Button';
 import { router, usePage } from '@inertiajs/react';
 import { Edit, Plus, Trash2, Eye, Check, PackageCheck, X, ClipboardCheck, FileSpreadsheet, Filter, RotateCcw } from 'lucide-react';
+import { InventoryPermission } from '../../types/permissions';
 import ConfirmationAlert from '@/components/alerts/ConfirmationAlert';
 import FormSearch from '@/components/forms/FormSearch';
 import FormSearchSelect from '@/components/forms/FormSearchSelect';
@@ -76,11 +77,11 @@ export default function WarehouseOrderIndex({ users = [], divisions = [] }: { us
     const { permissions, loggeduser: currentUser } = usePage<PageProps>().props;
 
     // Permission checks
-    const hasCreatePermission = permissions?.includes('buat_permintaan_barang');
-    const hasConfirmPermission = permissions?.includes('konfirmasi_permintaan_barang');
-    const hasHandoverPermission = permissions?.includes('serah_terima_barang');
-    const hasReceivePermission = permissions?.includes('terima_barang');
-    const canViewList = permissions?.includes('lihat_permintaan_barang_divisi') || permissions?.includes('lihat_semua_permintaan_barang');
+    const hasCreatePermission = permissions?.includes(InventoryPermission.CreateWarehouseOrder);
+    const hasConfirmPermission = permissions?.includes(InventoryPermission.ConfirmWarehouseOrder);
+    const hasHandoverPermission = permissions?.includes(InventoryPermission.HandoverItem);
+    const hasReceivePermission = permissions?.includes(InventoryPermission.ReceiveItem);
+    const canViewList = permissions?.includes(InventoryPermission.ViewWarehouseOrderDivisi) || permissions?.includes(InventoryPermission.ViewAllWarehouseOrder);
 
     // Show action column if user has any action permission
     const showActionColumn = hasConfirmPermission || hasHandoverPermission || hasReceivePermission || hasCreatePermission;

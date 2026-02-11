@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import { Truck } from 'lucide-react';
+import { InventoryPermission } from '../../types/permissions';
 
 import Badge from '@/components/badges/Badge';
 import Button from '@/components/buttons/Button';
@@ -53,7 +54,7 @@ interface PageProps {
 
 export default function WarehouseOrderShow({ order }: Props) {
     const { permissions, loggeduser } = usePage<PageProps>().props;
-    const hasHandoverPermission = permissions?.includes('serah_terima_barang');
+    const hasHandoverPermission = permissions?.includes(InventoryPermission.HandoverItem);
     const isOwner = loggeduser?.id === order.user_id;
 
     const getStatusColor = (status: string) => {

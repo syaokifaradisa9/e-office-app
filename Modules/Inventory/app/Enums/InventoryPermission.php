@@ -5,47 +5,47 @@ namespace Modules\Inventory\Enums;
 enum InventoryPermission: string
 {
     // Dashboard
-    case ViewMainWarehouseDashboard = 'lihat_dashboard_gudang_utama';
-    case ViewDivisionWarehouseDashboard = 'lihat_dashboard_gudang_divisi';
-    case ViewAllWarehouseDashboard = 'lihat_dashboard_gudang_keseluruhan';
+    case ViewMainWarehouseDashboard = 'Lihat Dashboard Gudang Utama';
+    case ViewDivisionWarehouseDashboard = 'Lihat Dashboard Gudang Divisi';
+    case ViewAllWarehouseDashboard = 'Lihat Dashboard Gudang Keseluruhan';
 
     // Category Item
-    case ViewCategory = 'lihat_kategori';
-    case ManageCategory = 'kelola_kategori';
+    case ViewCategory = 'Lihat Data Kategori';
+    case ManageCategory = 'Kelola Data Kategori';
 
     // Item (Gudang Utama)
-    case ViewItem = 'lihat_barang';
-    case ManageItem = 'kelola_barang';
-    case IssueItemGudang = 'pengeluaran_barang_gudang';
-    case ConvertItemGudang = 'konversi_barang_gudang';
+    case ViewItem = 'Lihat Data Barang Gudang';
+    case ManageItem = 'Kelola Data Barang Gudang';
+    case IssueItemGudang = 'Pengeluaran Barang Gudang';
+    case ConvertItemGudang = 'Konversi Barang Gudang';
 
     // Warehouse Order
-    case ViewWarehouseOrderDivisi = 'lihat_permintaan_barang_divisi';
-    case ViewAllWarehouseOrder = 'lihat_semua_permintaan_barang';
-    case CreateWarehouseOrder = 'buat_permintaan_barang';
-    case ConfirmWarehouseOrder = 'konfirmasi_permintaan_barang';
-    case HandoverItem = 'serah_terima_barang';
-    case ReceiveItem = 'terima_barang';
+    case ViewWarehouseOrderDivisi = 'Lihat Permintaan Barang Divisi';
+    case ViewAllWarehouseOrder = 'Lihat Semua Permintaan Barang';
+    case CreateWarehouseOrder = 'Buat Permintaan Barang';
+    case ConfirmWarehouseOrder = 'Konfirmasi Permintaan Barang';
+    case HandoverItem = 'Serah Terima Barang';
+    case ReceiveItem = 'Terima Barang';
 
     // Stock Opname
-    case ViewWarehouseStockOpname = 'lihat_stock_opname_gudang';
-    case ViewDivisionStockOpname = 'lihat_stock_opname_divisi';
-    case ViewAllStockOpname = 'lihat_semua_stock_opname';
-    case CreateStockOpname = 'tambah_stock_opname';
-    case ProcessStockOpname = 'proses_stock_opname';
-    case FinalizeStockOpname = 'finalisasi_stock_opname';
+    case ViewWarehouseStockOpname = 'Lihat Stock Opname Gudang';
+    case ViewDivisionStockOpname = 'Lihat Stock Opname Divisi';
+    case ViewAllStockOpname = 'Lihat Semua Stock Opname';
+    case CreateStockOpname = 'Tambah Stock Opname';
+    case ProcessStockOpname = 'Proses Stock Opname';
+    case FinalizeStockOpname = 'Finalisasi Stock Opname';
 
     // Monitoring
-    case MonitorItemTransaction = 'monitor_transaksi_barang';
-    case MonitorAllItemTransaction = 'monitor_semua_transaksi_barang';
-    case MonitorStock = 'lihat_stok_divisi';
-    case MonitorAllStock = 'lihat_semua_stok';
-    case IssueStock = 'pengeluaran_stok_barang';
-    case ConvertStock = 'konversi_stok_barang';
+    case MonitorItemTransaction = 'Monitor Transaksi Barang';
+    case MonitorAllItemTransaction = 'Monitor Semua Transaksi Barang';
+    case MonitorStock = 'Lihat Stok Divisi';
+    case MonitorAllStock = 'Lihat Semua Stok Keseluruhan';
+    case IssueStock = 'Pengeluaran Stok Barang';
+    case ConvertStock = 'Konversi Stok Barang';
 
     // Report
-    case ViewDivisionReport = 'lihat_laporan_gudang_divisi';
-    case ViewAllReport = 'lihat_laporan_gudang_semua';
+    case ViewDivisionReport = 'Lihat Laporan Gudang Divisi';
+    case ViewAllReport = 'Lihat Laporan Gudang Semua';
 
     public static function values(): array
     {

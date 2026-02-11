@@ -4,6 +4,7 @@ import DataTable from '@/components/tables/Datatable';
 import { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import { Folder, Edit, Plus, Trash2, FileSpreadsheet, Shield } from 'lucide-react';
+import { InventoryPermission } from '../../types/permissions';
 import { router } from '@inertiajs/react';
 import ConfirmationAlert from '@/components/alerts/ConfirmationAlert';
 import FormSearch from '@/components/forms/FormSearch';
@@ -44,12 +45,15 @@ interface Params {
     page: number;
     sort_by: string;
     sort_direction: 'asc' | 'desc';
+    name?: string;
+    description?: string;
+    is_active?: string;
 }
 
 export default function CategoryItemIndex() {
     const { permissions } = usePage<PageProps>().props;
-    const hasViewPermission = permissions?.includes('lihat_kategori');
-    const hasManagePermission = permissions?.includes('kelola_kategori');
+    const hasViewPermission = permissions?.includes(InventoryPermission.ViewCategory);
+    const hasManagePermission = permissions?.includes(InventoryPermission.ManageCategory);
 
     const [dataTable, setDataTable] = useState<PaginationData>({
         data: [],
@@ -66,6 +70,9 @@ export default function CategoryItemIndex() {
         page: 1,
         sort_by: 'created_at',
         sort_direction: 'desc',
+        name: '',
+        description: '',
+        is_active: '',
     });
 
     const [openConfirm, setOpenConfirm] = useState(false);
@@ -109,7 +116,7 @@ export default function CategoryItemIndex() {
     }
 
     function onParamsChange(e: { target: { name: string; value: string } }) {
-        setParams({ ...params, [e.target.name]: e.target.value });
+        setParams({ ...params, [e.target.name]: e.target.value, page: 1 });
     }
 
     function getPrintUrl() {
@@ -162,7 +169,7 @@ export default function CategoryItemIndex() {
                 title="Kategori Barang"
                 mobileFullWidth
                 additionalButton={
-                    <CheckPermissions permissions={['kelola_kategori']}>
+                    <CheckPermissions permissions={[InventoryPermission.ManageCategory]}>
                         <Button className="hidden w-full md:flex" label="Tambah Kategori" href="/inventory/categories/create" icon={<Plus className="size-4" />} />
                     </CheckPermissions>
                 }
@@ -215,6 +222,7 @@ export default function CategoryItemIndex() {
                                 name: 'description',
                                 header: 'Deskripsi',
                                 render: (item: CategoryItem) => <span className="text-gray-500 dark:text-slate-400">{item.description || '-'}</span>,
+                                footer: <FormSearch name="description" onChange={onParamsChange} placeholder="Filter Deskripsi" />,
                             },
                             {
                                 name: 'is_active',
@@ -224,8 +232,20 @@ export default function CategoryItemIndex() {
                                         {item.is_active ? 'Aktif' : 'Tidak Aktif'}
                                     </span>
                                 ),
+                                footer: (
+                                    <select
+                                        name="is_active"
+                                        onChange={onParamsChange}
+                                        value={params.is_active}
+                                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary focus:outline-none dark:border-slate-600 dark:bg-slate-800/40 dark:text-slate-200"
+                                    >
+                                        <option value="">Semua Status</option>
+                                        <option value="1">Aktif</option>
+                                        <option value="0">Tidak Aktif</option>
+                                    </select>
+                                ),
                             },
-                            ...(usePage<PageProps>().props.permissions?.includes('kelola_kategori')
+                            ...(usePage<PageProps>().props.permissions?.includes(InventoryPermission.ManageCategory)
                                 ? [
                                     {
                                         header: 'Aksi',
@@ -258,7 +278,7 @@ export default function CategoryItemIndex() {
                 )}
             </ContentCard>
 
-            <CheckPermissions permissions={['kelola_kategori']}>
+            <CheckPermissions permissions={[InventoryPermission.ManageCategory]}>
                 <FloatingActionButton href="/inventory/categories/create" label="Tambah Kategori" />
             </CheckPermissions>
         </RootLayout>

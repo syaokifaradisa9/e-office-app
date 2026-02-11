@@ -4,6 +4,7 @@ import DataTable from '@/components/tables/Datatable';
 import { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import { Package, FileSpreadsheet, RefreshCw, LogOut } from 'lucide-react';
+import { InventoryPermission } from '../../types/permissions';
 import Button from '@/components/buttons/Button';
 import MobileSearchBar from '@/components/forms/MobileSearchBar';
 import { DivisionCardSkeleton } from '@/components/skeletons/CardSkeleton';
@@ -69,9 +70,9 @@ interface Params {
 export default function StockMonitoringIndex() {
     const pageProps = usePage<PageProps>().props;
     const { categories = [], divisions = [], loggeduser } = pageProps;
-    const canIssue = pageProps.permissions?.includes('pengeluaran_stok_barang');
-    const canMonitorAll = pageProps.permissions?.includes('lihat_semua_stok');
-    const canConvertPermission = pageProps.permissions?.includes('konversi_stok_barang');
+    const canIssue = pageProps.permissions?.includes(InventoryPermission.IssueStock);
+    const canMonitorAll = pageProps.permissions?.includes(InventoryPermission.MonitorAllStock);
+    const canConvertPermission = pageProps.permissions?.includes(InventoryPermission.ConvertStock);
 
     const [dataTable, setDataTable] = useState<PaginationData>({
         data: [],

@@ -1,5 +1,6 @@
 import { usePage, Link } from '@inertiajs/react';
 import { Edit, Trash2, Eye, Check, PackageCheck, ClipboardCheck } from 'lucide-react';
+import { InventoryPermission } from '../../types/permissions';
 
 interface WarehouseOrderItem {
     id: number;
@@ -28,10 +29,10 @@ interface Props {
 export default function WarehouseOrderCardItem({ item, onConfirm, onDelete, onReject }: Props) {
     const { permissions, loggeduser: currentUser } = usePage<PageProps>().props;
 
-    const hasCreatePermission = permissions?.includes('buat_permintaan_barang');
-    const hasConfirmPermission = permissions?.includes('konfirmasi_permintaan_barang');
-    const hasHandoverPermission = permissions?.includes('serah_terima_barang');
-    const hasReceivePermission = permissions?.includes('terima_barang');
+    const hasCreatePermission = permissions?.includes(InventoryPermission.CreateWarehouseOrder);
+    const hasConfirmPermission = permissions?.includes(InventoryPermission.ConfirmWarehouseOrder);
+    const hasHandoverPermission = permissions?.includes(InventoryPermission.HandoverItem);
+    const hasReceivePermission = permissions?.includes(InventoryPermission.ReceiveItem);
 
     // Status badge colors
     const statusColors: Record<string, string> = {

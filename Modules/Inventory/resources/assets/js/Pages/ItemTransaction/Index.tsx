@@ -4,6 +4,7 @@ import DataTable from '@/components/tables/Datatable';
 import { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import { ArrowUpCircle, ArrowDownCircle, RefreshCw, FileSpreadsheet } from 'lucide-react';
+import { InventoryPermission } from '../../types/permissions';
 import Button from '@/components/buttons/Button';
 import MobileSearchBar from '@/components/forms/MobileSearchBar';
 import { DivisionCardSkeleton } from '@/components/skeletons/CardSkeleton';
@@ -76,7 +77,7 @@ const typeColors: Record<string, string> = {
 
 export default function ItemTransactionIndex() {
     const { permissions } = usePage<PageProps>().props;
-    const canMonitorAll = permissions?.includes('monitor_semua_transaksi_barang');
+    const canMonitorAll = permissions?.includes(InventoryPermission.MonitorAllItemTransaction);
 
     const [dataTable, setDataTable] = useState<PaginationData>({
         data: [],

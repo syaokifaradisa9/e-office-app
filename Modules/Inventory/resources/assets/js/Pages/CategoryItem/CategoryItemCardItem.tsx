@@ -1,5 +1,6 @@
 import { Edit, Trash2 } from 'lucide-react';
 import { Link, usePage } from '@inertiajs/react';
+import { InventoryPermission } from '../../types/permissions';
 
 interface CategoryItem {
     id: number;
@@ -19,7 +20,7 @@ interface Props {
 
 export default function CategoryItemCardItem({ item, onDelete }: Props) {
     const { permissions } = usePage<PageProps>().props;
-    const hasManagePermission = permissions?.includes('kelola_kategori_barang');
+    const hasManagePermission = permissions?.includes(InventoryPermission.ManageCategory);
 
     return (
         <div className="transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/30">
