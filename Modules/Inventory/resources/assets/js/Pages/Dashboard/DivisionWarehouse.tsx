@@ -29,24 +29,24 @@ interface Transaction {
 }
 
 interface PageProps {
-    mostStockItems: Item[];
-    leastStockItems: Item[];
-    hasStockOpnameThisMonth: boolean;
-    activeOrders: Order[];
-    recentTransactions: Transaction[];
-    divisionName?: string;
+    most_stock_items: Item[];
+    least_stock_items: Item[];
+    has_stock_opname_this_month: boolean;
+    active_orders: Order[];
+    recent_transactions: Transaction[];
+    division_name?: string;
     error?: string;
     [key: string]: unknown;
 }
 
 export default function DivisionWarehouse() {
     const {
-        mostStockItems = [],
-        leastStockItems = [],
-        hasStockOpnameThisMonth = false,
-        activeOrders = [],
-        recentTransactions = [],
-        divisionName,
+        most_stock_items: mostStockItems = [],
+        least_stock_items: leastStockItems = [],
+        has_stock_opname_this_month: hasStockOpnameThisMonth = false,
+        active_orders: activeOrders = [],
+        recent_transactions: recentTransactions = [],
+        division_name: divisionName,
         error
     } = usePage<PageProps>().props;
 

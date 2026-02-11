@@ -130,7 +130,7 @@ it('shows delivered orders on division warehouse dashboard', function () {
     $response = $this->actingAs($user)->get('/inventory/dashboard/division-warehouse');
 
     $response->assertOk();
-    $response->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page->has('activeOrders', 1));
+    $response->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page->has('active_orders', 1));
 });
 
 it('shows error message for division user without division', function () {
@@ -169,5 +169,5 @@ it('filters division dashboard by user division', function () {
     $response = $this->actingAs($user)->get('/inventory/dashboard/division-warehouse');
 
     $response->assertOk();
-    $response->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page->has('activeOrders', 1));
+    $response->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page->has('active_orders', 1));
 });

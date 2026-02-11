@@ -3,6 +3,7 @@
 namespace Modules\Inventory\Services;
 
 use App\Repositories\Division\DivisionRepository;
+use Modules\Inventory\Enums\InventoryPermission;
 use Modules\Inventory\Repositories\Item\ItemRepository;
 use Modules\Inventory\Repositories\ItemTransaction\ItemTransactionRepository;
 use Modules\Inventory\Repositories\StockOpname\StockOpnameRepository;
@@ -27,17 +28,17 @@ class InventoryDashboardService
         $tabs = [];
 
         // Tab: Gudang Divisi
-        if ($user->can('lihat_dashboard_gudang_divisi') && $user->division_id) {
+        if ($user->can(InventoryPermission::ViewDivisionWarehouseDashboard->value) && $user->division_id) {
             $tabs[] = $this->getDivisionWarehouseTab($user);
         }
 
         // Tab: Gudang Utama
-        if ($user->can('lihat_dashboard_gudang_utama')) {
+        if ($user->can(InventoryPermission::ViewMainWarehouseDashboard->value)) {
             $tabs[] = $this->getMainWarehouseTab();
         }
 
         // Tab: Gudang Keseluruhan
-        if ($user->can('lihat_dashboard_gudang_keseluruhan')) {
+        if ($user->can(InventoryPermission::ViewAllWarehouseDashboard->value)) {
             $tabs[] = $this->getAllWarehouseTab();
         }
 
@@ -52,12 +53,12 @@ class InventoryDashboardService
         $divisionId = $user->division_id;
 
         return [
-            'mostStockItems' => $this->itemRepository->getMostStocked(5, $divisionId),
-            'leastStockItems' => $this->itemRepository->getLeastStocked(5, $divisionId),
-            'hasStockOpnameThisMonth' => $this->opnameRepository->hasOpnameThisMonth($divisionId),
-            'activeOrders' => $this->orderRepository->getActiveOrders($divisionId, 5),
-            'recentTransactions' => $this->transactionRepository->getLatestTransactions($divisionId, 5),
-            'divisionName' => $user->division?->name,
+            'most_stock_items' => $this->itemRepository->getMostStocked(5, $divisionId),
+            'least_stock_items' => $this->itemRepository->getLeastStocked(5, $divisionId),
+            'has_stock_opname_this_month' => $this->opnameRepository->hasOpnameThisMonth($divisionId),
+            'active_orders' => $this->orderRepository->getActiveOrders($divisionId, 5),
+            'recent_transactions' => $this->transactionRepository->getLatestTransactions($divisionId, 5),
+            'division_name' => $user->division?->name,
         ];
     }
 
