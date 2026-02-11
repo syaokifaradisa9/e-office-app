@@ -11,6 +11,8 @@ class InventoryDatabaseSeeder extends Seeder
         $this->call([
             InventoryPermissionSeeder::class,
             CategoryItemSeeder::class,
+            ItemSeeder::class,
+            WarehouseOrderSeeder::class,
         ]);
     }
 }

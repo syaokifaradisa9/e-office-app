@@ -59,7 +59,6 @@ Route::prefix('inventory')->name('inventory.')->middleware(['auth'])->group(func
     // Reports
     Route::prefix('reports')->name('reports.')->controller(ReportController::class)->group(function () {
         Route::middleware('inventory_item_permission:ViewDivisionReport|ViewAllReport')->group(function () {
-            Route::get('/', 'index')->name('index');
             Route::get('/division', 'division')->name('division');
             Route::get('/all', 'all')->name('all')->middleware('inventory_item_permission:ViewAllReport');
             Route::get('/print-excel', 'printExcel')->name('print-excel');

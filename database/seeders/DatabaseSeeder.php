@@ -6,6 +6,8 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Modules\Inventory\Database\Seeders\CategoryItemSeeder;
 use Modules\Inventory\Database\Seeders\InventoryPermissionSeeder;
+use Modules\Inventory\Database\Seeders\ItemSeeder;
+use Modules\Inventory\Database\Seeders\WarehouseOrderSeeder;
 use Modules\Archieve\Database\Seeders\CategoryContextSeeder;
 use Modules\Archieve\Database\Seeders\DocumentClassificationSeeder;
 use Modules\VisitorManagement\Database\Seeders\VisitorManagementDatabaseSeeder;
@@ -22,6 +24,8 @@ class DatabaseSeeder extends Seeder
             DivisionSeeder::class,
             UserSeeder::class,
             CategoryItemSeeder::class,
+            ItemSeeder::class,
+            WarehouseOrderSeeder::class,
             InventoryPermissionSeeder::class,
             CategoryContextSeeder::class,
             DocumentClassificationSeeder::class,
