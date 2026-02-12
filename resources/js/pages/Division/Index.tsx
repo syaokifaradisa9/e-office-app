@@ -13,6 +13,7 @@ import MobileSearchBar from '@/components/forms/MobileSearchBar';
 import FloatingActionButton from '@/components/buttons/FloatingActionButton';
 import { DivisionCardSkeleton } from '@/components/skeletons/CardSkeleton';
 import Tooltip from '@/components/commons/Tooltip';
+import FormSearchSelect from '@/components/forms/FormSearchSelect';
 
 import DivisionCardItem from './DivisionCardItem';
 
@@ -263,11 +264,16 @@ export default function DivisionIndex() {
                                     </span>
                                 ),
                                 footer: (
-                                    <select name="is_active" onChange={onParamsChange} value={params.is_active} className="w-full rounded-lg border border-gray-400/50 bg-white px-3 py-1.5 text-xs text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-slate-600 dark:bg-slate-800/40 dark:text-slate-200">
-                                        <option value="">Semua</option>
-                                        <option value="1">Aktif</option>
-                                        <option value="0">Tidak Aktif</option>
-                                    </select>
+                                    <FormSearchSelect
+                                        name="is_active"
+                                        value={params.is_active}
+                                        onChange={onParamsChange}
+                                        options={[
+                                            { value: '', label: 'Semua Status' },
+                                            { value: '1', label: 'Aktif' },
+                                            { value: '0', label: 'Tidak Aktif' },
+                                        ]}
+                                    />
                                 ),
                             },
                             ...(usePage<PageProps>().props.permissions?.includes('kelola_divisi')

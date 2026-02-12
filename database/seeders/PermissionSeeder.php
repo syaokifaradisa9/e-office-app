@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\DivisionRolePermission;
 use App\Enums\PositionRolePermission;
+use App\Enums\RoleRolePermission;
 use App\Enums\UserRolePermission;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
@@ -26,8 +27,7 @@ class PermissionSeeder extends Seeder
             ...UserRolePermission::values(),
             
             // Role Permissions
-            'lihat_role',
-            'kelola_role',
+            ...RoleRolePermission::values(),
 
             // Archieve Module Permissions
             'lihat_kategori_arsip',

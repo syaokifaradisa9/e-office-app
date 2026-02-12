@@ -11,7 +11,11 @@ class RoleDatatableService implements DatatableServiceInterface
 {
     private function getStartedQuery(DatatableRequest $request, User $loggedUser): Builder
     {
-        $query = Role::query()->with('permissions');
+        $query = Role::query()->with('permissions')->withCount('permissions');
+
+        if ($request->has('name') && $request->name != '') {
+            $query->where('name', 'like', '%'.$request->name.'%');
+        }
 
         if ($request->has('search') && $request->search != '') {
             $query->where('name', 'like', '%'.$request->search.'%');

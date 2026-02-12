@@ -181,6 +181,7 @@ export default function RoleIndex() {
             />
             <ContentCard
                 title="Role & Permission"
+                subtitle="Kelola dan atur tingkat akses pengguna dalam sistem Anda"
                 mobileFullWidth
                 additionalButton={
                     <CheckPermissions permissions={['kelola_role']}>
@@ -232,7 +233,7 @@ export default function RoleIndex() {
                             header: 'Jumlah Permission',
                             render: (role: Role) => (
                                 <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                    {role.permissions_count} Permissions
+                                    {role.permissions_count ?? 0} Hak Akses
                                 </span>
                             ),
                         },

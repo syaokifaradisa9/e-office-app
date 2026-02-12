@@ -72,15 +72,18 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Role Routes
-    Route::prefix('role')->name('role.')->controller(RoleController::class)->group(function () {
+    Route::prefix('role')->name('role.')->controller(RoleController::class)->middleware('role_permission')->group(function () {
         Route::get('/', 'index')->name('index');
-        Route::get('/create', 'create')->name('create');
-        Route::post('/store', 'store')->name('store');
-        Route::get('/{role}/edit', 'edit')->name('edit');
-        Route::put('/{role}/update', 'update')->name('update');
-        Route::delete('/{role}/delete', 'delete')->name('delete');
         Route::get('/datatable', 'datatable')->name('datatable');
         Route::get('/print/{type}', 'printExcel')->name('print');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
+
+        Route::prefix('{role}')->group(function () {
+            Route::get('/edit', 'edit')->name('edit');
+            Route::put('/update', 'update')->name('update');
+            Route::delete('/delete', 'delete')->name('delete');
+        });
     });
 
     // Profile Routes

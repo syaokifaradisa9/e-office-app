@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'division_permission' => \App\Http\Middleware\DivisionPermissionCheck::class,
             'position_permission' => \App\Http\Middleware\PositionPermissionCheck::class,
             'user_permission' => \App\Http\Middleware\UserPermissionCheck::class,
+            'role_permission' => \App\Http\Middleware\RolePermissionCheck::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

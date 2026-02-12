@@ -68,7 +68,7 @@ class RoleController extends Controller
         return $this->roleDatatableService->getDatatable($request, $request->user());
     }
 
-    public function printExcel(DatatableRequest $request)
+    public function printExcel(DatatableRequest $request, $type)
     {
         return $this->roleDatatableService->printExcel($request, $request->user());
     }
