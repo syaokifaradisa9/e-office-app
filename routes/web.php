@@ -57,22 +57,17 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // User Routes
-    Route::prefix('user')->name('user.')->controller(UserController::class)->group(function () {
-        Route::middleware('role_or_permission:lihat_pengguna|kelola_pengguna')->group(function () {
-            Route::get('/', 'index')->name('index');
-        });
+    Route::prefix('user')->name('user.')->controller(UserController::class)->middleware('user_permission')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/datatable', 'datatable')->name('datatable');
+        Route::get('/print/{type}', 'printExcel')->name('print');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
 
-        Route::middleware('permission:lihat_pengguna')->group(function () {
-            Route::get('/datatable', 'datatable')->name('datatable');
-            Route::get('/print/{type}', 'printExcel')->name('print');
-        });
-
-        Route::middleware('permission:kelola_pengguna')->group(function () {
-            Route::get('/create', 'create')->name('create');
-            Route::post('/store', 'store')->name('store');
-            Route::get('/{user}/edit', 'edit')->name('edit');
-            Route::put('/{user}/update', 'update')->name('update');
-            Route::delete('/{user}/delete', 'delete')->name('delete');
+        Route::prefix('{user}')->group(function () {
+            Route::get('/edit', 'edit')->name('edit');
+            Route::put('/update', 'update')->name('update');
+            Route::delete('/delete', 'delete')->name('delete');
         });
     });
 

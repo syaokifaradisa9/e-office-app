@@ -12,6 +12,18 @@ class UserDatatableService implements DatatableServiceInterface
     {
         $query = User::query()->with(['division', 'position', 'roles']);
 
+        if ($request->has('name') && $request->name != '') {
+            $query->where('name', 'like', '%'.$request->name.'%');
+        }
+
+        if ($request->has('email') && $request->email != '') {
+            $query->where('email', 'like', '%'.$request->email.'%');
+        }
+
+        if ($request->has('is_active') && $request->is_active !== '') {
+            $query->where('is_active', $request->is_active);
+        }
+
         if ($request->has('search') && $request->search != '') {
             $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', '%'.$request->search.'%')

@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'check_active_opname' => \Modules\Inventory\Http\Middleware\CheckActiveStockOpname::class,
             'division_permission' => \App\Http\Middleware\DivisionPermissionCheck::class,
             'position_permission' => \App\Http\Middleware\PositionPermissionCheck::class,
+            'user_permission' => \App\Http\Middleware\UserPermissionCheck::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

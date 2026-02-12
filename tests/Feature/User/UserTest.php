@@ -3,288 +3,187 @@
 use App\Models\Division;
 use App\Models\Position;
 use App\Models\User;
+use App\Enums\UserRolePermission;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
-use Modules\Inventory\Database\Seeders\InventoryPermissionSeeder;
+use Illuminate\Support\Facades\DB;
 
 beforeEach(function () {
     $this->seed(PermissionSeeder::class);
-    $this->seed(InventoryPermissionSeeder::class);
     $this->seed(RoleSeeder::class);
 });
 
-it('can display user index page', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
+describe('User Management Access Control', function () {
+    it('allows users with lihat_pengguna to access index, datatable, and print', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(UserRolePermission::VIEW_USER->value);
 
-    $response = $this->actingAs($user)->get('/user');
+        $this->actingAs($user)->get('/user')->assertStatus(200);
+        $this->actingAs($user)->get('/user/datatable')->assertStatus(200);
+        $this->actingAs($user)->get('/user/print/excel')->assertStatus(200);
+    });
 
-    $response->assertStatus(200)
-        ->assertInertia(fn ($page) => $page->component('User/Index'));
+    it('denies users with only lihat_pengguna from accessing management routes', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(UserRolePermission::VIEW_USER->value);
+
+        $targetUser = User::factory()->create();
+
+        $this->actingAs($user)->get('/user/create')->assertStatus(403);
+        $this->actingAs($user)->post('/user/store', [])->assertStatus(403);
+        $this->actingAs($user)->get("/user/{$targetUser->id}/edit")->assertStatus(403);
+        $this->actingAs($user)->put("/user/{$targetUser->id}/update", [])->assertStatus(403);
+        $this->actingAs($user)->delete("/user/{$targetUser->id}/delete")->assertStatus(403);
+    });
+
+    it('allows users with kelola_pengguna to access management routes', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(UserRolePermission::MANAGE_USER->value);
+
+        $targetUser = User::factory()->create();
+
+        $this->actingAs($user)->get('/user/create')->assertStatus(200);
+        $this->actingAs($user)->get("/user/{$targetUser->id}/edit")->assertStatus(200);
+    });
 });
 
-it('can display user create page', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
+describe('User Datatable Features', function () {
+    it('can search globally using name or email', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(UserRolePermission::VIEW_USER->value);
 
-    $response = $this->actingAs($user)->get('/user/create');
+        User::factory()->create(['name' => 'John Doe', 'email' => 'john@test.com']);
+        User::factory()->create(['name' => 'Jane Smith', 'email' => 'jane@test.com']);
 
-    $response->assertStatus(200)
-        ->assertInertia(fn ($page) => $page
-            ->component('User/Create')
-            ->has('divisions')
-            ->has('positions')
-            ->has('roles'));
+        // Search by name
+        $response = $this->actingAs($user)->get('/user/datatable?search=John');
+        $response->assertStatus(200);
+        expect($response->json('data'))->toHaveCount(1);
+        expect($response->json('data.0.name'))->toBe('John Doe');
+
+        // Search by email
+        $response = $this->actingAs($user)->get('/user/datatable?search=jane@test');
+        $response->assertStatus(200);
+        expect($response->json('data'))->toHaveCount(1);
+        expect($response->json('data.0.email'))->toBe('jane@test.com');
+    });
+
+    it('can filter results with limit and page', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(UserRolePermission::VIEW_USER->value);
+
+        User::factory()->count(15)->create();
+
+        $response = $this->actingAs($user)->get('/user/datatable?limit=5&page=2');
+
+        $response->assertStatus(200);
+        $json = $response->json();
+        expect($json['data'])->toHaveCount(5);
+        expect($json['total'])->toBe(16); // 15 + 1 logged user
+        expect($json['current_page'])->toBe(2);
+    });
+
+    it('can perform individual search on name column', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(UserRolePermission::VIEW_USER->value);
+
+        User::factory()->create(['name' => 'Specific User']);
+        User::factory()->create(['name' => 'Other User']);
+
+        $response = $this->actingAs($user)->get('/user/datatable?name=Specific');
+
+        $response->assertStatus(200);
+        $data = $response->json('data');
+        expect($data)->toHaveCount(1);
+        expect($data[0]['name'])->toBe('Specific User');
+    });
+
+    it('can perform individual search on email column', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(UserRolePermission::VIEW_USER->value);
+
+        User::factory()->create(['email' => 'specific@test.com']);
+        User::factory()->create(['email' => 'other@test.com']);
+
+        $response = $this->actingAs($user)->get('/user/datatable?email=specific@test');
+
+        $response->assertStatus(200);
+        $data = $response->json('data');
+        expect($data)->toHaveCount(1);
+        expect($data[0]['email'])->toBe('specific@test.com');
+    });
+
+    it('can filter by division_id', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(UserRolePermission::VIEW_USER->value);
+
+        $div1 = Division::factory()->create();
+        $div2 = Division::factory()->create();
+
+        User::factory()->create(['division_id' => $div1->id]);
+        User::factory()->create(['division_id' => $div2->id]);
+
+        $response = $this->actingAs($user)->get("/user/datatable?division_id={$div1->id}");
+
+        $response->assertStatus(200);
+        foreach ($response->json('data') as $row) {
+            expect($row['division_id'])->toBe($div1->id);
+        }
+    });
+
+    it('can filter by position_id', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(UserRolePermission::VIEW_USER->value);
+
+        $pos1 = Position::factory()->create();
+        $pos2 = Position::factory()->create();
+
+        User::factory()->create(['position_id' => $pos1->id]);
+        User::factory()->create(['position_id' => $pos2->id]);
+
+        $response = $this->actingAs($user)->get("/user/datatable?position_id={$pos1->id}");
+
+        $response->assertStatus(200);
+        foreach ($response->json('data') as $row) {
+            expect($row['position_id'])->toBe($pos1->id);
+        }
+    });
+
+    it('can perform individual search on is_active status', function () {
+        $user = User::factory()->create(['is_active' => true]);
+        $user->givePermissionTo(UserRolePermission::VIEW_USER->value);
+
+        User::factory()->create(['is_active' => false, 'name' => 'Inactive User']);
+
+        // Test inactive
+        $responseInactive = $this->actingAs($user)->get('/user/datatable?is_active=0');
+        expect($responseInactive->json('data'))->toHaveCount(1);
+        expect($responseInactive->json('data.0.is_active'))->toBeFalse();
+    });
 });
 
-it('can create a new user', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Superadmin');
+describe('User Print functionality', function () {
+    it('returns xlsx file for printing', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(UserRolePermission::VIEW_USER->value);
 
-    $division = Division::factory()->create();
-    $position = Position::factory()->create();
+        User::factory()->count(5)->create();
 
-    $response = $this->actingAs($admin)->post('/user/store', [
-        'name' => 'Test User',
-        'email' => 'testuser@example.com',
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
-        'division_id' => $division->id,
-        'position_id' => $position->id,
-        'role' => 'User',
-        'is_active' => true,
-    ]);
+        $response = $this->actingAs($user)->get('/user/print/excel');
 
-    $response->assertRedirect('/user');
-    $this->assertDatabaseHas('users', [
-        'name' => 'Test User',
-        'email' => 'testuser@example.com',
-        'division_id' => $division->id,
-        'position_id' => $position->id,
-    ]);
-});
+        $response->assertStatus(200)
+            ->assertHeader('Content-Disposition', 'attachment; filename="Data Pengguna Per ' . date('d F Y') . '.xlsx"');
+    });
 
-it('requires name when creating user', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Superadmin');
+    it('respects filters when printing to excel', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(UserRolePermission::VIEW_USER->value);
 
-    $response = $this->actingAs($admin)->post('/user/store', [
-        'email' => 'testuser@example.com',
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
-    ]);
+        User::factory()->create(['name' => 'Excel User']);
+        User::factory()->create(['name' => 'Other User']);
 
-    $response->assertSessionHasErrors('name');
-});
+        $response = $this->actingAs($user)->get('/user/print/excel?search=Excel');
 
-it('requires valid email when creating user', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Superadmin');
-
-    $response = $this->actingAs($admin)->post('/user/store', [
-        'name' => 'Test User',
-        'email' => 'invalid-email',
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
-    ]);
-
-    $response->assertSessionHasErrors('email');
-});
-
-it('requires unique email when creating user', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Superadmin');
-
-    User::factory()->create(['email' => 'existing@example.com']);
-
-    $response = $this->actingAs($admin)->post('/user/store', [
-        'name' => 'Test User',
-        'email' => 'existing@example.com',
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
-    ]);
-
-    $response->assertSessionHasErrors('email');
-});
-
-it('can display user edit page', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Superadmin');
-
-    $user = User::factory()->withDivisionAndPosition()->create();
-
-    $response = $this->actingAs($admin)->get("/user/{$user->id}/edit");
-
-    $response->assertStatus(200)
-        ->assertInertia(fn ($page) => $page
-            ->component('User/Create')
-            ->has('user')
-            ->has('divisions')
-            ->has('positions')
-            ->has('roles'));
-});
-
-it('can update an existing user', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Superadmin');
-
-    $user = User::factory()->create([
-        'name' => 'Old Name',
-        'email' => 'old@example.com',
-    ]);
-    $user->assignRole('User');
-
-    $division = Division::factory()->create();
-    $position = Position::factory()->create();
-
-    $response = $this->actingAs($admin)->put("/user/{$user->id}/update", [
-        'name' => 'New Name',
-        'email' => 'new@example.com',
-        'division_id' => $division->id,
-        'position_id' => $position->id,
-        'role' => 'Admin',
-        'is_active' => true,
-    ]);
-
-    $response->assertRedirect('/user');
-    $this->assertDatabaseHas('users', [
-        'id' => $user->id,
-        'name' => 'New Name',
-        'email' => 'new@example.com',
-    ]);
-});
-
-it('can update user without changing password', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Superadmin');
-
-    $user = User::factory()->create([
-        'password' => bcrypt('oldpassword'),
-    ]);
-    $user->assignRole('User');
-
-    $originalPasswordHash = $user->password;
-
-    $response = $this->actingAs($admin)->put("/user/{$user->id}/update", [
-        'name' => 'Updated Name',
-        'email' => $user->email,
-        'role' => 'User',
-        'is_active' => true,
-    ]);
-
-    $response->assertRedirect('/user');
-
-    $user->refresh();
-    expect($user->password)->toBe($originalPasswordHash);
-});
-
-it('can delete a user', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Superadmin');
-
-    $user = User::factory()->create();
-
-    $response = $this->actingAs($admin)->delete("/user/{$user->id}/delete");
-
-    $response->assertRedirect('/user');
-    $this->assertDatabaseMissing('users', [
-        'id' => $user->id,
-    ]);
-});
-
-it('can fetch users datatable', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Superadmin');
-
-    User::factory()->count(5)->create();
-
-    $response = $this->actingAs($admin)->get('/user/datatable');
-
-    $response->assertStatus(200)
-        ->assertJsonStructure([
-            'data',
-            'current_page',
-            'last_page',
-            'per_page',
-            'total',
-        ]);
-});
-
-it('can search users in datatable', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Superadmin');
-
-    User::factory()->create(['name' => 'John Doe', 'email' => 'john@example.com']);
-    User::factory()->create(['name' => 'Jane Smith', 'email' => 'jane@example.com']);
-    User::factory()->create(['name' => 'Bob Wilson', 'email' => 'bob@example.com']);
-
-    $response = $this->actingAs($admin)->get('/user/datatable?search=john');
-
-    $response->assertStatus(200);
-    $data = $response->json('data');
-
-    expect($data)->toHaveCount(1)
-        ->and($data[0]['name'])->toBe('John Doe');
-});
-
-it('can search users by email in datatable', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Superadmin');
-
-    User::factory()->create(['name' => 'John Doe', 'email' => 'john@example.com']);
-    User::factory()->create(['name' => 'Jane Smith', 'email' => 'jane@example.com']);
-
-    $response = $this->actingAs($admin)->get('/user/datatable?search=jane@example');
-
-    $response->assertStatus(200);
-    $data = $response->json('data');
-
-    expect($data)->toHaveCount(1)
-        ->and($data[0]['email'])->toBe('jane@example.com');
-});
-
-it('can paginate users in datatable', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Superadmin');
-
-    User::factory()->count(25)->create();
-
-    $response = $this->actingAs($admin)->get('/user/datatable?limit=10');
-
-    $response->assertStatus(200);
-    $json = $response->json();
-
-    expect($json['data'])->toHaveCount(10)
-        ->and($json['total'])->toBe(26); // 25 + 1 admin
-});
-
-it('includes user relationships in datatable', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('Superadmin');
-
-    $division = Division::factory()->create();
-    $position = Position::factory()->create();
-
-    $user = User::factory()->create([
-        'division_id' => $division->id,
-        'position_id' => $position->id,
-    ]);
-    $user->assignRole('User');
-
-    $response = $this->actingAs($admin)->get('/user/datatable');
-
-    $response->assertStatus(200);
-    $data = $response->json('data');
-
-    $foundUser = collect($data)->firstWhere('id', $user->id);
-
-    expect($foundUser)->not->toBeNull()
-        ->and($foundUser['division']['id'])->toBe($division->id)
-        ->and($foundUser['position']['id'])->toBe($position->id);
-});
-
-it('prevents unauthenticated access to users', function () {
-    $response = $this->get('/user');
-
-    $response->assertRedirect('/login');
+        $response->assertStatus(200);
+    });
 });

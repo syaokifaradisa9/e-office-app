@@ -13,6 +13,7 @@ import MobileSearchBar from '@/components/forms/MobileSearchBar';
 import FloatingActionButton from '@/components/buttons/FloatingActionButton';
 import { UserCardSkeleton } from '@/components/skeletons/CardSkeleton';
 import Tooltip from '@/components/commons/Tooltip';
+import FormSearchSelect from '@/components/forms/FormSearchSelect';
 
 import UserCardItem from './UserCardItem';
 
@@ -61,6 +62,10 @@ interface Params {
     limit: number;
     page: number;
     name: string;
+    email: string;
+    division_id: string;
+    position_id: string;
+    is_active: string;
     sort_by: string;
     sort_direction: 'asc' | 'desc';
 }
@@ -81,6 +86,10 @@ export default function UserIndex() {
         limit: 20,
         page: 1,
         name: '',
+        email: '',
+        division_id: '',
+        position_id: '',
+        is_active: '',
         sort_by: 'created_at',
         sort_direction: 'desc',
     });
@@ -186,6 +195,7 @@ export default function UserIndex() {
             />
             <ContentCard
                 title="Pengguna"
+                subtitle="Kelola dan atur daftar pengguna sistem Anda"
                 mobileFullWidth
                 additionalButton={
                     <CheckPermissions permissions={['kelola_pengguna']}>
@@ -242,14 +252,43 @@ export default function UserIndex() {
                                 name: 'email',
                                 header: 'Email',
                                 render: (user: UserData) => <span className="text-gray-500 dark:text-slate-400">{user.email}</span>,
+                                footer: <FormSearch name="email" onChange={onParamsChange} placeholder="Filter Email" />,
                             },
                             {
                                 header: 'Divisi',
                                 render: (user: UserData) => <span className="text-gray-500 dark:text-slate-400">{user.division?.name || '-'}</span>,
+                                footer: (
+                                    <FormSearchSelect
+                                        name="division_id"
+                                        value={params.division_id}
+                                        onChange={onParamsChange}
+                                        options={[
+                                            { value: '', label: 'Semua Divisi' },
+                                            ...(usePage<any>().props.divisions || []).map((div: any) => ({
+                                                value: div.id.toString(),
+                                                label: div.name,
+                                            })),
+                                        ]}
+                                    />
+                                ),
                             },
                             {
                                 header: 'Jabatan',
                                 render: (user: UserData) => <span className="text-gray-500 dark:text-slate-400">{user.position?.name || '-'}</span>,
+                                footer: (
+                                    <FormSearchSelect
+                                        name="position_id"
+                                        value={params.position_id}
+                                        onChange={onParamsChange}
+                                        options={[
+                                            { value: '', label: 'Semua Jabatan' },
+                                            ...(usePage<any>().props.positions || []).map((pos: any) => ({
+                                                value: pos.id.toString(),
+                                                label: pos.name,
+                                            })),
+                                        ]}
+                                    />
+                                ),
                             },
                             {
                                 header: 'Role',
@@ -266,6 +305,18 @@ export default function UserIndex() {
                                     <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${user.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'}`}>
                                         {user.is_active ? 'Aktif' : 'Tidak Aktif'}
                                     </span>
+                                ),
+                                footer: (
+                                    <FormSearchSelect
+                                        name="is_active"
+                                        value={params.is_active}
+                                        onChange={onParamsChange}
+                                        options={[
+                                            { value: '', label: 'Semua Status' },
+                                            { value: '1', label: 'Aktif' },
+                                            { value: '0', label: 'Tidak Aktif' },
+                                        ]}
+                                    />
                                 ),
                             },
                             ...(usePage<PageProps>().props.permissions?.includes('kelola_pengguna')

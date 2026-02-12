@@ -25,7 +25,10 @@ class UserController extends Controller
 
     public function index()
     {
-        return Inertia::render('User/Index');
+        return Inertia::render('User/Index', [
+            'divisions' => $this->divisionService->getActive(),
+            'positions' => $this->positionService->getActive(),
+        ]);
     }
 
     public function create()
@@ -78,7 +81,7 @@ class UserController extends Controller
         return $this->userDatatableService->getDatatable($request, $request->user());
     }
 
-    public function printExcel(DatatableRequest $request)
+    public function printExcel(DatatableRequest $request, $type)
     {
         return $this->userDatatableService->printExcel($request, $request->user());
     }
