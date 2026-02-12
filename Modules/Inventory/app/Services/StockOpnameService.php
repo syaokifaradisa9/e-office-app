@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Modules\Inventory\DataTransferObjects\StockOpnameDTO;
 use Modules\Inventory\Enums\InventoryPermission;
 use Modules\Inventory\Enums\ItemTransactionType;
+use Modules\Inventory\Enums\StockOpnameStatus;
 use Modules\Inventory\Models\Item;
 use Modules\Inventory\Models\ItemTransaction;
 use Modules\Inventory\Models\StockOpname;
@@ -31,7 +32,7 @@ class StockOpnameService
     public function initializeOpname(StockOpnameDTO $dto, User $user): StockOpname
     {
         if ($this->repository->hasActiveOpname($dto->division_id)) {
-            throw new \Exception('Masih ada Stock Opname yang belum selesai (Pending/Proses).');
+            throw new \Exception('Masih ada Stock Opname yang belum selesai.');
         }
 
         return $this->repository->create([
@@ -39,13 +40,18 @@ class StockOpnameService
             'division_id' => $dto->division_id,
             'opname_date' => $dto->opname_date,
             'notes' => $dto->notes,
-            'status' => 'Pending',
+            'status' => StockOpnameStatus::Pending,
         ]);
     }
 
+    /**
+     * Save physical stock data from process form.
+     * Draft = status "Process"
+     * Confirm = status "Stock Opname" + adjust stock + record transactions
+     */
     public function savePhysicalStock(StockOpname $opname, StockOpnameDTO $dto, User $user): StockOpname
     {
-        if (!in_array($opname->status, ['Pending', 'Proses'])) {
+        if (!in_array($opname->status, [StockOpnameStatus::Pending, StockOpnameStatus::Proses])) {
             throw new \Exception('Status Stock Opname tidak valid untuk proses ini.');
         }
 
@@ -53,45 +59,56 @@ class StockOpnameService
             $opname->items()->delete();
 
             foreach ($dto->items as $itemData) {
-                // Determine system stock based on current status or original snapshot?
-                // Request says: "hanya mengisikan stok fisik tanpa adanya data stok sistem" in step 3.
-                // But in step 5: "akan muncul stok sistem sebelum stok fisik".
-                // I'll take the current item stock as system stock when saving.
                 $item = Item::find($itemData['item_id']);
-                
+
+                $physicalStock = $itemData['physical_stock'] ?? null;
+
+                // Requirement: If confirming (not draft), treat empty input as 0
+                if ($dto->status === StockOpnameStatus::StockOpname && is_null($physicalStock)) {
+                    $physicalStock = 0;
+                }
+
                 $opname->items()->create([
                     'item_id' => $itemData['item_id'],
                     'system_stock' => $item->stock,
-                    'physical_stock' => $itemData['physical_stock'],
-                    'difference' => $itemData['physical_stock'] - $item->stock,
+                    'physical_stock' => $physicalStock,
                     'notes' => $itemData['notes'] ?? null,
                 ]);
             }
 
-            if ($dto->status === 'Confirmed') {
+            if ($dto->status === StockOpnameStatus::StockOpname) {
                 $this->confirmStockUpdate($opname, $user);
             } else {
-                $opname->update(['status' => 'Proses']);
+                $opname->update(['status' => StockOpnameStatus::Proses]);
             }
 
             return $opname->fresh(['items.item']);
         });
     }
 
+    /**
+     * When user confirms the stock opname:
+     * - Status changes to "Stock Opname"
+     * - Stock adjustments are applied to items
+     * - Changes recorded in item_transactions
+     */
     private function confirmStockUpdate(StockOpname $opname, User $user)
     {
         foreach ($opname->items as $opnameItem) {
             $item = Item::find($opnameItem->item_id);
-            $difference = $opnameItem->difference;
+            // Formula: system_stock - physical_stock
+            $difference = $opnameItem->system_stock - $opnameItem->physical_stock;
 
-            if ($item && $difference != 0) {
+            if ($item && !is_null($opnameItem->physical_stock) && $difference != 0) {
                 ItemTransaction::create([
                     'date' => now(),
-                    'type' => $difference > 0 ? ItemTransactionType::StockOpnameMore : ItemTransactionType::StockOpnameLess,
+                    // system > physical (diff > 0) -> Kurang (Less)
+                    // system < physical (diff < 0) -> Lebih (More)
+                    'type' => $difference > 0 ? ItemTransactionType::StockOpnameLess : ItemTransactionType::StockOpnameMore,
                     'item_id' => $item->id,
                     'quantity' => abs($difference),
                     'user_id' => $user->id,
-                    'description' => 'Stock opname adjustment (Confirmed)',
+                    'description' => 'Penyesuaian stock opname',
                 ]);
 
                 $item->update(['stock' => $opnameItem->physical_stock]);
@@ -99,7 +116,7 @@ class StockOpnameService
         }
 
         $opname->update([
-            'status' => 'Confirmed',
+            'status' => StockOpnameStatus::StockOpname,
             'confirmed_at' => now(),
         ]);
     }
@@ -113,18 +130,22 @@ class StockOpnameService
                 $opnameItem = $opname->items()->where('item_id', $itemData['item_id'])->first();
                 if ($opnameItem) {
                     $item = Item::find($opnameItem->item_id);
-                    
-                    // Logic: If there's a difference between final_stock and previous physical_stock
-                    $additionalDifference = $itemData['final_stock'] - $opnameItem->physical_stock;
+
+                    // Formula: system_stock - final_stock (compared to current system stock which was the opname start stock)
+                    // But wait, the previous adjustment already happened. 
+                    // So we need the delta between current physical and final.
+                    $additionalDifference = $opnameItem->physical_stock - $itemData['final_stock'];
 
                     if ($additionalDifference != 0) {
                         ItemTransaction::create([
                             'date' => now(),
-                            'type' => $additionalDifference > 0 ? ItemTransactionType::StockOpnameMore : ItemTransactionType::StockOpnameLess,
+                            // positive -> physical > final -> Less (Kurang)
+                            // negative -> physical < final -> More (Lebih)
+                            'type' => $additionalDifference > 0 ? ItemTransactionType::StockOpnameLess : ItemTransactionType::StockOpnameMore,
                             'item_id' => $item->id,
                             'quantity' => abs($additionalDifference),
                             'user_id' => $user->id,
-                            'description' => 'Final stock adjustment (Selesai)',
+                            'description' => 'Penyesuaian finalisasi stock opname',
                         ]);
 
                         $item->update(['stock' => $itemData['final_stock']]);
@@ -137,7 +158,7 @@ class StockOpnameService
                 }
             }
 
-            $opname->update(['status' => 'Selesai']);
+            $opname->update(['status' => StockOpnameStatus::Finish]);
 
             return $opname->fresh(['items.item']);
         });
@@ -145,37 +166,52 @@ class StockOpnameService
 
     private function validateFinalizationRule(StockOpname $opname)
     {
-        if ($opname->status !== 'Confirmed') {
-            throw new \Exception('Hanya Stock Opname berstatus Confirmed yang dapat difinalisasi.');
+        if ($opname->status !== StockOpnameStatus::StockOpname) {
+            throw new \Exception('Hanya Stock Opname berstatus "Stock Opname" yang dapat difinalisasi.');
         }
 
+        $opnameDate = Carbon::parse($opname->opname_date);
         $confirmedAt = Carbon::parse($opname->confirmed_at);
         $now = now();
 
-        if ($confirmedAt->isSameDay($now)) {
-            throw new \Exception('Finalisasi tidak boleh dilakukan di hari yang sama dengan konfirmasi.');
+        if ($opnameDate->isSameDay($now)) {
+            throw new \Exception('Finalisasi tidak boleh dilakukan di hari yang sama dengan Tanggal Opname.');
         }
 
         if ($now->diffInDays($confirmedAt) > 5) {
-            // After 5 days, status should be auto-set to Selesai if not already done.
-            // But if they try to manually finalize after 5 days, we might allow it or just block it if it's already "expired".
-            // Requested: "jika telah lewat 5 hari maka status menjadi Selesai dan stok penyesuaian menjadi sama seperti stock opname"
             throw new \Exception('Batas waktu finalisasi (5 hari) telah berakhir.');
         }
     }
 
-    public function isMenuHidden(?int $divisionId = null): bool
+    /**
+     * Check if menus (Kategori Barang Gudang, Monitoring Stok, Permintaan Barang)
+     * should be hidden/blocked.
+     *
+     * Requirement 6-8:
+     * - If user's division has active opname → block for that user
+     * - If warehouse (division_id=null) has active opname → block for ALL users
+     */
+    public function isMenuHidden(?int $userDivisionId = null): bool
     {
-        return $this->repository->hasActiveOpname($divisionId);
+        // Check if warehouse (division_id=null) has active opname → blocks everyone
+        if ($this->repository->hasActiveOpname(null)) {
+            return true;
+        }
+
+        // Check if user's division has active opname → blocks that division's user
+        if ($userDivisionId && $this->repository->hasActiveOpname($userDivisionId)) {
+            return true;
+        }
+
+        return false;
     }
 
     public function canManage(StockOpname $opname, User $user): bool
     {
-        if (in_array($opname->status, ['Confirmed', 'Selesai'])) {
+        if (in_array($opname->status, [StockOpnameStatus::StockOpname, StockOpnameStatus::Finish])) {
             return false;
         }
 
-        // Creator check
         if ($opname->user_id !== $user->id) {
             return false;
         }
@@ -190,12 +226,11 @@ class StockOpnameService
 
     public function canProcess(StockOpname $opname, User $user): bool
     {
-        if (!in_array($opname->status, ['Pending', 'Proses'])) {
+        if (!in_array($opname->status, [StockOpnameStatus::Pending, StockOpnameStatus::Proses])) {
             return false;
         }
 
         if ($opname->division_id === null) {
-            // Gudang utama manager or similar
             return $user->can(InventoryPermission::ProcessStockOpname->value);
         }
 
@@ -205,11 +240,25 @@ class StockOpnameService
 
     public function canFinalize(StockOpname $opname, User $user): bool
     {
-        if ($opname->status !== 'Confirmed') {
+        if ($opname->status !== StockOpnameStatus::StockOpname) {
             return false;
         }
 
-        return $user->can(InventoryPermission::FinalizeStockOpname->value);
+        // Check Permission
+        if (! $user->can(InventoryPermission::FinalizeStockOpname->value)) {
+            return false;
+        }
+
+        // Check Division access
+        if ($user->can(InventoryPermission::ViewAllStockOpname->value)) {
+            return true;
+        }
+
+        if ($opname->division_id === null) {
+            return true; // Warehouse opname can be finalized by anyone with the permission
+        }
+
+        return $opname->division_id === $user->division_id;
     }
 
     public function canView(StockOpname $opname, User $user): bool

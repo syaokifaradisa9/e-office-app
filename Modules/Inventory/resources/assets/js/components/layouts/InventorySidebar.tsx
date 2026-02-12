@@ -7,13 +7,17 @@ export default function InventorySidebar() {
     const { permissions, is_stock_opname_pending } = usePage<{ permissions: string[], is_stock_opname_pending: boolean }>().props;
 
     // Define visibility for each menu item
-    const showKategori = permissions?.includes(InventoryPermission.ViewCategory) ||
-        permissions?.includes(InventoryPermission.ManageCategory);
+    const showKategori = !is_stock_opname_pending && (
+        permissions?.includes(InventoryPermission.ViewCategory) ||
+        permissions?.includes(InventoryPermission.ManageCategory)
+    );
 
-    const showBarang = permissions?.includes(InventoryPermission.ViewItem) ||
+    const showBarang = !is_stock_opname_pending && (
+        permissions?.includes(InventoryPermission.ViewItem) ||
         permissions?.includes(InventoryPermission.ManageItem) ||
         permissions?.includes(InventoryPermission.ConvertItemGudang) ||
-        permissions?.includes(InventoryPermission.IssueItemGudang);
+        permissions?.includes(InventoryPermission.IssueItemGudang)
+    );
 
     const showMonitoringStok = !is_stock_opname_pending && (
         permissions?.includes(InventoryPermission.MonitorStock) ||

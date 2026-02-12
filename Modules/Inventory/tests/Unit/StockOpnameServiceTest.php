@@ -5,7 +5,9 @@ namespace Modules\Inventory\Tests\Unit;
 use App\Models\Division;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Modules\Inventory\DataTransferObjects\StockOpnameDTO;
 use Modules\Inventory\Enums\InventoryPermission;
+use Modules\Inventory\Enums\StockOpnameStatus;
 use Modules\Inventory\Models\CategoryItem;
 use Modules\Inventory\Models\Item;
 use Modules\Inventory\Models\ItemTransaction;
@@ -20,12 +22,9 @@ beforeEach(function () {
     $this->service = app(StockOpnameService::class);
     
     // Create permissions
-    Permission::firstOrCreate(['name' => InventoryPermission::ManageWarehouseStockOpname->value, 'guard_name' => 'web']);
-    Permission::firstOrCreate(['name' => InventoryPermission::ManageDivisionStockOpname->value, 'guard_name' => 'web']);
-    Permission::firstOrCreate(['name' => InventoryPermission::ViewWarehouseStockOpname->value, 'guard_name' => 'web']);
-    Permission::firstOrCreate(['name' => InventoryPermission::ViewDivisionStockOpname->value, 'guard_name' => 'web']);
-    Permission::firstOrCreate(['name' => InventoryPermission::ViewAllStockOpname->value, 'guard_name' => 'web']);
-    Permission::firstOrCreate(['name' => InventoryPermission::ConfirmStockOpname->value, 'guard_name' => 'web']);
+    foreach (InventoryPermission::values() as $permission) {
+        Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+    }
     
     // Create division
     $this->division = Division::factory()->create(['is_active' => true]);
@@ -34,7 +33,7 @@ beforeEach(function () {
     $this->category = CategoryItem::factory()->create();
     $this->warehouseItem = Item::factory()->create([
         'category_id' => $this->category->id,
-        'division_id' => null, // Warehouse item
+        'division_id' => null,
         'stock' => 100,
     ]);
     $this->divisionItem = Item::factory()->create([
@@ -50,337 +49,195 @@ beforeEach(function () {
 
 describe('getItemsForOpname', function () {
     
-    it('mengembalikan item gudang untuk type warehouse', function () {
+    it('mengembalikan item gudang jika division_id null', function () {
         $user = User::factory()->create();
         
-        $items = $this->service->getItemsForOpname($user, 'warehouse');
+        $items = $this->service->getItemsForOpname($user, null);
         
         expect($items->count())->toBeGreaterThan(0);
         expect($items->first()->division_id)->toBeNull();
     });
     
-    it('mengembalikan item divisi user untuk type division', function () {
+    it('mengembalikan item divisi jika division_id diberikan', function () {
         $user = User::factory()->create(['division_id' => $this->division->id]);
         
-        $items = $this->service->getItemsForOpname($user, 'division');
+        $items = $this->service->getItemsForOpname($user, $this->division->id);
         
-        // Query only returns items for user's division
-        // Note: division_id is not in selected columns, only id, name, stock, unit_of_measure
         expect($items->count())->toBeGreaterThan(0);
-    });
-    
-    it('mengembalikan kosong jika user tidak punya divisi', function () {
-        $user = User::factory()->create(['division_id' => null]);
-        
-        $items = $this->service->getItemsForOpname($user, 'division');
-        
-        expect($items->count())->toBe(0);
     });
 });
 
 // ============================================
-// createWarehouse
+// initializeOpname
 // ============================================
 
-describe('createWarehouse', function () {
+describe('initializeOpname', function () {
     
-    it('dapat membuat stock opname gudang dengan data valid', function () {
+    it('dapat membuat stock opname gudang dengan status Pending', function () {
         $user = User::factory()->create();
         
-        $data = [
-            'opname_date' => now()->format('Y-m-d'),
-            'notes' => 'Test opname gudang',
-            'items' => [
-                [
-                    'item_id' => $this->warehouseItem->id,
-                    'physical_stock' => 95,
-                    'notes' => 'Selisih 5',
-                ],
-            ],
-        ];
+        $dto = new StockOpnameDTO(
+            opname_date: now()->format('Y-m-d'),
+            division_id: null,
+            notes: 'Test opname gudang',
+            status: StockOpnameStatus::Pending
+        );
         
-        $opname = $this->service->createWarehouse($data, $user);
+        $opname = $this->service->initializeOpname($dto, $user);
         
         expect($opname)->toBeInstanceOf(StockOpname::class);
         expect($opname->user_id)->toBe($user->id);
         expect($opname->division_id)->toBeNull();
-        expect($opname->status)->toBe('Draft');
+        expect($opname->status)->toBe(StockOpnameStatus::Pending);
     });
     
-    it('menyimpan items dengan difference yang benar', function () {
+    it('gagal jika masih ada opname aktif di gudang', function () {
         $user = User::factory()->create();
         
-        $data = [
-            'opname_date' => now()->format('Y-m-d'),
-            'items' => [
-                [
-                    'item_id' => $this->warehouseItem->id,
-                    'physical_stock' => 90, // System = 100, physical = 90, diff = -10
-                ],
+        StockOpname::create([
+            'user_id' => $user->id,
+            'division_id' => null,
+            'opname_date' => now(),
+            'status' => StockOpnameStatus::Pending,
+        ]);
+        
+        $dto = new StockOpnameDTO(
+            opname_date: now()->format('Y-m-d'),
+            division_id: null,
+            status: StockOpnameStatus::Pending
+        );
+        
+        expect(fn () => $this->service->initializeOpname($dto, $user))
+            ->toThrow(\Exception::class, 'belum selesai');
+    });
+});
+
+// ============================================
+// savePhysicalStock (Draft)
+// ============================================
+
+describe('savePhysicalStock draft', function () {
+    
+    it('menyimpan sebagai draft dengan status Process', function () {
+        $user = User::factory()->create();
+        
+        $opname = StockOpname::create([
+            'user_id' => $user->id,
+            'division_id' => null,
+            'opname_date' => now(),
+            'status' => StockOpnameStatus::Pending,
+        ]);
+        
+        $dto = new StockOpnameDTO(
+            items: [
+                ['item_id' => $this->warehouseItem->id, 'physical_stock' => 95, 'notes' => 'Selisih 5'],
             ],
-        ];
+            status: StockOpnameStatus::Proses
+        );
         
-        $opname = $this->service->createWarehouse($data, $user);
-        $opnameItem = $opname->items->first();
+        $result = $this->service->savePhysicalStock($opname, $dto, $user);
         
-        expect($opnameItem->system_stock)->toBe(100);
-        expect($opnameItem->physical_stock)->toBe(90);
-        expect($opnameItem->difference)->toBe(-10);
+        expect($result->status)->toBe(StockOpnameStatus::Proses);
+        expect($result->items->count())->toBe(1);
+        expect($result->items->first()->physical_stock)->toBe(95);
     });
+});
+
+// ============================================
+// savePhysicalStock (Confirm → Stock Opname)
+// ============================================
+
+describe('savePhysicalStock confirm', function () {
     
-    it('status awal adalah Draft', function () {
+    it('konfirmasi mengubah status ke Stock Opname', function () {
         $user = User::factory()->create();
         
-        $data = [
-            'opname_date' => now()->format('Y-m-d'),
-            'items' => [
-                ['item_id' => $this->warehouseItem->id, 'physical_stock' => 100],
+        $opname = StockOpname::create([
+            'user_id' => $user->id,
+            'division_id' => null,
+            'opname_date' => now(),
+            'status' => StockOpnameStatus::Pending,
+        ]);
+        
+        $dto = new StockOpnameDTO(
+            items: [
+                ['item_id' => $this->warehouseItem->id, 'physical_stock' => 85],
             ],
-        ];
+            status: StockOpnameStatus::StockOpname
+        );
         
-        $opname = $this->service->createWarehouse($data, $user);
+        $result = $this->service->savePhysicalStock($opname, $dto, $user);
         
-        expect($opname->status)->toBe('Draft');
+        expect($result->status)->toBe(StockOpnameStatus::StockOpname);
     });
-});
 
-// ============================================
-// createDivision
-// ============================================
-
-describe('createDivision', function () {
-    
-    it('dapat membuat stock opname divisi dengan data valid', function () {
-        $user = User::factory()->create(['division_id' => $this->division->id]);
+    it('mengatur physical_stock ke 0 jika kosong saat konfirmasi', function () {
+        $user = User::factory()->create();
         
-        $data = [
-            'opname_date' => now()->format('Y-m-d'),
-            'notes' => 'Test opname divisi',
-            'items' => [
-                [
-                    'item_id' => $this->divisionItem->id,
-                    'physical_stock' => 45,
-                ],
+        $opname = StockOpname::create([
+            'user_id' => $user->id,
+            'division_id' => null,
+            'opname_date' => now(),
+            'status' => StockOpnameStatus::Pending,
+        ]);
+        
+        $dto = new StockOpnameDTO(
+            items: [
+                ['item_id' => $this->warehouseItem->id, 'physical_stock' => null],
             ],
-        ];
+            status: StockOpnameStatus::StockOpname
+        );
         
-        $opname = $this->service->createDivision($data, $user);
+        // Items created with initial stock 100 in beforeEach
+        $result = $this->service->savePhysicalStock($opname, $dto, $user);
         
-        expect($opname->user_id)->toBe($user->id);
-        expect($opname->division_id)->toBe($this->division->id);
-        expect($opname->status)->toBe('Draft');
+        expect($result->items->first()->physical_stock)->toBe(0);
+        expect($result->items->first()->difference)->toBe(-100);
     });
 });
 
 // ============================================
-// update
+// isMenuHidden
 // ============================================
 
-describe('update', function () {
+describe('isMenuHidden', function () {
     
-    it('dapat mengupdate opname yang masih Draft', function () {
-        $role = Role::firstOrCreate(['name' => 'Warehouse Manager', 'guard_name' => 'web']);
-        $role->syncPermissions([InventoryPermission::ManageWarehouseStockOpname->value]);
-        
+    it('true jika ada opname aktif di gudang utama', function () {
         $user = User::factory()->create();
-        $user->assignRole($role);
         
-        // Create opname first
-        $opname = StockOpname::create([
+        StockOpname::create([
             'user_id' => $user->id,
             'division_id' => null,
-            'opname_date' => now()->subDay(),
-            'status' => 'Draft',
-        ]);
-        $opname->items()->create([
-            'item_id' => $this->warehouseItem->id,
-            'system_stock' => 100,
-            'physical_stock' => 95,
-            'difference' => -5,
+            'opname_date' => now(),
+            'status' => StockOpnameStatus::Pending,
         ]);
         
-        // Update data
-        $data = [
-            'opname_date' => now()->format('Y-m-d'),
-            'notes' => 'Updated notes',
-            'items' => [
-                ['item_id' => $this->warehouseItem->id, 'physical_stock' => 90],
-            ],
-        ];
-        
-        $updated = $this->service->update($opname, $data, $user);
-        
-        expect($updated->notes)->toBe('Updated notes');
+        expect($this->service->isMenuHidden($this->division->id))->toBeTrue();
     });
-    
-    it('gagal update jika bukan creator', function () {
-        $role = Role::firstOrCreate(['name' => 'Warehouse Manager', 'guard_name' => 'web']);
-        $role->syncPermissions([InventoryPermission::ManageWarehouseStockOpname->value]);
+
+    it('false jika status sudah Stock Opname', function () {
+        $user = User::factory()->create();
         
-        $creator = User::factory()->create();
-        $otherUser = User::factory()->create();
-        $otherUser->assignRole($role);
-        
-        $opname = StockOpname::create([
-            'user_id' => $creator->id,
+        StockOpname::create([
+            'user_id' => $user->id,
             'division_id' => null,
             'opname_date' => now(),
-            'status' => 'Draft',
+            'status' => StockOpnameStatus::StockOpname,
         ]);
         
-        $data = [
-            'opname_date' => now()->format('Y-m-d'),
-            'items' => [['item_id' => $this->warehouseItem->id, 'physical_stock' => 90]],
-        ];
-        
-        expect(fn () => $this->service->update($opname, $data, $otherUser))
-            ->toThrow(\Exception::class, 'Unauthorized');
+        expect($this->service->isMenuHidden($this->division->id))->toBeFalse();
     });
 });
 
 // ============================================
-// delete
-// ============================================
-
-describe('delete', function () {
-    
-    it('dapat menghapus opname yang masih Draft', function () {
-        $role = Role::firstOrCreate(['name' => 'Warehouse Manager', 'guard_name' => 'web']);
-        $role->syncPermissions([InventoryPermission::ManageWarehouseStockOpname->value]);
-        
-        $user = User::factory()->create();
-        $user->assignRole($role);
-        
-        $opname = StockOpname::create([
-            'user_id' => $user->id,
-            'division_id' => null,
-            'opname_date' => now(),
-            'status' => 'Draft',
-        ]);
-        
-        $result = $this->service->delete($opname, $user);
-        
-        expect($result)->toBeTrue();
-        expect(StockOpname::find($opname->id))->toBeNull();
-    });
-    
-    it('gagal hapus jika bukan creator', function () {
-        $role = Role::firstOrCreate(['name' => 'Warehouse Manager', 'guard_name' => 'web']);
-        $role->syncPermissions([InventoryPermission::ManageWarehouseStockOpname->value]);
-        
-        $creator = User::factory()->create();
-        $otherUser = User::factory()->create();
-        $otherUser->assignRole($role);
-        
-        $opname = StockOpname::create([
-            'user_id' => $creator->id,
-            'division_id' => null,
-            'opname_date' => now(),
-            'status' => 'Draft',
-        ]);
-        
-        expect(fn () => $this->service->delete($opname, $otherUser))
-            ->toThrow(\Exception::class, 'Unauthorized');
-    });
-});
-
-// ============================================
-// confirm
-// ============================================
-
-describe('confirm', function () {
-    
-    it('dapat mengkonfirmasi opname Draft', function () {
-        $user = User::factory()->create();
-        
-        $opname = StockOpname::create([
-            'user_id' => $user->id,
-            'division_id' => null,
-            'opname_date' => now(),
-            'status' => 'Draft',
-        ]);
-        $opname->items()->create([
-            'item_id' => $this->warehouseItem->id,
-            'system_stock' => 100,
-            'physical_stock' => 95,
-            'difference' => -5,
-        ]);
-        
-        $confirmed = $this->service->confirm($opname, $user);
-        
-        expect($confirmed->status)->toBe('Confirmed');
-    });
-    
-    it('stok item diupdate sesuai physical_stock', function () {
-        $user = User::factory()->create();
-        
-        $opname = StockOpname::create([
-            'user_id' => $user->id,
-            'division_id' => null,
-            'opname_date' => now(),
-            'status' => 'Draft',
-        ]);
-        $opname->items()->create([
-            'item_id' => $this->warehouseItem->id,
-            'system_stock' => 100,
-            'physical_stock' => 85, // New stock should be 85
-            'difference' => -15,
-        ]);
-        
-        $this->service->confirm($opname, $user);
-        
-        $this->warehouseItem->refresh();
-        expect($this->warehouseItem->stock)->toBe(85);
-    });
-    
-    it('membuat transaksi untuk setiap perbedaan stok', function () {
-        $user = User::factory()->create();
-        
-        $opname = StockOpname::create([
-            'user_id' => $user->id,
-            'division_id' => null,
-            'opname_date' => now(),
-            'status' => 'Draft',
-        ]);
-        $opname->items()->create([
-            'item_id' => $this->warehouseItem->id,
-            'system_stock' => 100,
-            'physical_stock' => 90,
-            'difference' => -10,
-        ]);
-        
-        $this->service->confirm($opname, $user);
-        
-        $transaction = ItemTransaction::where('item_id', $this->warehouseItem->id)->first();
-        expect($transaction)->not->toBeNull();
-        expect($transaction->quantity)->toBe(10);
-        expect($transaction->user_id)->toBe($user->id);
-    });
-    
-    it('gagal konfirmasi jika sudah Confirmed', function () {
-        $user = User::factory()->create();
-        
-        $opname = StockOpname::create([
-            'user_id' => $user->id,
-            'division_id' => null,
-            'opname_date' => now(),
-            'status' => 'Confirmed', // Already confirmed
-        ]);
-        
-        expect(fn () => $this->service->confirm($opname, $user))
-            ->toThrow(\Exception::class, 'sudah dikonfirmasi');
-    });
-});
-
-// ============================================
-// canManage & canView
+// canManage & canView & canProcess & canFinalize
 // ============================================
 
 describe('canManage dan canView', function () {
     
-    it('creator dapat manage opname Draft gudang dengan permission kelola_gudang', function () {
-        $role = Role::firstOrCreate(['name' => 'Warehouse Manager', 'guard_name' => 'web']);
-        $role->syncPermissions([InventoryPermission::ManageWarehouseStockOpname->value]);
+    it('canProcess true untuk opname Pending', function () {
+        $role = Role::firstOrCreate(['name' => 'Processor', 'guard_name' => 'web']);
+        $role->syncPermissions([InventoryPermission::ProcessStockOpname->value]);
         
         $user = User::factory()->create();
         $user->assignRole($role);
@@ -389,15 +246,15 @@ describe('canManage dan canView', function () {
             'user_id' => $user->id,
             'division_id' => null,
             'opname_date' => now(),
-            'status' => 'Draft',
+            'status' => StockOpnameStatus::Pending,
         ]);
         
-        expect($this->service->canManage($opname, $user))->toBeTrue();
+        expect($this->service->canProcess($opname, $user))->toBeTrue();
     });
     
-    it('tidak dapat manage jika status sudah Confirmed', function () {
-        $role = Role::firstOrCreate(['name' => 'Warehouse Manager', 'guard_name' => 'web']);
-        $role->syncPermissions([InventoryPermission::ManageWarehouseStockOpname->value]);
+    it('canProcess true untuk opname Process', function () {
+        $role = Role::firstOrCreate(['name' => 'Processor', 'guard_name' => 'web']);
+        $role->syncPermissions([InventoryPermission::ProcessStockOpname->value]);
         
         $user = User::factory()->create();
         $user->assignRole($role);
@@ -406,46 +263,27 @@ describe('canManage dan canView', function () {
             'user_id' => $user->id,
             'division_id' => null,
             'opname_date' => now(),
-            'status' => 'Confirmed',
+            'status' => StockOpnameStatus::Proses,
         ]);
         
-        expect($this->service->canManage($opname, $user))->toBeFalse();
+        expect($this->service->canProcess($opname, $user))->toBeTrue();
     });
     
-    it('user dengan lihat_semua dapat view semua opname', function () {
-        $role = Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
-        $role->syncPermissions([InventoryPermission::ViewAllStockOpname->value]);
+    it('canFinalize true untuk opname Stock Opname', function () {
+        $role = Role::firstOrCreate(['name' => 'Finalizer', 'guard_name' => 'web']);
+        $role->syncPermissions([InventoryPermission::FinalizeStockOpname->value]);
         
         $user = User::factory()->create();
         $user->assignRole($role);
         
-        $otherUser = User::factory()->create();
         $opname = StockOpname::create([
-            'user_id' => $otherUser->id,
-            'division_id' => $this->division->id,
-            'opname_date' => now(),
-            'status' => 'Draft',
+            'user_id' => $user->id,
+            'division_id' => null,
+            'opname_date' => now()->subDay(), // Must be at least 1 day before today
+            'status' => StockOpnameStatus::StockOpname,
+            'confirmed_at' => now()->subDay(),
         ]);
         
-        expect($this->service->canView($opname, $user))->toBeTrue();
-    });
-});
-
-// ============================================
-// getType
-// ============================================
-
-describe('getType', function () {
-    
-    it('mengembalikan warehouse jika division_id null', function () {
-        $opname = new StockOpname(['division_id' => null]);
-        
-        expect($this->service->getType($opname))->toBe('warehouse');
-    });
-    
-    it('mengembalikan division jika division_id ada', function () {
-        $opname = new StockOpname(['division_id' => 1]);
-        
-        expect($this->service->getType($opname))->toBe('division');
+        expect($this->service->canFinalize($opname, $user))->toBeTrue();
     });
 });

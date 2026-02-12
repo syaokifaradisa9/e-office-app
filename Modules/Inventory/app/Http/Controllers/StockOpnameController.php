@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Modules\Inventory\Datatables\StockOpnameDatatableService;
 use Modules\Inventory\Enums\InventoryPermission;
+use Modules\Inventory\DataTransferObjects\StockOpnameDTO;
+use Modules\Inventory\Http\Requests\FinalizeStockOpnameRequest;
+use Modules\Inventory\Http\Requests\ProcessStockOpnameRequest;
 use Modules\Inventory\Http\Requests\StoreStockOpnameRequest;
 use Modules\Inventory\Http\Requests\UpdateStockOpnameRequest;
 use Modules\Inventory\Models\StockOpname;
@@ -23,19 +26,40 @@ class StockOpnameController extends Controller
         private LookupService $lookupService
     ) {}
 
+    /**
+     * Index page for stock opname
+     * - /stock-opname/all → requires ViewAllStockOpname permission (shows all data)
+     * - /stock-opname/division → requires ViewDivisionStockOpname permission
+     * - /stock-opname/warehouse → requires ViewWarehouseStockOpname permission
+     */
     public function index(Request $request, string $type = 'all')
     {
         /** @var User $user */
         $user = auth()->user();
-        $divisionId = $type === 'division' ? $user->division_id : null;
+
+        // Permission check per type
+        if ($type === 'division' && ! $user->can(InventoryPermission::ViewDivisionStockOpname->value)) {
+            abort(403);
+        }
+        if ($type === 'warehouse' && ! $user->can(InventoryPermission::ViewWarehouseStockOpname->value)) {
+            abort(403);
+        }
+        if ($type === 'all' && ! $user->can(InventoryPermission::ViewAllStockOpname->value)) {
+            abort(403);
+        }
 
         return Inertia::render('Inventory/StockOpname/Index', [
             'type' => $type,
             'divisions' => $this->lookupService->getActiveDivisions(),
-            'isMenuHidden' => $this->stockOpnameService->isMenuHidden($divisionId),
+            'isMenuHidden' => $this->stockOpnameService->isMenuHidden($user->division_id),
         ]);
     }
 
+    /**
+     * Create form for stock opname
+     * - /stock-opname/warehouse/create → requires CreateStockOpname
+     * - /stock-opname/division/create → requires CreateStockOpname
+     */
     public function create(Request $request, string $type = 'warehouse')
     {
         if (! in_array($type, ['warehouse', 'division'])) {
@@ -45,10 +69,7 @@ class StockOpnameController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        if ($type === 'warehouse' && ! $user->can(InventoryPermission::CreateStockOpname->value)) {
-            abort(403);
-        }
-        if ($type === 'division' && ! $user->can(InventoryPermission::CreateStockOpname->value)) {
+        if (! $user->can(InventoryPermission::CreateStockOpname->value)) {
             abort(403);
         }
 
@@ -58,14 +79,44 @@ class StockOpnameController extends Controller
         ]);
     }
 
+    /**
+     * Store stock opname (status = Pending)
+     * warehouse type → division_id must be null
+     * division type → division_id = user's division_id
+     */
     public function store(StoreStockOpnameRequest $request, string $type = 'warehouse')
     {
+        /** @var User $user */
         $user = $request->user();
+
+        if (! $user->can(InventoryPermission::CreateStockOpname->value)) {
+            abort(403);
+        }
+
         $dto = StockOpnameDTO::fromStoreRequest($request);
+
+        // Enforce division_id based on type
+        if ($type === 'warehouse') {
+            $dto = new StockOpnameDTO(
+                opname_date: $dto->opname_date,
+                division_id: null,
+                notes: $dto->notes,
+                status: \Modules\Inventory\Enums\StockOpnameStatus::Pending
+            );
+        } elseif ($type === 'division') {
+            $dto = new StockOpnameDTO(
+                opname_date: $dto->opname_date,
+                division_id: $user->division_id,
+                notes: $dto->notes,
+                status: \Modules\Inventory\Enums\StockOpnameStatus::Pending
+            );
+        }
 
         try {
             $this->stockOpnameService->initializeOpname($dto, $user);
-            $message = $type === 'warehouse' ? 'Stok Opname Gudang berhasil diinisialisasi.' : 'Stok Opname Divisi berhasil diinisialisasi.';
+            $message = $type === 'warehouse'
+                ? 'Stok Opname Gudang berhasil diinisialisasi.'
+                : 'Stok Opname Divisi berhasil diinisialisasi.';
 
             return to_route('inventory.stock-opname.index', ['type' => $type])->with('success', $message);
         } catch (\Exception $e) {
@@ -73,6 +124,10 @@ class StockOpnameController extends Controller
         }
     }
 
+    /**
+     * Process page for stock opname
+     * Requires ProcessStockOpname permission
+     */
     public function process(string $type, StockOpname $stockOpname)
     {
         $user = auth()->user();
@@ -90,14 +145,27 @@ class StockOpnameController extends Controller
         ]);
     }
 
+    /**
+     * Store process result
+     * Draft → status "Dalam Proses"
+     * Confirm → status "Stock Opname"
+     */
     public function storeProcess(ProcessStockOpnameRequest $request, string $type, StockOpname $stockOpname)
     {
         $user = $request->user();
+
+        if (! $this->stockOpnameService->canProcess($stockOpname, $user)) {
+            abort(403, 'Anda tidak memiliki akses untuk memproses opname ini.');
+        }
+
         $dto = StockOpnameDTO::fromProcessRequest($request);
 
         try {
             $this->stockOpnameService->savePhysicalStock($stockOpname, $dto, $user);
-            $message = $dto->status === 'Confirmed' ? 'Stok Opname berhasil dikonfirmasi.' : 'Proses Stok Opname berhasil disimpan.';
+
+            $message = $dto->status === 'Stock Opname'
+                ? 'Stok Opname berhasil dikonfirmasi. Stok barang telah disesuaikan.'
+                : 'Proses Stok Opname berhasil disimpan sebagai draft.';
 
             return to_route('inventory.stock-opname.index', ['type' => $type])->with('success', $message);
         } catch (\Exception $e) {
@@ -111,6 +179,14 @@ class StockOpnameController extends Controller
 
         if (! $this->stockOpnameService->canFinalize($stockOpname, $user)) {
             abort(403, 'Anda tidak memiliki akses untuk finalisasi opname ini.');
+        }
+
+        try {
+            $method = new \ReflectionMethod($this->stockOpnameService, 'validateFinalizationRule');
+            $method->setAccessible(true);
+            $method->invoke($this->stockOpnameService, $stockOpname);
+        } catch (\Exception $e) {
+            return to_route('inventory.stock-opname.index', ['type' => $type])->with('error', $e->getMessage());
         }
 
         return Inertia::render('Inventory/StockOpname/Finalize', [
@@ -163,7 +239,6 @@ class StockOpnameController extends Controller
 
     public function update(StoreStockOpnameRequest $request, string $type, StockOpname $stockOpname)
     {
-        // Using StoreStockOpnameRequest because rules are same for updating Pending opname
         $dto = StockOpnameDTO::fromStoreRequest($request);
 
         try {

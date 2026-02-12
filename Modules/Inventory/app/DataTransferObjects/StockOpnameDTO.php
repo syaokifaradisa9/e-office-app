@@ -3,6 +3,7 @@
 namespace Modules\Inventory\DataTransferObjects;
 
 use Illuminate\Http\Request;
+use Modules\Inventory\Enums\StockOpnameStatus;
 
 class StockOpnameDTO
 {
@@ -11,7 +12,7 @@ class StockOpnameDTO
         public readonly ?int $division_id = null,
         public readonly ?string $notes = null,
         public readonly array $items = [],
-        public readonly ?string $status = null
+        public readonly ?StockOpnameStatus $status = null
     ) {}
 
     public static function fromStoreRequest(Request $request): self
@@ -20,23 +21,28 @@ class StockOpnameDTO
             opname_date: $request->validated('opname_date'),
             division_id: $request->validated('division_id'),
             notes: $request->validated('notes'),
-            status: 'Pending'
+            status: StockOpnameStatus::Pending
         );
     }
 
+    /**
+     * Status mapping:
+     * - confirm=true → "Stock Opname" (confirmed, stock adjusted)
+     * - confirm=false → "Process" (draft)
+     */
     public static function fromProcessRequest(Request $request): self
     {
         return new self(
-            items: $request->validated('items'), // Array of ['item_id' => ..., 'physical_stock' => ..., 'notes' => ...]
-            status: $request->has('confirm') ? 'Confirmed' : 'Proses'
+            items: $request->validated('items'),
+            status: $request->boolean('confirm') ? StockOpnameStatus::StockOpname : StockOpnameStatus::Proses
         );
     }
 
     public static function fromFinalizeRequest(Request $request): self
     {
         return new self(
-            items: $request->validated('items'), // Array of ['item_id' => ..., 'final_stock' => ..., 'final_notes' => ...]
-            status: 'Selesai'
+            items: $request->validated('items'),
+            status: StockOpnameStatus::Finish
         );
     }
 
@@ -46,7 +52,7 @@ class StockOpnameDTO
             'opname_date' => $this->opname_date,
             'division_id' => $this->division_id,
             'notes' => $this->notes,
-            'status' => $this->status,
+            'status' => $this->status?->value,
         ], fn($value) => !is_null($value));
     }
 }

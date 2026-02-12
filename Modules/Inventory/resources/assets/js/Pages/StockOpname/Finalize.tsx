@@ -17,6 +17,7 @@ interface OpnameItem {
     system_stock: number;
     physical_stock: number;
     final_stock: number;
+    notes: string | null;
     final_notes: string | null;
     item: Item;
 }
@@ -67,7 +68,7 @@ export default function StockOpnameFinalize({ type = 'warehouse', opname }: Prop
                             <span>Informasi:</span>
                         </p>
                         <p className="mt-1">
-                            Langkah ini adalah penyesuaian stok akhir sistem. Silakan masukkan stok final yang akan dijadikan saldo baru.
+                            Langkah ini adalah penyesuaian stok akhir sistem. Silakan masukkan stok final yang akan dijadikan stok baru.
                         </p>
                     </div>
 
@@ -76,8 +77,9 @@ export default function StockOpnameFinalize({ type = 'warehouse', opname }: Prop
                         <GeneralTable
                             headers={[
                                 { label: 'Barang' },
-                                { label: 'Stok Sistem (Lama)' },
+                                { label: 'Stok Sistem' },
                                 { label: 'Stok Fisik' },
+                                { label: 'Selisih' },
                                 { label: 'STOK FINAL (BARU)', className: 'text-primary font-bold' },
                                 { label: 'Catatan Penyesuaian' }
                             ]}
@@ -88,6 +90,7 @@ export default function StockOpnameFinalize({ type = 'warehouse', opname }: Prop
                                         <div>
                                             <div className="font-medium text-gray-900 dark:text-white">{item.item.name}</div>
                                             <div className="text-xs text-gray-500">{item.item.unit_of_measure}</div>
+                                            {item.notes && <div className="mt-1 text-[10px] italic text-gray-400 bg-gray-50 dark:bg-gray-800 px-1 rounded inline-block">SO: {item.notes}</div>}
                                         </div>
                                     ),
                                 },
@@ -96,6 +99,16 @@ export default function StockOpnameFinalize({ type = 'warehouse', opname }: Prop
                                 },
                                 {
                                     render: (item: OpnameItem) => <span className="font-medium text-orange-600">{item.physical_stock}</span>,
+                                },
+                                {
+                                    render: (item: OpnameItem) => {
+                                        const diff = item.physical_stock - item.system_stock;
+                                        return (
+                                            <span className={`font-medium ${diff < 0 ? 'text-red-600' : diff > 0 ? 'text-green-600' : 'text-gray-500'}`}>
+                                                {diff > 0 ? `+${diff}` : diff}
+                                            </span>
+                                        );
+                                    },
                                 },
                                 {
                                     render: (item: OpnameItem, index: number) => (
@@ -135,16 +148,32 @@ export default function StockOpnameFinalize({ type = 'warehouse', opname }: Prop
                                 <div className="border-b pb-2">
                                     <div className="font-bold text-gray-900 dark:text-white">{item.item.name}</div>
                                     <div className="text-xs text-gray-500">{item.item.unit_of_measure}</div>
+                                    {item.notes && (
+                                        <div className="mt-1 text-xs text-gray-400 italic">
+                                            SO: {item.notes}
+                                        </div>
+                                    )}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4 text-center">
+                                <div className="grid grid-cols-3 gap-2 text-center">
                                     <div className="rounded bg-gray-50 p-2 dark:bg-gray-700/50">
                                         <div className="text-[10px] uppercase text-gray-500">Sistem</div>
-                                        <div className="font-medium">{item.system_stock}</div>
+                                        <div className="font-medium text-xs">{item.system_stock}</div>
                                     </div>
                                     <div className="rounded bg-orange-50 p-2 dark:bg-orange-900/10">
                                         <div className="text-[10px] uppercase text-orange-500">Fisik</div>
-                                        <div className="font-medium text-orange-600">{item.physical_stock}</div>
+                                        <div className="font-medium text-xs text-orange-600">{item.physical_stock}</div>
+                                    </div>
+                                    <div className="rounded bg-gray-50 p-2 dark:bg-gray-700/50">
+                                        <div className="text-[10px] uppercase text-gray-500">Selisih</div>
+                                        {(() => {
+                                            const diff = item.physical_stock - item.system_stock;
+                                            return (
+                                                <div className={`font-medium text-xs ${diff < 0 ? 'text-red-600' : diff > 0 ? 'text-green-600' : 'text-gray-500'}`}>
+                                                    {diff > 0 ? `+${diff}` : diff}
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
                                 </div>
 

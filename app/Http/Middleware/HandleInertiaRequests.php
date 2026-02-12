@@ -62,7 +62,7 @@ class HandleInertiaRequests extends Middleware
                 'message' => $successMessage ?? $errorMessage ?? null,
                 'type' => $successMessage ? 'success' : ($errorMessage ? 'error' : null),
             ],
-            'is_stock_opname_pending' => $user ? cache()->remember("user_so_pending_{$user->division_id}", 60, fn() => app(\Modules\Inventory\Services\StockOpnameService::class)->isMenuHidden($user->division_id)) : false,
+            'is_stock_opname_pending' => $user ? app(\Modules\Inventory\Services\StockOpnameService::class)->isMenuHidden($user->division_id) : false,
         ];
     }
 }

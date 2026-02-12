@@ -3,6 +3,7 @@
 namespace Modules\Inventory\Repositories\StockOpname;
 
 use Carbon\Carbon;
+use Modules\Inventory\Enums\StockOpnameStatus;
 use Modules\Inventory\Models\StockOpname;
 
 class EloquentStockOpnameRepository implements StockOpnameRepository
@@ -24,9 +25,17 @@ class EloquentStockOpnameRepository implements StockOpnameRepository
         return $query->exists();
     }
 
+    /**
+     * Check if there is an active stock opname (not finished yet).
+     * Active statuses: Pending, Process, Stock Opname
+     * (Only "Finish" means it's done)
+     */
     public function hasActiveOpname(?int $divisionId = null): bool
     {
-        $query = StockOpname::whereIn('status', ['Pending', 'Proses']);
+        $query = StockOpname::whereIn('status', [
+            StockOpnameStatus::Pending->value,
+            StockOpnameStatus::Proses->value
+        ]);
 
         if ($divisionId) {
             $query->where('division_id', $divisionId);

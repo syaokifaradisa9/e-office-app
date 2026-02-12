@@ -25,6 +25,7 @@ class StockOpname extends Model
         'opname_date',
         'notes',
         'status',
+        'confirmed_at',
     ];
 
     protected function casts(): array
@@ -33,6 +34,8 @@ class StockOpname extends Model
             'user_id' => 'integer',
             'division_id' => 'integer',
             'opname_date' => 'date',
+            'status' => \Modules\Inventory\Enums\StockOpnameStatus::class,
+            'confirmed_at' => 'datetime',
         ];
     }
 

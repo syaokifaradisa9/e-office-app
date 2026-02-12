@@ -16,7 +16,7 @@ interface Item {
 interface OpnameItem {
     item_id: number;
     system_stock: number;
-    physical_stock: number;
+    physical_stock: number | null;
     notes: string;
     item?: {
         name: string;
@@ -39,27 +39,39 @@ interface Props {
 }
 
 export default function StockOpnameProcess({ items = [], type = 'warehouse', opname }: Props) {
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors, transform } = useForm({
         items: items.map((item) => {
             const existingItem = opname.items.find((i) => i.item_id === item.id);
             return {
                 item_id: item.id,
                 system_stock: item.stock,
-                physical_stock: existingItem ? existingItem.physical_stock : item.stock,
+                // Requirement 9: Default physical_stock to null (empty)
+                physical_stock: existingItem ? existingItem.physical_stock : null as number | null,
                 notes: existingItem?.notes || '',
             };
         }),
-        status: opname.status || 'Proses'
+        confirm: false,
     });
 
-    const handleItemChange = (index: number, field: keyof OpnameItem, value: string | number) => {
+    const handleItemChange = (index: number, field: string, value: string | number | null) => {
         const newItems = [...data.items];
         newItems[index] = { ...newItems[index], [field]: value };
         setData('items', newItems);
     };
 
-    const handleSubmit = (status: string) => {
-        setData('status', status);
+    const handleSaveDraft = () => {
+        transform((data) => ({
+            ...data,
+            confirm: false,
+        }));
+        post(`/inventory/stock-opname/${type}/${opname.id}/process`);
+    };
+
+    const handleConfirm = () => {
+        transform((data) => ({
+            ...data,
+            confirm: true,
+        }));
         post(`/inventory/stock-opname/${type}/${opname.id}/process`);
     };
 
@@ -74,7 +86,7 @@ export default function StockOpnameProcess({ items = [], type = 'warehouse', opn
                     {/* Desktop View */}
                     <div className="hidden md:block">
                         <GeneralTable
-                            headers={[{ label: 'Barang' }, { label: 'Stok Sistem' }, { label: 'Stok Fisik' }, { label: 'Catatan Item' }]}
+                            headers={[{ label: 'Barang' }, { label: 'Stok Fisik' }, { label: 'Catatan Item' }]}
                             items={items}
                             columns={[
                                 {
@@ -85,17 +97,19 @@ export default function StockOpnameProcess({ items = [], type = 'warehouse', opn
                                         </div>
                                     ),
                                 },
-                                {
-                                    render: (item: Item) => <span className="font-medium">{item.stock}</span>,
-                                },
+
                                 {
                                     render: (item: Item, index: number) => (
                                         <FormInput
                                             type="number"
                                             name={`physical_stock_${index}`}
-                                            value={data.items[index]?.physical_stock?.toString() || '0'}
-                                            onChange={(e) => handleItemChange(index, 'physical_stock', parseInt(e.target.value) || 0)}
+                                            value={data.items[index]?.physical_stock?.toString() ?? ''}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                handleItemChange(index, 'physical_stock', val === '' ? null : parseInt(val));
+                                            }}
                                             className="w-24"
+                                            placeholder="-"
                                             error={errors[`items.${index}.physical_stock`]}
                                         />
                                     ),
@@ -128,10 +142,7 @@ export default function StockOpnameProcess({ items = [], type = 'warehouse', opn
                                         <div className="font-medium text-gray-900 dark:text-white">{item.name}</div>
                                         <div className="text-xs text-gray-500">{item.unit_of_measure}</div>
                                     </div>
-                                    <div className="text-right">
-                                        <div className="text-xs text-gray-500 uppercase">Stok Sistem</div>
-                                        <div className="font-bold text-gray-900 dark:text-white">{item.stock}</div>
-                                    </div>
+
                                 </div>
 
                                 <div>
@@ -139,9 +150,13 @@ export default function StockOpnameProcess({ items = [], type = 'warehouse', opn
                                     <FormInput
                                         type="number"
                                         name={`physical_stock_mobile_${index}`}
-                                        value={data.items[index]?.physical_stock?.toString() || '0'}
-                                        onChange={(e) => handleItemChange(index, 'physical_stock', parseInt(e.target.value) || 0)}
+                                        value={data.items[index]?.physical_stock?.toString() ?? ''}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            handleItemChange(index, 'physical_stock', val === '' ? null : parseInt(val));
+                                        }}
                                         className="w-full"
+                                        placeholder="-"
                                     />
                                 </div>
 
@@ -168,7 +183,7 @@ export default function StockOpnameProcess({ items = [], type = 'warehouse', opn
 
                     <div className="flex flex-col gap-3 pt-4 md:flex-row md:justify-end">
                         <Button
-                            onClick={() => handleSubmit('Proses')}
+                            onClick={handleSaveDraft}
                             label="Simpan Sebagai Draf"
                             icon={<Save className="size-4" />}
                             disabled={processing || items.length === 0}
@@ -176,7 +191,7 @@ export default function StockOpnameProcess({ items = [], type = 'warehouse', opn
                             className="w-full md:w-auto"
                         />
                         <Button
-                            onClick={() => handleSubmit('Confirmed')}
+                            onClick={handleConfirm}
                             label="Konfirmasi Hasil Opname"
                             icon={<Check className="size-4" />}
                             disabled={processing || items.length === 0}

@@ -14,39 +14,39 @@ class StockOpnameDatatableService
     {
         $query = StockOpname::query()->with(['user', 'division', 'items.item']);
 
-        // Permission-based filtering
-        if ($loggedUser->can(InventoryPermission::ViewAllStockOpname->value)) {
-            // Can view all stock opnames
-            if ($type === 'warehouse') {
-                $query->whereNull('division_id');
-            } elseif ($type === 'division') {
-                $query->whereNotNull('division_id');
-            }
-        } elseif ($loggedUser->can(InventoryPermission::ViewWarehouseStockOpname->value)) {
+        // Type-based filtering
+        // Requirement 1: /all shows ALL data without any division_id filter
+        // Requirement 14: /warehouse shows division_id = null only
+        // Requirement 15: /division shows division_id = user's division_id only
+        if ($type === 'warehouse') {
             $query->whereNull('division_id');
-        } elseif ($loggedUser->can(InventoryPermission::ViewDivisionStockOpname->value)) {
+        } elseif ($type === 'division') {
             $query->where('division_id', $loggedUser->division_id);
-        } else {
-            $query->whereRaw('1 = 0');
         }
+        // type === 'all' → no division filter, show everything
 
-        // Search filter
+        // Global search filter (Requirement 12)
         if ($request->has('search') && $request->search != '') {
             $query->where(function ($q) use ($request) {
                 $q->where('notes', 'like', '%'.$request->search.'%')
+                    ->orWhere('status', 'like', '%'.$request->search.'%')
                     ->orWhereHas('user', function ($uq) use ($request) {
                         $uq->where('name', 'like', '%'.$request->search.'%');
+                    })
+                    ->orWhereHas('division', function ($dq) use ($request) {
+                        $dq->where('name', 'like', '%'.$request->search.'%');
                     });
             });
         }
 
+        // Individual column search filters (Requirement 13)
         // Status filter
-        if ($request->has('status') && $request->status != 'ALL') {
+        if ($request->has('status') && $request->status != '' && $request->status != 'ALL') {
             $query->where('status', $request->status);
         }
 
         // Division filter
-        if ($request->has('division_id') && $request->division_id != 'ALL') {
+        if ($request->has('division_id') && $request->division_id != '' && $request->division_id != 'ALL') {
             if ($request->division_id === 'MAIN_WAREHOUSE') {
                 $query->whereNull('division_id');
             } else {
@@ -59,6 +59,13 @@ class StockOpnameDatatableService
             $date = \Carbon\Carbon::parse($request->opname_date);
             $query->whereMonth('opname_date', $date->month)
                 ->whereYear('opname_date', $date->year);
+        }
+
+        // User/petugas filter
+        if ($request->has('user') && $request->user != '') {
+            $query->whereHas('user', function ($uq) use ($request) {
+                $uq->where('name', 'like', '%'.$request->user.'%');
+            });
         }
 
         // Sorting
@@ -75,9 +82,10 @@ class StockOpnameDatatableService
     {
         $query = $this->getStartedQuery($request, $loggedUser, $type);
 
+        // Requirement 12: pagination and limit
         $result = $query->paginate($request->limit ?? 20)->withQueryString();
 
-        // Transform data to return user and division as strings
+        // Transform data
         $result->getCollection()->transform(function ($opname) {
             return [
                 'id' => $opname->id,
@@ -85,6 +93,7 @@ class StockOpnameDatatableService
                 'user' => $opname->user?->name ?? '-',
                 'division' => $opname->division?->name ?? null,
                 'status' => $opname->status,
+                'notes' => $opname->notes,
                 'created_at' => $opname->created_at?->format('Y-m-d H:i:s'),
             ];
         });
@@ -96,6 +105,12 @@ class StockOpnameDatatableService
     {
         $query = $this->getStartedQuery($request, $loggedUser, $type);
         $data = $query->get();
+
+        $titleSuffix = match ($type) {
+            'warehouse' => 'Gudang',
+            'division' => 'Divisi',
+            default => 'Semua',
+        };
 
         return response()->streamDownload(function () use ($data) {
             $writer = new \OpenSpout\Writer\XLSX\Writer;
@@ -168,9 +183,9 @@ class StockOpnameDatatableService
                         $opname->user?->name ?? '-',
                         $item->item?->name ?? '-',
                         $item->system_stock,
-                        $item->physical_stock,
+                        $item->physical_stock ?? '-',
                         $opname->status === 'Selesai' ? $item->final_stock : '-',
-                        $item->difference,
+                        $item->difference ?? '-',
                         $item->notes ?? '-',
                         $item->final_notes ?? '-',
                     ]);
@@ -179,6 +194,6 @@ class StockOpnameDatatableService
             }
 
             $writer->close();
-        }, 'Laporan Stock Opname Per '.date('d F Y').'.xlsx');
+        }, 'Laporan Stock Opname '.$titleSuffix.' Per '.date('d F Y').'.xlsx');
     }
 }

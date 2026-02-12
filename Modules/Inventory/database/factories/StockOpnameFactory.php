@@ -5,6 +5,7 @@ namespace Modules\Inventory\Database\Factories;
 use App\Models\Division;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Modules\Inventory\Enums\StockOpnameStatus;
 use Modules\Inventory\Models\StockOpname;
 
 class StockOpnameFactory extends Factory
@@ -18,7 +19,7 @@ class StockOpnameFactory extends Factory
             'division_id' => null,
             'opname_date' => fake()->dateTimeBetween('-1 month', 'now'),
             'notes' => fake()->optional()->sentence(),
-            'status' => 'Draft',
+            'status' => StockOpnameStatus::Pending,
         ];
     }
 
@@ -39,7 +40,8 @@ class StockOpnameFactory extends Factory
     public function confirmed(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'Confirmed',
+            'status' => StockOpnameStatus::StockOpname,
+            'confirmed_at' => now(),
         ]);
     }
 }

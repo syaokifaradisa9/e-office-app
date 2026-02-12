@@ -20,15 +20,19 @@ interface Props {
 
 // Status translations
 const statusLabels: Record<string, string> = {
-    Pending: 'Menunggu',
-    Confirmed: 'Dikonfirmasi',
+    'Pending': 'Pending',
+    'Proses': 'Proses',
+    'Stock Opname': 'Stock Opname',
+    'Finish': 'Finish',
 };
 
 export default function StockOpnameCardItem({ item, canEdit, canConfirm, onDelete, onConfirm }: Props) {
     // Status badge colors
     const statusColors: Record<string, string> = {
-        Pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-        Confirmed: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+        'Pending': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+        'Proses': 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+        'Stock Opname': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+        'Finish': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
     };
 
     return (

@@ -32,7 +32,7 @@ export default function StockOpnameCreate({ type = 'warehouse', divisions = [], 
         opname_date: opname?.opname_date
             ? new Date(opname.opname_date).toISOString().split('T')[0]
             : new Date().toISOString().split('T')[0],
-        division_id: opname?.division_id || '',
+        division_id: opname?.division_id || (divisions.length > 0 ? divisions[0].id.toString() : ''),
         notes: opname?.notes || '',
     });
 
@@ -53,14 +53,14 @@ export default function StockOpnameCreate({ type = 'warehouse', divisions = [], 
             ? 'Buat Stok Opname Gudang'
             : 'Buat Stok Opname Divisi';
 
-    const subtitle = type === 'warehouse' ? 'Gudang Utama' : 'Pilih Divisi';
+    const subtitle = type === 'warehouse' ? 'Gudang Utama' : (divisions.find(d => d.id.toString() === data.division_id.toString())?.name || 'Pilih Divisi');
     const backPath = `/inventory/stock-opname/${type}`;
 
     return (
         <RootLayout title={title} backPath={backPath}>
             <ContentCard title={title} subtitle={subtitle} backPath={backPath}>
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <div className={type === 'division' ? "grid grid-cols-1 gap-6 md:grid-cols-2" : "space-y-6"}>
                         <FormInput
                             type="date"
                             label="Tanggal Opname"
@@ -78,10 +78,7 @@ export default function StockOpnameCreate({ type = 'warehouse', divisions = [], 
                                 value={data.division_id.toString()}
                                 onChange={(e) => setData('division_id', e.target.value)}
                                 error={errors.division_id}
-                                options={[
-                                    { label: '-- Pilih Divisi --', value: '' },
-                                    ...divisions.map(d => ({ label: d.name, value: d.id.toString() }))
-                                ]}
+                                options={divisions.map(d => ({ label: d.name, value: d.id.toString() }))}
                                 required
                             />
                         )}

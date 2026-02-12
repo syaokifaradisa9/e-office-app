@@ -13,8 +13,9 @@ return new class extends Migration
             $table->foreignId('stock_opname_id')->constrained('stock_opnames')->cascadeOnDelete();
             $table->foreignId('item_id')->constrained('items')->cascadeOnDelete();
             $table->integer('system_stock');
-            $table->integer('physical_stock');
-            $table->integer('difference');
+            $table->integer('physical_stock')->nullable();
+            $table->integer('final_stock')->nullable();
+            $table->text('final_notes')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
         });

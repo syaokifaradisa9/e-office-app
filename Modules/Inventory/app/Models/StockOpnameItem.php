@@ -12,8 +12,9 @@ class StockOpnameItem extends Model
         'item_id',
         'system_stock',
         'physical_stock',
-        'difference',
         'notes',
+        'final_stock',
+        'final_notes',
     ];
 
     protected function casts(): array
@@ -23,7 +24,7 @@ class StockOpnameItem extends Model
             'item_id' => 'integer',
             'system_stock' => 'integer',
             'physical_stock' => 'integer',
-            'difference' => 'integer',
+            'final_stock' => 'integer',
         ];
     }
 
@@ -35,5 +36,14 @@ class StockOpnameItem extends Model
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class);
+    }
+
+    public function getDifferenceAttribute(): ?int
+    {
+        if (is_null($this->physical_stock)) {
+            return null;
+        }
+
+        return $this->physical_stock - $this->system_stock;
     }
 }

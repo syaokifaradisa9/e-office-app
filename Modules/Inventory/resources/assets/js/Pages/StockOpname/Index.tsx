@@ -48,17 +48,17 @@ interface Params {
 }
 
 const statusColors: Record<string, string> = {
-    Pending: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-    Proses: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-    Confirmed: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    Selesai: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+    'Pending': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+    'Proses': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+    'Stock Opname': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    'Finish': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
 };
 
 const statusLabels: Record<string, string> = {
-    Pending: 'Pending',
-    Proses: 'Dalam Proses',
-    Confirmed: 'Dikonfirmasi',
-    Selesai: 'Selesai',
+    'Pending': 'Pending',
+    'Proses': 'Proses',
+    'Stock Opname': 'Stock Opname',
+    'Finish': 'Finish',
 };
 
 export default function StockOpnameIndex() {
@@ -307,7 +307,7 @@ export default function StockOpnameIndex() {
                                                 />
                                             </Tooltip>
                                         )}
-                                        {type !== 'all' && hasFinalize && opname.status === 'Confirmed' && (
+                                        {type !== 'all' && hasFinalize && opname.status === 'Stock Opname' && (
                                             <Tooltip text="Finalisasi">
                                                 <Button
                                                     href={`/inventory/stock-opname/${rowType}/${opname.id}/finalize`}

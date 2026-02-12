@@ -15,6 +15,7 @@ return new class extends Migration
             $table->date('opname_date');
             $table->text('notes')->nullable();
             $table->string('status')->default('Draft');
+            $table->timestamp('confirmed_at')->nullable();
             $table->timestamps();
         });
     }

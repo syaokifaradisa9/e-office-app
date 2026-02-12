@@ -15,8 +15,9 @@ interface OpnameItem {
     };
     system_stock: number;
     physical_stock: number;
-    difference: number;
     notes: string | null;
+    final_stock: number | null;
+    final_notes: string | null;
 }
 
 interface StockOpname {
@@ -40,17 +41,24 @@ interface PageProps {
 }
 
 const statusColors: Record<string, string> = {
-    Draft: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    Confirmed: 'bg-green-100 text-green-800 border-green-200',
+    'Pending': 'bg-blue-100 text-blue-800 border-blue-200',
+    'Proses': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    'Stock Opname': 'bg-green-100 text-green-800 border-green-200',
+    'Finish': 'bg-purple-100 text-purple-800 border-purple-200',
 };
 
 export default function StockOpnameShow({ opname }: Props) {
     const pageProps = usePage<PageProps>().props;
-    const canConfirm = pageProps.permissions?.includes('konfirmasi_stock_opname');
+    const canProcess = pageProps.permissions?.includes('Proses Stock Opname');
+    const canFinalize = pageProps.permissions?.includes('Finalisasi Stock Opname');
 
     const type = opname.division ? 'division' : 'warehouse';
 
-    const showDetails = opname.status !== 'Draft' || canConfirm;
+    const showDetails = opname.status !== 'Pending';
+
+    // Business Rule: Finalize allowed if status is 'Stock Opname' and NOT same day as opname_date
+    const isPastOpnameDate = new Date(opname.opname_date).setHours(0, 0, 0, 0) < new Date().setHours(0, 0, 0, 0);
+    const finalizeAllowed = opname.status === 'Stock Opname' && isPastOpnameDate;
 
     return (
         <RootLayout title="Detail Stock Opname" backPath={`/inventory/stock-opname/${type}`}>
@@ -120,13 +128,13 @@ export default function StockOpnameShow({ opname }: Props) {
                                 <div className="rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-900/20">
                                     <p className="text-sm text-green-700 dark:text-green-400">Stok Lebih</p>
                                     <p className="text-2xl font-bold text-green-700 dark:text-green-400">
-                                        {opname.items.filter((i) => i.difference > 0).length}
+                                        {opname.items.filter((i) => i.physical_stock - i.system_stock > 0).length}
                                     </p>
                                 </div>
                                 <div className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-900/20">
                                     <p className="text-sm text-red-700 dark:text-red-400">Stok Kurang</p>
                                     <p className="text-2xl font-bold text-red-700 dark:text-red-400">
-                                        {opname.items.filter((i) => i.difference < 0).length}
+                                        {opname.items.filter((i) => i.physical_stock - i.system_stock < 0).length}
                                     </p>
                                 </div>
                             </div>
@@ -146,12 +154,19 @@ export default function StockOpnameShow({ opname }: Props) {
                                         <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-slate-400">Barang</th>
                                         {showDetails && (
                                             <>
-                                                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-slate-400">Stok Sistem</th>
+                                                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-slate-400">Stok Awal</th>
+                                                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-slate-400">Stok Opname</th>
+                                                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-slate-400">Selisih SO</th>
+                                                {opname.status === 'Finish' && (
+                                                    <>
+                                                        <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-slate-400 font-bold text-primary">Stok Final</th>
+                                                        <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-slate-400">Selisih Fin.</th>
+                                                    </>
+                                                )}
                                             </>
                                         )}
-                                        <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-slate-400">Stok Fisik</th>
-                                        {showDetails && (
-                                            <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-slate-400">Selisih</th>
+                                        {!showDetails && (
+                                            <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-slate-400">Aksi Rekon</th>
                                         )}
                                     </tr>
                                 </thead>
@@ -164,35 +179,56 @@ export default function StockOpnameShow({ opname }: Props) {
                                                     <div>
                                                         <p className="font-medium text-gray-900 dark:text-white">{item.item.name}</p>
                                                         <p className="text-sm text-gray-500">{item.item.unit_of_measure}</p>
-                                                        {item.notes && <p className="mt-1 text-xs italic text-gray-400">{item.notes}</p>}
+                                                        {item.notes && <p className="mt-1 text-xs italic text-gray-400">SO: {item.notes}</p>}
+                                                        {item.final_notes && <p className="mt-1 text-xs italic text-blue-400 text-opacity-80">Fin: {item.final_notes}</p>}
                                                     </div>
                                                 </div>
                                             </td>
                                             {showDetails && (
-                                                <td className="whitespace-nowrap px-6 py-4 text-right text-gray-500 dark:text-slate-400">{item.system_stock}</td>
+                                                <>
+                                                    <td className="whitespace-nowrap px-6 py-4 text-right text-gray-500 dark:text-slate-400">{item.system_stock}</td>
+                                                    <td className="whitespace-nowrap px-6 py-4 text-right font-medium text-gray-900 dark:text-white">{item.physical_stock}</td>
+                                                    <td className="whitespace-nowrap px-6 py-4 text-right">
+                                                        {(() => {
+                                                            const diff = item.physical_stock - item.system_stock;
+                                                            return (
+                                                                <div className="flex items-center justify-end gap-1 text-sm">
+                                                                    {diff < 0 ? (
+                                                                        <span className="font-semibold text-red-600">{diff}</span>
+                                                                    ) : diff > 0 ? (
+                                                                        <span className="font-semibold text-green-600">+{diff}</span>
+                                                                    ) : (
+                                                                        <span className="text-gray-400">0</span>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })()}
+                                                    </td>
+                                                    {opname.status === 'Finish' && (
+                                                        <>
+                                                            <td className="whitespace-nowrap px-6 py-4 text-right font-bold text-primary">{item.final_stock}</td>
+                                                            <td className="whitespace-nowrap px-6 py-4 text-right">
+                                                                {(() => {
+                                                                    const finDiff = (item.final_stock ?? 0) - item.system_stock;
+                                                                    return (
+                                                                        <div className="flex items-center justify-end gap-1 text-sm">
+                                                                            {finDiff < 0 ? (
+                                                                                <span className="font-semibold text-red-600">{finDiff}</span>
+                                                                            ) : finDiff > 0 ? (
+                                                                                <span className="font-semibold text-green-600">+{finDiff}</span>
+                                                                            ) : (
+                                                                                <span className="text-gray-400">0</span>
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })()}
+                                                            </td>
+                                                        </>
+                                                    )}
+                                                </>
                                             )}
-                                            <td className="whitespace-nowrap px-6 py-4 text-right font-medium text-gray-900 dark:text-white">{item.physical_stock}</td>
-                                            {showDetails && (
-                                                <td className="whitespace-nowrap px-6 py-4 text-right">
-                                                    <div className="flex items-center justify-end gap-1">
-                                                        {item.difference > 0 ? (
-                                                            <>
-                                                                <ArrowUp className="size-4 text-green-500" />
-                                                                <span className="font-semibold text-green-600">+{item.difference}</span>
-                                                            </>
-                                                        ) : item.difference < 0 ? (
-                                                            <>
-                                                                <ArrowDown className="size-4 text-red-500" />
-                                                                <span className="font-semibold text-red-600">{item.difference}</span>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <Minus className="size-4 text-gray-400" />
-                                                                <span className="text-gray-500">0</span>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                </td>
+                                            {!showDetails && (
+                                                <td className="whitespace-nowrap px-6 py-4 text-right text-gray-400 italic text-sm">Belum diproses</td>
                                             )}
                                         </tr>
                                     ))}
@@ -210,32 +246,82 @@ export default function StockOpnameShow({ opname }: Props) {
                                             <div className="text-xs text-gray-500">{item.item.unit_of_measure}</div>
                                         </div>
                                         {showDetails && (
-                                            <div className={`rounded px-2 py-1 text-xs font-medium ${item.difference < 0 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                                                item.difference > 0 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                                                    'bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-gray-300'
-                                                }`}>
-                                                Selisih: {item.difference > 0 ? '+' : ''}{item.difference}
+                                            <div className={`rounded px-2 py-1 text-xs font-medium ${(() => {
+                                                const diff = item.system_stock - item.physical_stock;
+                                                return diff > 0 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                                    diff < 0 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                                                        'bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-gray-300';
+                                            })()}`}>
+                                                {(() => {
+                                                    const diff = item.system_stock - item.physical_stock;
+                                                    return `Selisih: ${diff > 0 ? '+' : ''}${diff}`;
+                                                })()}
                                             </div>
                                         )}
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4 border-t border-gray-100 pt-3 text-sm dark:border-slate-700">
+                                    <div className="grid grid-cols-2 gap-y-3 gap-x-4 border-t border-gray-100 pt-3 text-sm dark:border-slate-700">
                                         {showDetails && (
-                                            <div>
-                                                <div className="text-xs text-gray-500">Stok Sistem</div>
-                                                <div className="font-medium dark:text-slate-300">{item.system_stock}</div>
-                                            </div>
+                                            <>
+                                                <div>
+                                                    <div className="text-[10px] text-gray-500 uppercase">Stok Awal</div>
+                                                    <div className="font-medium dark:text-slate-300">{item.system_stock}</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-[10px] text-gray-500 uppercase">Stok Opname</div>
+                                                    <div className="font-medium dark:text-white">{item.physical_stock}</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-[10px] text-gray-500 uppercase">Selisih SO</div>
+                                                    {(() => {
+                                                        const diff = item.physical_stock - item.system_stock;
+                                                        return (
+                                                            <div className={`font-semibold ${diff < 0 ? 'text-red-600' : diff > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                                                                {diff > 0 ? `+${diff}` : diff}
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                </div>
+                                                {opname.status === 'Finish' && (
+                                                    <>
+                                                        <div className="bg-primary/5 p-1 rounded">
+                                                            <div className="text-[10px] text-primary uppercase font-bold">Stok Final</div>
+                                                            <div className="font-bold text-primary">{item.final_stock}</div>
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-[10px] text-gray-500 uppercase">Selisih Fin.</div>
+                                                            {(() => {
+                                                                const finDiff = (item.final_stock ?? 0) - item.system_stock;
+                                                                return (
+                                                                    <div className={`font-semibold ${finDiff < 0 ? 'text-red-600' : finDiff > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                                                                        {finDiff > 0 ? `+${finDiff}` : finDiff}
+                                                                    </div>
+                                                                );
+                                                            })()}
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </>
                                         )}
-                                        <div className={!showDetails ? 'col-span-2' : ''}>
-                                            <div className="text-xs text-gray-500">Stok Fisik</div>
-                                            <div className="font-medium dark:text-white">{item.physical_stock}</div>
-                                        </div>
+                                        {!showDetails && (
+                                            <div className="col-span-2 text-center text-xs text-gray-400 italic">Belum diproses</div>
+                                        )}
                                     </div>
 
-                                    {item.notes && (
-                                        <div className="mt-2 rounded bg-gray-50 p-2 text-sm text-gray-600 dark:bg-slate-900/50 dark:text-slate-400">
-                                            <span className="mb-1 block text-xs font-medium text-gray-500">Catatan:</span>
-                                            {item.notes}
+                                    {(item.notes || item.final_notes) && (
+                                        <div className="mt-2 space-y-2">
+                                            {item.notes && (
+                                                <div className="rounded bg-gray-50 p-2 text-sm text-gray-600 dark:bg-slate-900/50 dark:text-slate-400">
+                                                    <span className="mb-1 block text-[10px] font-bold text-gray-500 uppercase">Catatan SO:</span>
+                                                    {item.notes}
+                                                </div>
+                                            )}
+                                            {item.final_notes && (
+                                                <div className="rounded bg-blue-50/30 border border-blue-100 dark:bg-blue-900/10 dark:border-blue-900/30 p-2 text-sm text-blue-700 dark:text-blue-400">
+                                                    <span className="mb-1 block text-[10px] font-bold text-blue-500 uppercase">Catatan Finalisasi:</span>
+                                                    {item.final_notes}
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -243,17 +329,36 @@ export default function StockOpnameShow({ opname }: Props) {
                         </div>
                     </div>
 
-                    {canConfirm && opname.status === 'Draft' && (
+                    {(canProcess || canFinalize) && (
                         <div className="border-t border-gray-200 pt-6 dark:border-slate-700">
-                            <Button
-                                onClick={() => router.post(`/inventory/stock-opname/${opname.id}/confirm`)}
-                                label="Konfirmasi Stock Opname"
-                                icon={<Check className="size-4" />}
-                                className="w-full justify-center"
-                            />
-                            <p className="mt-2 text-sm text-gray-500">
-                                Konfirmasi akan menyesuaikan stok barang sesuai dengan stok fisik yang tercatat.
-                            </p>
+                            {canProcess && opname.status === 'Pending' && (
+                                <>
+                                    <Button
+                                        onClick={() => router.get(`/inventory/stock-opname/${type}/${opname.id}/process`)}
+                                        label="Input Hasil Opname"
+                                        icon={<ClipboardCheck className="size-4" />}
+                                        className="w-full justify-center"
+                                    />
+                                    <p className="mt-2 text-sm text-gray-500">
+                                        Mulai masukkan hasil perhitungan fisik stok untuk opname ini.
+                                    </p>
+                                </>
+                            )}
+
+                            {canFinalize && finalizeAllowed && (
+                                <>
+                                    <Button
+                                        onClick={() => router.get(`/inventory/stock-opname/${type}/${opname.id}/finalize`)}
+                                        label="Finalisasi Stok Opname"
+                                        icon={<Check className="size-4" />}
+                                        className="w-full justify-center"
+                                        variant="primary"
+                                    />
+                                    <p className="mt-2 text-sm text-gray-500">
+                                        Lakukan penyesuaian stok akhir sistem berdasarkan hasil opname ini.
+                                    </p>
+                                </>
+                            )}
                         </div>
                     )}
                 </div>

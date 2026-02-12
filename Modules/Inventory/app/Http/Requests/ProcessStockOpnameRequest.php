@@ -16,7 +16,7 @@ class ProcessStockOpnameRequest extends FormRequest
         return [
             'items' => 'required|array|min:1',
             'items.*.item_id' => 'required|exists:items,id',
-            'items.*.physical_stock' => 'required|integer|min:0',
+            'items.*.physical_stock' => 'nullable|integer|min:0',
             'items.*.notes' => 'nullable|string',
             'confirm' => 'nullable|boolean',
         ];

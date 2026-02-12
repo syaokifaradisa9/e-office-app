@@ -66,7 +66,7 @@ Route::prefix('inventory')->name('inventory.')->middleware(['auth'])->group(func
     });
 
     // Categories
-    Route::prefix('categories')->name('categories.')->controller(CategoryItemController::class)->group(function () {
+    Route::prefix('categories')->name('categories.')->controller(CategoryItemController::class)->middleware('check_active_opname')->group(function () {
         // Index - can be accessed with lihat OR kelola
         Route::middleware('inventory_item_permission:ViewCategory|ManageCategory')->group(function () {
             Route::get('/', 'index')->name('index');
@@ -89,8 +89,8 @@ Route::prefix('inventory')->name('inventory.')->middleware(['auth'])->group(func
     });
 
     // Items
-    Route::prefix('items')->name('items.')->controller(ItemController::class)->group(function () {
-        Route::middleware('inventory_item_permission:ViewItem')->group(function () {
+    Route::prefix('items')->name('items.')->controller(ItemController::class)->middleware('check_active_opname')->group(function () {
+        Route::middleware('inventory_item_permission:ViewItem|ManageItem|IssueItemGudang')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/datatable', 'datatable')->name('datatable');
             Route::get('/print-excel', 'printExcel')->name('print-excel');
@@ -115,7 +115,7 @@ Route::prefix('inventory')->name('inventory.')->middleware(['auth'])->group(func
         });
     });
     // Warehouse Orders
-    Route::prefix('warehouse-orders')->name('warehouse-orders.')->controller(WarehouseOrderController::class)->group(function () {
+    Route::prefix('warehouse-orders')->name('warehouse-orders.')->controller(WarehouseOrderController::class)->middleware('check_active_opname')->group(function () {
         Route::middleware('inventory_item_permission:CreateWarehouseOrder')->group(function () {
             Route::get('/create', 'create')->name('create');
             Route::post('/store', 'store')->name('store');
@@ -152,7 +152,7 @@ Route::prefix('inventory')->name('inventory.')->middleware(['auth'])->group(func
 
 
     // Stock Monitoring
-    Route::prefix('stock-monitoring')->name('stock-monitoring.')->controller(StockMonitoringController::class)->group(function () {
+    Route::prefix('stock-monitoring')->name('stock-monitoring.')->controller(StockMonitoringController::class)->middleware('check_active_opname')->group(function () {
         Route::middleware('inventory_item_permission:MonitorStock|MonitorAllStock')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/datatable', 'datatable')->name('datatable');
