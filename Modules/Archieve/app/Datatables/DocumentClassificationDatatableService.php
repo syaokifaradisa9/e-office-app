@@ -67,6 +67,10 @@ class DocumentClassificationDatatableService
             $query->where('parent_id', $request->parent_id);
         }
 
+        if ($request->has('description') && $request->description != '') {
+            $query->where('description', 'like', '%'.$request->description.'%');
+        }
+
         if ($request->has('search') && $request->search != '') {
             $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', '%'.$request->search.'%')

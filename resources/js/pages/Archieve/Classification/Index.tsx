@@ -49,6 +49,7 @@ interface Params {
     code: string;
     parent_id: string;
     limit: number;
+    description: string;
     page: number;
     sort_by: string;
     sort_direction: 'asc' | 'desc';
@@ -73,6 +74,7 @@ export default function ClassificationIndex() {
         code: '',
         parent_id: '',
         limit: 20,
+        description: '',
         page: 1,
         sort_by: 'code',
         sort_direction: 'asc',
@@ -125,7 +127,7 @@ export default function ClassificationIndex() {
     }
 
     function getPrintUrl() {
-        let url = `/archieve/classifications/print-excel`;
+        let url = `/archieve/classifications/print/excel`;
         const queryParams: string[] = [];
         Object.keys(params).forEach((key) => {
             if (params[key as keyof Params]) {
@@ -179,6 +181,7 @@ export default function ClassificationIndex() {
             />
             <ContentCard
                 title="Klasifikasi Dokumen"
+                subtitle="Atur tata kelola dan klasifikasi dokumen arsip Anda"
                 mobileFullWidth
                 additionalButton={
                     <CheckPermissions permissions={['kelola_klasifikasi_arsip']}>
@@ -264,6 +267,7 @@ export default function ClassificationIndex() {
                                 name: 'description',
                                 header: 'Deskripsi',
                                 render: (item: Classification) => <span className="text-gray-500 dark:text-slate-400">{item.description || '-'}</span>,
+                                footer: <FormSearch name="description" onChange={onParamsChange} placeholder="Filter Deskripsi" />,
                             },
                             ...(hasManagePermission
                                 ? [

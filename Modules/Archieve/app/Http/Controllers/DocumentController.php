@@ -149,7 +149,7 @@ class DocumentController extends Controller
         return $this->datatableService->getDatatableAll($request, $user);
     }
 
-    public function printExcel(DatatableRequest $request)
+    public function printExcel(DatatableRequest $request, $type)
     {
         $user = $request->user();
         $viewType = $request->view_type ?? 'all';

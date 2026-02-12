@@ -55,6 +55,7 @@ export default function ClassificationCreate({ classification, classifications }
         <RootLayout title={isEdit ? 'Edit Klasifikasi Dokumen' : 'Tambah Klasifikasi Dokumen'}>
             <ContentCard
                 title={isEdit ? 'Edit Klasifikasi Dokumen' : 'Tambah Klasifikasi Dokumen Baru'}
+                subtitle={isEdit ? 'Perbarui informasi detail untuk klasifikasi dokumen ini' : 'Buat klasifikasi dokumen baru untuk mengatur tata kelola dokumen di sistem'}
                 backPath="/archieve/classifications"
                 mobileFullWidth
             >
