@@ -55,6 +55,22 @@ it('cannot authenticate with invalid password', function () {
     $this->assertGuest();
 });
 
+it('cannot authenticate with inactive user', function () {
+    User::factory()->create([
+        'email' => 'inactive@example.com',
+        'password' => bcrypt('password'),
+        'is_active' => false,
+    ]);
+
+    $response = $this->post('/auth/verify', [
+        'email' => 'inactive@example.com',
+        'password' => 'password',
+    ]);
+
+    $response->assertSessionHasErrors('email');
+    $this->assertGuest();
+});
+
 it('requires email for login', function () {
     $response = $this->post('/auth/verify', [
         'password' => 'password',
