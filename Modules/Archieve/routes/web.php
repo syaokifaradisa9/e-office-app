@@ -21,15 +21,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::resource('categories', CategoryController::class)->except(['show']);
         Route::get('categories/datatable', [CategoryController::class, 'datatable'])->name('categories.datatable');
-        Route::get('categories/print-excel', [CategoryController::class, 'printExcel'])->name('categories.print-excel');
+        Route::get('categories/print/{type}', [CategoryController::class, 'printExcel'])->name('categories.print');
 
         Route::resource('contexts', CategoryContextController::class)->except(['show']);
         Route::get('contexts/datatable', [CategoryContextController::class, 'datatable'])->name('contexts.datatable');
-        Route::get('contexts/print-excel', [CategoryContextController::class, 'printExcel'])->name('contexts.print-excel');
+        Route::get('contexts/print/{type}', [CategoryContextController::class, 'printExcel'])->name('contexts.print');
 
         Route::resource('classifications', DocumentClassificationController::class)->except(['show']);
         Route::get('classifications/datatable', [DocumentClassificationController::class, 'datatable'])->name('classifications.datatable');
-        Route::get('classifications/print-excel', [DocumentClassificationController::class, 'printExcel'])->name('classifications.print-excel');
+        Route::get('classifications/print/{type}', [DocumentClassificationController::class, 'printExcel'])->name('classifications.print');
 
         Route::get('division-storages', [DivisionStorageController::class, 'index'])->name('division-storages.index');
         Route::post('division-storages', [DivisionStorageController::class, 'store'])->name('division-storages.store');
@@ -44,7 +44,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('documents/{document}', [DocumentController::class, 'update'])->name('documents.update');
         Route::delete('documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
         Route::get('documents/datatable', [DocumentController::class, 'datatable'])->name('documents.datatable');
-        Route::get('documents/print-excel', [DocumentController::class, 'printExcel'])->name('documents.print-excel');
+        Route::get('documents/print/{type}', [DocumentController::class, 'printExcel'])->name('documents.print');
         Route::get('documents/classification-children/{parentId}', [DocumentController::class, 'getClassificationChildren'])->name('documents.classification-children');
         Route::get('documents/users-by-division/{divisionId}', [DocumentController::class, 'getUsersByDivision'])->name('documents.users-by-division');
         

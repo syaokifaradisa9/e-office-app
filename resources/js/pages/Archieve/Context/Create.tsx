@@ -37,6 +37,7 @@ export default function ContextCreate({ context }: Props) {
         <RootLayout title={isEdit ? 'Edit Konteks Arsip' : 'Tambah Konteks Arsip'}>
             <ContentCard
                 title={isEdit ? 'Edit Konteks Arsip' : 'Tambah Konteks Arsip Baru'}
+                subtitle={isEdit ? 'Perbarui informasi detail untuk konteks kategori arsip ini' : 'Buat konteks arsip baru untuk membantu pengelompokan kategori dokumen'}
                 backPath="/archieve/contexts"
                 mobileFullWidth
             >

@@ -51,6 +51,7 @@ export default function CategoryCreate({ category, contexts }: Props) {
         <RootLayout title={isEdit ? 'Edit Kategori Arsip' : 'Tambah Kategori Arsip'}>
             <ContentCard
                 title={isEdit ? 'Edit Kategori Arsip' : 'Tambah Kategori Arsip Baru'}
+                subtitle={isEdit ? 'Perbarui informasi detail untuk kategori arsip ini' : 'Buat kategori arsip baru untuk melengkapi sistem pengarsipan Anda'}
                 backPath="/archieve/categories"
                 mobileFullWidth
             >

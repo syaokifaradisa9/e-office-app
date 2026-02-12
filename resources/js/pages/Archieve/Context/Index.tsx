@@ -41,6 +41,8 @@ interface Params {
     search: string;
     limit: number;
     page: number;
+    name: string;
+    description: string;
     sort_by: string;
     sort_direction: 'asc' | 'desc';
 }
@@ -63,6 +65,8 @@ export default function ContextIndex() {
         search: '',
         limit: 20,
         page: 1,
+        name: '',
+        description: '',
         sort_by: 'name',
         sort_direction: 'asc',
     });
@@ -163,6 +167,7 @@ export default function ContextIndex() {
             />
             <ContentCard
                 title="Konteks Arsip"
+                subtitle="Kelola pengelompokan konteks arsip dokumen Anda"
                 mobileFullWidth
                 additionalButton={
                     <CheckPermissions permissions={['kelola_kategori_arsip']}>
@@ -218,6 +223,7 @@ export default function ContextIndex() {
                                 name: 'description',
                                 header: 'Deskripsi',
                                 render: (item: Context) => <span className="text-gray-500 dark:text-slate-400">{item.description || '-'}</span>,
+                                footer: <FormSearch name="description" onChange={onParamsChange} placeholder="Filter Deskripsi" />,
                             },
                             ...(hasManagePermission
                                 ? [

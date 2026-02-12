@@ -78,7 +78,7 @@ class CategoryContextController extends Controller
         return $this->datatableService->getDatatable($request, $request->user());
     }
 
-    public function printExcel(DatatableRequest $request)
+    public function printExcel(DatatableRequest $request, $type)
     {
         Gate::authorize(ArchieveUserPermission::ViewCategory->value);
 

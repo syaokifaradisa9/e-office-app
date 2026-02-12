@@ -50,6 +50,8 @@ interface PageProps {
 
 interface Params {
     search: string;
+    name: string;
+    description: string;
     context_id: string;
     limit: number;
     page: number;
@@ -73,6 +75,8 @@ export default function CategoryIndex() {
     });
     const [params, setParams] = useState<Params>({
         search: '',
+        name: '',
+        description: '',
         context_id: '',
         limit: 20,
         page: 1,
@@ -127,7 +131,7 @@ export default function CategoryIndex() {
     }
 
     function getPrintUrl() {
-        let url = `/archieve/categories/print-excel`;
+        let url = `/archieve/categories/print/excel`;
         const queryParams: string[] = [];
         Object.keys(params).forEach((key) => {
             if (params[key as keyof Params]) {
@@ -181,6 +185,7 @@ export default function CategoryIndex() {
             />
             <ContentCard
                 title="Kategori Arsip"
+                subtitle="Daftar pengelompokan jenis dokumen arsip"
                 mobileFullWidth
                 additionalButton={
                     <CheckPermissions permissions={['kelola_kategori_arsip']}>
@@ -255,6 +260,7 @@ export default function CategoryIndex() {
                                 name: 'description',
                                 header: 'Deskripsi',
                                 render: (item: Category) => <span className="text-gray-500 dark:text-slate-400">{item.description || '-'}</span>,
+                                footer: <FormSearch name="description" onChange={onParamsChange} placeholder="Filter Deskripsi" />,
                             },
                             ...(hasManagePermission
                                 ? [
