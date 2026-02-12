@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\DivisionRolePermission;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 
@@ -14,8 +15,7 @@ class PermissionSeeder extends Seeder
     {
         $permissions = [
             // Division Permissions
-            'lihat_divisi',
-            'kelola_divisi',
+            ...DivisionRolePermission::values(),
             
             // Position Permissions
             'lihat_jabatan',

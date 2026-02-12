@@ -65,7 +65,7 @@ class DivisionController extends Controller
         return $this->divisionDatatableService->getDatatable($request, $request->user());
     }
 
-    public function printExcel(DatatableRequest $request)
+    public function printExcel(DatatableRequest $request, $type)
     {
         return $this->divisionDatatableService->printExcel($request, $request->user());
     }

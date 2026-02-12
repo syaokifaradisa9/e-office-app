@@ -53,6 +53,9 @@ interface Params {
     limit: number;
     page: number;
     name: string;
+    description: string;
+    is_active: string;
+    users_count: string;
     sort_by: string;
     sort_direction: 'asc' | 'desc';
 }
@@ -73,6 +76,9 @@ export default function DivisionIndex() {
         limit: 20,
         page: 1,
         name: '',
+        description: '',
+        is_active: '',
+        users_count: '',
         sort_by: 'created_at',
         sort_direction: 'desc',
     });
@@ -178,6 +184,7 @@ export default function DivisionIndex() {
             />
             <ContentCard
                 title="Divisi"
+                subtitle="Kelola dan atur struktur divisi kerja kantor Anda"
                 mobileFullWidth
                 additionalButton={
                     <CheckPermissions permissions={['kelola_divisi']}>
@@ -234,6 +241,7 @@ export default function DivisionIndex() {
                                 name: 'description',
                                 header: 'Deskripsi',
                                 render: (division: Division) => <span className="text-gray-500 dark:text-slate-400">{division.description || '-'}</span>,
+                                footer: <FormSearch name="description" onChange={onParamsChange} placeholder="Filter Deskripsi" />,
                             },
                             {
                                 name: 'users_count',
@@ -244,6 +252,7 @@ export default function DivisionIndex() {
                                         <span>{division.users_count || 0}</span>
                                     </div>
                                 ),
+                                footer: <FormSearch name="users_count" onChange={onParamsChange} placeholder="Filter Jumlah" type="number" />,
                             },
                             {
                                 name: 'is_active',
@@ -252,6 +261,13 @@ export default function DivisionIndex() {
                                     <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${division.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'}`}>
                                         {division.is_active ? 'Aktif' : 'Tidak Aktif'}
                                     </span>
+                                ),
+                                footer: (
+                                    <select name="is_active" onChange={onParamsChange} value={params.is_active} className="w-full rounded-lg border border-gray-400/50 bg-white px-3 py-1.5 text-xs text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-slate-600 dark:bg-slate-800/40 dark:text-slate-200">
+                                        <option value="">Semua</option>
+                                        <option value="1">Aktif</option>
+                                        <option value="0">Tidak Aktif</option>
+                                    </select>
                                 ),
                             },
                             ...(usePage<PageProps>().props.permissions?.includes('kelola_divisi')

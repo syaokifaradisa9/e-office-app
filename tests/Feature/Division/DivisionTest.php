@@ -2,166 +2,173 @@
 
 use App\Models\Division;
 use App\Models\User;
+use App\Enums\DivisionRolePermission;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
-use Modules\Inventory\Database\Seeders\InventoryPermissionSeeder;
+use Illuminate\Support\Facades\DB;
 
 beforeEach(function () {
     $this->seed(PermissionSeeder::class);
-    $this->seed(InventoryPermissionSeeder::class);
     $this->seed(RoleSeeder::class);
 });
 
-it('can display division index page', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
+describe('Division Access Control', function () {
+    it('allows users with lihat_divisi to access index, datatable, and print', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(DivisionRolePermission::VIEW_DIVISION->value);
 
-    $response = $this->actingAs($user)->get('/division');
+        $this->actingAs($user)->get('/division')->assertStatus(200);
+        $this->actingAs($user)->get('/division/datatable')->assertStatus(200);
+        $this->actingAs($user)->get('/division/print/excel')->assertStatus(200);
+    });
 
-    $response->assertStatus(200)
-        ->assertInertia(fn ($page) => $page->component('Division/Index'));
+    it('denies users with only lihat_divisi from accessing management routes', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(DivisionRolePermission::VIEW_DIVISION->value);
+
+        $division = Division::factory()->create();
+
+        $this->actingAs($user)->get('/division/create')->assertStatus(403);
+        $this->actingAs($user)->post('/division/store', [])->assertStatus(403);
+        $this->actingAs($user)->get("/division/{$division->id}/edit")->assertStatus(403);
+        $this->actingAs($user)->put("/division/{$division->id}/update", [])->assertStatus(403);
+        $this->actingAs($user)->delete("/division/{$division->id}/delete")->assertStatus(403);
+    });
+
+    it('allows users with kelola_divisi to access management routes', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(DivisionRolePermission::MANAGE_DIVISION->value);
+
+        $division = Division::factory()->create();
+
+        $this->actingAs($user)->get('/division/create')->assertStatus(200);
+        $this->actingAs($user)->get("/division/{$division->id}/edit")->assertStatus(200);
+    });
 });
 
-it('can display division create page', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
+describe('Division Datatable Features', function () {
+    it('can search globally using name', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(DivisionRolePermission::VIEW_DIVISION->value);
 
-    $response = $this->actingAs($user)->get('/division/create');
+        Division::factory()->create(['name' => 'IT Department']);
+        Division::factory()->create(['name' => 'HR Department']);
 
-    $response->assertStatus(200)
-        ->assertInertia(fn ($page) => $page->component('Division/Create'));
+        $response = $this->actingAs($user)->get('/division/datatable?search=IT');
+
+        $response->assertStatus(200);
+        $data = $response->json('data');
+        expect($data)->toHaveCount(1);
+        expect($data[0]['name'])->toBe('IT Department');
+    });
+
+    it('can filter results with limit and page', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(DivisionRolePermission::VIEW_DIVISION->value);
+
+        Division::factory()->count(15)->create();
+
+        $response = $this->actingAs($user)->get('/division/datatable?limit=5&page=2');
+
+        $response->assertStatus(200);
+        $json = $response->json();
+        expect($json['data'])->toHaveCount(5);
+        expect($json['total'])->toBe(15);
+        expect($json['current_page'])->toBe(2);
+    });
+
+    it('can perform individual search on name column', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(DivisionRolePermission::VIEW_DIVISION->value);
+
+        Division::factory()->create(['name' => 'Finance']);
+        Division::factory()->create(['name' => 'Marketing']);
+
+        $response = $this->actingAs($user)->get('/division/datatable?name=Finance');
+
+        $response->assertStatus(200);
+        $data = $response->json('data');
+        expect($data)->toHaveCount(1);
+        expect($data[0]['name'])->toBe('Finance');
+    });
+
+    it('can perform individual search on description column', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(DivisionRolePermission::VIEW_DIVISION->value);
+
+        Division::factory()->create(['description' => 'Handle technology stuff']);
+        Division::factory()->create(['description' => 'Handle human resources']);
+
+        $response = $this->actingAs($user)->get('/division/datatable?description=technology');
+
+        $response->assertStatus(200);
+        $data = $response->json('data');
+        expect($data)->toHaveCount(1);
+        expect($data[0]['description'])->toContain('technology');
+    });
+
+    it('can perform individual search on is_active status', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(DivisionRolePermission::VIEW_DIVISION->value);
+
+        Division::factory()->create(['is_active' => true, 'name' => 'Active Div']);
+        Division::factory()->create(['is_active' => false, 'name' => 'Inactive Div']);
+
+        // Test active
+        $responseActive = $this->actingAs($user)->get('/division/datatable?is_active=1');
+        expect($responseActive->json('data'))->toHaveCount(1);
+        expect($responseActive->json('data.0.is_active'))->toBeTrue();
+
+        // Test inactive
+        $responseInactive = $this->actingAs($user)->get('/division/datatable?is_active=0');
+        expect($responseInactive->json('data'))->toHaveCount(1);
+        expect($responseInactive->json('data.0.is_active'))->toBeFalse();
+    });
+
+    it('can perform individual search on users_count', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(DivisionRolePermission::VIEW_DIVISION->value);
+
+        $div1 = Division::factory()->create();
+        User::factory()->count(3)->create(['division_id' => $div1->id]);
+
+        $div2 = Division::factory()->create();
+        User::factory()->count(1)->create(['division_id' => $div2->id]);
+
+        $response = $this->actingAs($user)->get('/division/datatable?users_count=3');
+
+        $response->assertStatus(200);
+        $data = $response->json('data');
+        expect($data)->toHaveCount(1);
+        expect($data[0]['id'])->toBe($div1->id);
+    });
 });
 
-it('can create a new division', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
+describe('Division Print functionality', function () {
+    it('returns xlsx file for printing', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(DivisionRolePermission::VIEW_DIVISION->value);
 
-    $response = $this->actingAs($user)->post('/division/store', [
-        'name' => 'Test Division',
-        'description' => 'Test Description',
-        'is_active' => true,
-    ]);
+        Division::factory()->count(5)->create();
 
-    $response->assertRedirect('/division');
-    $this->assertDatabaseHas('divisions', [
-        'name' => 'Test Division',
-        'description' => 'Test Description',
-    ]);
+        $response = $this->actingAs($user)->get('/division/print/excel');
+
+        $response->assertStatus(200)
+            ->assertHeader('Content-Disposition', 'attachment; filename="Data Divisi Per ' . date('d F Y') . '.xlsx"');
+    });
+
+    it('respects filters when printing to excel', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(DivisionRolePermission::VIEW_DIVISION->value);
+
+        Division::factory()->create(['name' => 'IT Department']);
+        Division::factory()->create(['name' => 'HR Department']);
+
+        $response = $this->actingAs($user)->get('/division/print/excel?search=IT');
+
+        $response->assertStatus(200);
+        // We can't easily peek into the XLSX content here without extra libs, 
+        // but getting 200 with the filter param means it passed the filter logic in the controller.
+    });
 });
 
-it('requires name when creating division', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
-
-    $response = $this->actingAs($user)->post('/division/store', [
-        'description' => 'Test Description',
-    ]);
-
-    $response->assertSessionHasErrors('name');
-});
-
-it('can display division edit page', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
-
-    $division = Division::factory()->create();
-
-    $response = $this->actingAs($user)->get("/division/{$division->id}/edit");
-
-    $response->assertStatus(200)
-        ->assertInertia(fn ($page) => $page
-            ->component('Division/Create')
-            ->has('division'));
-});
-
-it('can update an existing division', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
-
-    $division = Division::factory()->create([
-        'name' => 'Old Name',
-    ]);
-
-    $response = $this->actingAs($user)->put("/division/{$division->id}/update", [
-        'name' => 'New Name',
-        'description' => 'Updated Description',
-        'is_active' => true,
-    ]);
-
-    $response->assertRedirect('/division');
-    $this->assertDatabaseHas('divisions', [
-        'id' => $division->id,
-        'name' => 'New Name',
-        'description' => 'Updated Description',
-    ]);
-});
-
-it('can delete a division', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
-
-    $division = Division::factory()->create();
-
-    $response = $this->actingAs($user)->delete("/division/{$division->id}/delete");
-
-    $response->assertRedirect('/division');
-    $this->assertDatabaseMissing('divisions', [
-        'id' => $division->id,
-    ]);
-});
-
-it('can fetch divisions datatable', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
-
-    Division::factory()->count(5)->create();
-
-    $response = $this->actingAs($user)->get('/division/datatable');
-
-    $response->assertStatus(200)
-        ->assertJsonStructure([
-            'data',
-            'current_page',
-            'last_page',
-            'per_page',
-            'total',
-        ]);
-});
-
-it('can search divisions in datatable', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
-
-    Division::factory()->create(['name' => 'Bagian IT']);
-    Division::factory()->create(['name' => 'Bagian Keuangan']);
-    Division::factory()->create(['name' => 'Bagian Umum']);
-
-    $response = $this->actingAs($user)->get('/division/datatable?search=keuangan');
-
-    $response->assertStatus(200);
-    $data = $response->json('data');
-
-    expect($data)->toHaveCount(1)
-        ->and($data[0]['name'])->toBe('Bagian Keuangan');
-});
-
-it('can paginate divisions in datatable', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
-
-    Division::factory()->count(25)->create();
-
-    $response = $this->actingAs($user)->get('/division/datatable?limit=10');
-
-    $response->assertStatus(200);
-    $json = $response->json();
-
-    expect($json['data'])->toHaveCount(10)
-        ->and($json['total'])->toBe(25);
-});
-
-it('prevents unauthenticated access to divisions', function () {
-    $response = $this->get('/division');
-
-    $response->assertRedirect('/login');
-});

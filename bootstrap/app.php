@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'inventory_item_permission' => \Modules\Inventory\Http\Middleware\InventoryItemRoutePermissionCheck::class,
             'check_active_opname' => \Modules\Inventory\Http\Middleware\CheckActiveStockOpname::class,
+            'division_permission' => \App\Http\Middleware\DivisionPermissionCheck::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

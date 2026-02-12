@@ -39,9 +39,10 @@ export default function DivisionCreate({ division }: Props) {
         <RootLayout title={isEdit ? 'Edit Divisi' : 'Tambah Divisi'} backPath="/division">
             <ContentCard
                 title={isEdit ? 'Edit Divisi' : 'Tambah Divisi Baru'}
+                subtitle="Isi informasi divisi di bawah ini"
+                backPath="/division"
                 mobileFullWidth
             >
-                <p className="mb-6 text-sm text-gray-500 dark:text-slate-400">Isi informasi divisi di bawah ini</p>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <FormInput name="name" label="Nama Divisi" placeholder="Masukkan nama divisi" value={data.name} onChange={(e) => setData('name', e.target.value)} error={errors.name} required />
