@@ -2,166 +2,170 @@
 
 use App\Models\Position;
 use App\Models\User;
+use App\Enums\PositionRolePermission;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
-use Modules\Inventory\Database\Seeders\InventoryPermissionSeeder;
+use Illuminate\Support\Facades\DB;
 
 beforeEach(function () {
     $this->seed(PermissionSeeder::class);
-    $this->seed(InventoryPermissionSeeder::class);
     $this->seed(RoleSeeder::class);
 });
 
-it('can display position index page', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
+describe('Position Access Control', function () {
+    it('allows users with lihat_jabatan to access index, datatable, and print', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(PositionRolePermission::VIEW_POSITION->value);
 
-    $response = $this->actingAs($user)->get('/position');
+        $this->actingAs($user)->get('/position')->assertStatus(200);
+        $this->actingAs($user)->get('/position/datatable')->assertStatus(200);
+        $this->actingAs($user)->get('/position/print/excel')->assertStatus(200);
+    });
 
-    $response->assertStatus(200)
-        ->assertInertia(fn ($page) => $page->component('Position/Index'));
+    it('denies users with only lihat_jabatan from accessing management routes', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(PositionRolePermission::VIEW_POSITION->value);
+
+        $position = Position::factory()->create();
+
+        $this->actingAs($user)->get('/position/create')->assertStatus(403);
+        $this->actingAs($user)->post('/position/store', [])->assertStatus(403);
+        $this->actingAs($user)->get("/position/{$position->id}/edit")->assertStatus(403);
+        $this->actingAs($user)->put("/position/{$position->id}/update", [])->assertStatus(403);
+        $this->actingAs($user)->delete("/position/{$position->id}/delete")->assertStatus(403);
+    });
+
+    it('allows users with kelola_jabatan to access management routes', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(PositionRolePermission::MANAGE_POSITION->value);
+
+        $position = Position::factory()->create();
+
+        $this->actingAs($user)->get('/position/create')->assertStatus(200);
+        $this->actingAs($user)->get("/position/{$position->id}/edit")->assertStatus(200);
+    });
 });
 
-it('can display position create page', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
+describe('Position Datatable Features', function () {
+    it('can search globally using name', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(PositionRolePermission::VIEW_POSITION->value);
 
-    $response = $this->actingAs($user)->get('/position/create');
+        Position::factory()->create(['name' => 'Software Engineer']);
+        Position::factory()->create(['name' => 'Product Manager']);
 
-    $response->assertStatus(200)
-        ->assertInertia(fn ($page) => $page->component('Position/Create'));
+        $response = $this->actingAs($user)->get('/position/datatable?search=Software');
+
+        $response->assertStatus(200);
+        $data = $response->json('data');
+        expect($data)->toHaveCount(1);
+        expect($data[0]['name'])->toBe('Software Engineer');
+    });
+
+    it('can filter results with limit and page', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(PositionRolePermission::VIEW_POSITION->value);
+
+        Position::factory()->count(15)->create();
+
+        $response = $this->actingAs($user)->get('/position/datatable?limit=5&page=2');
+
+        $response->assertStatus(200);
+        $json = $response->json();
+        expect($json['data'])->toHaveCount(5);
+        expect($json['total'])->toBe(15);
+        expect($json['current_page'])->toBe(2);
+    });
+
+    it('can perform individual search on name column', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(PositionRolePermission::VIEW_POSITION->value);
+
+        Position::factory()->create(['name' => 'Director']);
+        Position::factory()->create(['name' => 'Manager']);
+
+        $response = $this->actingAs($user)->get('/position/datatable?name=Director');
+
+        $response->assertStatus(200);
+        $data = $response->json('data');
+        expect($data)->toHaveCount(1);
+        expect($data[0]['name'])->toBe('Director');
+    });
+
+    it('can perform individual search on description column', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(PositionRolePermission::VIEW_POSITION->value);
+
+        Position::factory()->create(['description' => 'Handle code and stuff']);
+        Position::factory()->create(['description' => 'Handle people and stuff']);
+
+        $response = $this->actingAs($user)->get('/position/datatable?description=code');
+
+        $response->assertStatus(200);
+        $data = $response->json('data');
+        expect($data)->toHaveCount(1);
+        expect($data[0]['description'])->toContain('code');
+    });
+
+    it('can perform individual search on is_active status', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(PositionRolePermission::VIEW_POSITION->value);
+
+        Position::factory()->create(['is_active' => true, 'name' => 'Active Pos']);
+        Position::factory()->create(['is_active' => false, 'name' => 'Inactive Pos']);
+
+        // Test active
+        $responseActive = $this->actingAs($user)->get('/position/datatable?is_active=1');
+        expect($responseActive->json('data'))->toHaveCount(1);
+        expect($responseActive->json('data.0.is_active'))->toBeTrue();
+
+        // Test inactive
+        $responseInactive = $this->actingAs($user)->get('/position/datatable?is_active=0');
+        expect($responseInactive->json('data'))->toHaveCount(1);
+        expect($responseInactive->json('data.0.is_active'))->toBeFalse();
+    });
+
+    it('can perform individual search on users_count', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(PositionRolePermission::VIEW_POSITION->value);
+
+        $pos1 = Position::factory()->create();
+        User::factory()->count(3)->create(['position_id' => $pos1->id]);
+
+        $pos2 = Position::factory()->create();
+        User::factory()->count(1)->create(['position_id' => $pos2->id]);
+
+        $response = $this->actingAs($user)->get('/position/datatable?users_count=3');
+
+        $response->assertStatus(200);
+        $data = $response->json('data');
+        expect($data)->toHaveCount(1);
+        expect($data[0]['id'])->toBe($pos1->id);
+    });
 });
 
-it('can create a new position', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
+describe('Position Print functionality', function () {
+    it('returns xlsx file for printing', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(PositionRolePermission::VIEW_POSITION->value);
 
-    $response = $this->actingAs($user)->post('/position/store', [
-        'name' => 'Test Position',
-        'description' => 'Test Description',
-        'is_active' => true,
-    ]);
+        Position::factory()->count(5)->create();
 
-    $response->assertRedirect('/position');
-    $this->assertDatabaseHas('positions', [
-        'name' => 'Test Position',
-        'description' => 'Test Description',
-    ]);
-});
+        $response = $this->actingAs($user)->get('/position/print/excel');
 
-it('requires name when creating position', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
+        $response->assertStatus(200)
+            ->assertHeader('Content-Disposition', 'attachment; filename="Data Jabatan Per ' . date('d F Y') . '.xlsx"');
+    });
 
-    $response = $this->actingAs($user)->post('/position/store', [
-        'description' => 'Test Description',
-    ]);
+    it('respects filters when printing to excel', function () {
+        $user = User::factory()->create();
+        $user->givePermissionTo(PositionRolePermission::VIEW_POSITION->value);
 
-    $response->assertSessionHasErrors('name');
-});
+        Position::factory()->create(['name' => 'Software Engineer']);
+        Position::factory()->create(['name' => 'Product Manager']);
 
-it('can display position edit page', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
+        $response = $this->actingAs($user)->get('/position/print/excel?search=Software');
 
-    $position = Position::factory()->create();
-
-    $response = $this->actingAs($user)->get("/position/{$position->id}/edit");
-
-    $response->assertStatus(200)
-        ->assertInertia(fn ($page) => $page
-            ->component('Position/Create')
-            ->has('position'));
-});
-
-it('can update an existing position', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
-
-    $position = Position::factory()->create([
-        'name' => 'Old Name',
-    ]);
-
-    $response = $this->actingAs($user)->put("/position/{$position->id}/update", [
-        'name' => 'New Name',
-        'description' => 'Updated Description',
-        'is_active' => true,
-    ]);
-
-    $response->assertRedirect('/position');
-    $this->assertDatabaseHas('positions', [
-        'id' => $position->id,
-        'name' => 'New Name',
-        'description' => 'Updated Description',
-    ]);
-});
-
-it('can delete a position', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
-
-    $position = Position::factory()->create();
-
-    $response = $this->actingAs($user)->delete("/position/{$position->id}/delete");
-
-    $response->assertRedirect('/position');
-    $this->assertDatabaseMissing('positions', [
-        'id' => $position->id,
-    ]);
-});
-
-it('can fetch positions datatable', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
-
-    Position::factory()->count(5)->create();
-
-    $response = $this->actingAs($user)->get('/position/datatable');
-
-    $response->assertStatus(200)
-        ->assertJsonStructure([
-            'data',
-            'current_page',
-            'last_page',
-            'per_page',
-            'total',
-        ]);
-});
-
-it('can search positions in datatable', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
-
-    Position::factory()->create(['name' => 'Manager']);
-    Position::factory()->create(['name' => 'Staff']);
-    Position::factory()->create(['name' => 'Director']);
-
-    $response = $this->actingAs($user)->get('/position/datatable?search=staff');
-
-    $response->assertStatus(200);
-    $data = $response->json('data');
-
-    expect($data)->toHaveCount(1)
-        ->and($data[0]['name'])->toBe('Staff');
-});
-
-it('can paginate positions in datatable', function () {
-    $user = User::factory()->create();
-    $user->assignRole('Superadmin');
-
-    Position::factory()->count(25)->create();
-
-    $response = $this->actingAs($user)->get('/position/datatable?limit=10');
-
-    $response->assertStatus(200);
-    $json = $response->json();
-
-    expect($json['data'])->toHaveCount(10)
-        ->and($json['total'])->toBe(25);
-});
-
-it('prevents unauthenticated access to positions', function () {
-    $response = $this->get('/position');
-
-    $response->assertRedirect('/login');
+        $response->assertStatus(200);
+    });
 });

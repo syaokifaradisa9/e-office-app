@@ -17,6 +17,18 @@ class PositionDatatableService implements DatatableServiceInterface
             $query->where('name', 'like', '%'.$request->name.'%');
         }
 
+        if ($request->has('description') && $request->description != '') {
+            $query->where('description', 'like', '%'.$request->description.'%');
+        }
+
+        if ($request->has('is_active') && $request->is_active != '') {
+            $query->where('is_active', $request->is_active);
+        }
+
+        if ($request->has('users_count') && $request->users_count != '') {
+            $query->has('users', '=', $request->users_count);
+        }
+
         if ($request->has('search') && $request->search != '') {
             $query->where('name', 'like', '%'.$request->search.'%');
         }
@@ -56,10 +68,10 @@ class PositionDatatableService implements DatatableServiceInterface
             $writer->openToFile('php://output');
 
             $headerRow = \OpenSpout\Common\Entity\Row::fromValues([
-                'Nama Jabatan',
+                'Nama',
                 'Deskripsi',
-                'Status',
                 'Jumlah Pegawai',
+                'Status',
             ]);
             $writer->addRow($headerRow);
 
@@ -67,8 +79,8 @@ class PositionDatatableService implements DatatableServiceInterface
                 $row = \OpenSpout\Common\Entity\Row::fromValues([
                     $item->name,
                     $item->description ?? '-',
-                    $item->is_active ? 'Aktif' : 'Tidak Aktif',
                     $item->users_count,
+                    $item->is_active ? 'Aktif' : 'Tidak Aktif',
                 ]);
                 $writer->addRow($row);
             }

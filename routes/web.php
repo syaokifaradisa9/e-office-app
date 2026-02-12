@@ -42,22 +42,17 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Position Routes
-    Route::prefix('position')->name('position.')->controller(PositionController::class)->group(function () {
-        Route::middleware('role_or_permission:lihat_jabatan|kelola_jabatan')->group(function () {
-            Route::get('/', 'index')->name('index');
-        });
+    Route::prefix('position')->name('position.')->controller(PositionController::class)->middleware('position_permission')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/datatable', 'datatable')->name('datatable');
+        Route::get('/print/{type}', 'printExcel')->name('print');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
 
-        Route::middleware('permission:lihat_jabatan')->group(function () {
-            Route::get('/datatable', 'datatable')->name('datatable');
-            Route::get('/print/{type}', 'printExcel')->name('print');
-        });
-
-        Route::middleware('permission:kelola_jabatan')->group(function () {
-            Route::get('/create', 'create')->name('create');
-            Route::post('/store', 'store')->name('store');
-            Route::get('/{position}/edit', 'edit')->name('edit');
-            Route::put('/{position}/update', 'update')->name('update');
-            Route::delete('/{position}/delete', 'delete')->name('delete');
+        Route::prefix('{position}')->group(function () {
+            Route::get('/edit', 'edit')->name('edit');
+            Route::put('/update', 'update')->name('update');
+            Route::delete('/delete', 'delete')->name('delete');
         });
     });
 

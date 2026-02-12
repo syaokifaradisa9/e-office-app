@@ -13,6 +13,7 @@ import MobileSearchBar from '@/components/forms/MobileSearchBar';
 import FloatingActionButton from '@/components/buttons/FloatingActionButton';
 import { PositionCardSkeleton } from '@/components/skeletons/CardSkeleton';
 import Tooltip from '@/components/commons/Tooltip';
+import FormSearchSelect from '@/components/forms/FormSearchSelect';
 
 import PositionCardItem from './PositionCardItem';
 
@@ -53,6 +54,9 @@ interface Params {
     limit: number;
     page: number;
     name: string;
+    description: string;
+    is_active: string;
+    users_count: string;
     sort_by: string;
     sort_direction: 'asc' | 'desc';
 }
@@ -73,6 +77,9 @@ export default function PositionIndex() {
         limit: 20,
         page: 1,
         name: '',
+        description: '',
+        is_active: '',
+        users_count: '',
         sort_by: 'created_at',
         sort_direction: 'desc',
     });
@@ -178,6 +185,7 @@ export default function PositionIndex() {
             />
             <ContentCard
                 title="Jabatan"
+                subtitle="Kelola dan atur struktur jabatan kantor Anda"
                 mobileFullWidth
                 additionalButton={
                     <CheckPermissions permissions={['kelola_jabatan']}>
@@ -234,6 +242,7 @@ export default function PositionIndex() {
                                 name: 'description',
                                 header: 'Deskripsi',
                                 render: (position: Position) => <span className="text-gray-500 dark:text-slate-400">{position.description || '-'}</span>,
+                                footer: <FormSearch name="description" onChange={onParamsChange} placeholder="Filter Deskripsi" />,
                             },
                             {
                                 name: 'users_count',
@@ -244,6 +253,7 @@ export default function PositionIndex() {
                                         <span>{position.users_count || 0}</span>
                                     </div>
                                 ),
+                                footer: <FormSearch name="users_count" onChange={onParamsChange} placeholder="Filter Jumlah" />,
                             },
                             {
                                 name: 'is_active',
@@ -252,6 +262,18 @@ export default function PositionIndex() {
                                     <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${position.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'}`}>
                                         {position.is_active ? 'Aktif' : 'Tidak Aktif'}
                                     </span>
+                                ),
+                                footer: (
+                                    <FormSearchSelect
+                                        name="is_active"
+                                        value={params.is_active}
+                                        onChange={onParamsChange}
+                                        options={[
+                                            { value: '', label: 'Semua Status' },
+                                            { value: '1', label: 'Aktif' },
+                                            { value: '0', label: 'Tidak Aktif' },
+                                        ]}
+                                    />
                                 ),
                             },
                             ...(usePage<PageProps>().props.permissions?.includes('kelola_jabatan')

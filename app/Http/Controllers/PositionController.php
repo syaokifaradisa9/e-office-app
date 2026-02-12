@@ -65,7 +65,7 @@ class PositionController extends Controller
         return $this->positionDatatableService->getDatatable($request, $request->user());
     }
 
-    public function printExcel(DatatableRequest $request)
+    public function printExcel(DatatableRequest $request, $type)
     {
         return $this->positionDatatableService->printExcel($request, $request->user());
     }

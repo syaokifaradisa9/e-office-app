@@ -39,9 +39,10 @@ export default function PositionCreate({ position }: Props) {
         <RootLayout title={isEdit ? 'Edit Jabatan' : 'Tambah Jabatan'} backPath="/position">
             <ContentCard
                 title={isEdit ? 'Edit Jabatan' : 'Tambah Jabatan Baru'}
+                subtitle="Isi informasi jabatan di bawah ini"
                 mobileFullWidth
+                backPath="/position"
             >
-                <p className="mb-6 text-sm text-gray-500 dark:text-slate-400">Isi informasi jabatan di bawah ini</p>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <FormInput name="name" label="Nama Jabatan" placeholder="Masukkan nama jabatan" value={data.name} onChange={(e) => setData('name', e.target.value)} error={errors.name} required />
