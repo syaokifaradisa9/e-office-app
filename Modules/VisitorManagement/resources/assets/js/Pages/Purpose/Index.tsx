@@ -3,9 +3,10 @@ import RootLayout from '@/components/layouts/RootLayout';
 import DataTable from '@/components/tables/Datatable';
 import { useEffect, useState } from 'react';
 import { usePage, router } from '@inertiajs/react';
-import { ClipboardList, Edit, Plus, Trash2, Shield, ToggleLeft, ToggleRight } from 'lucide-react';
+import { ClipboardList, Edit, Plus, Trash2, Shield, ToggleLeft, ToggleRight, FileSpreadsheet } from 'lucide-react';
 import ConfirmationAlert from '@/components/alerts/ConfirmationAlert';
 import FormSearch from '@/components/forms/FormSearch';
+import FormSearchSelect from '@/components/forms/FormSearchSelect';
 import Button from '@/components/buttons/Button';
 import CheckPermissions from '@/components/utils/CheckPermissions';
 import MobileSearchBar from '@/components/forms/MobileSearchBar';
@@ -43,6 +44,9 @@ interface Params {
     page: number;
     sort_by: string;
     sort_direction: 'asc' | 'desc';
+    name?: string;
+    description?: string;
+    status?: string;
 }
 
 export default function PurposeCategoryIndex() {
@@ -114,6 +118,21 @@ export default function PurposeCategoryIndex() {
         setParams({ ...params, [e.target.name]: e.target.value });
     }
 
+    function getPrintUrl() {
+        let url = `/visitor/purposes/print/excel`;
+        const queryParams: string[] = [];
+        Object.keys(params).forEach((key) => {
+            const value = params[key as keyof Params];
+            if (value !== undefined && value !== null && value !== '') {
+                queryParams.push(`${key}=${value}`);
+            }
+        });
+        if (queryParams.length > 0) {
+            url += `?${queryParams.join('&')}`;
+        }
+        return url;
+    }
+
     function handleToggleStatus(item: PurposeCategory) {
         router.post(`/visitor/purposes/${item.id}/toggle`, {}, {
             preserveState: true,
@@ -130,6 +149,11 @@ export default function PurposeCategoryIndex() {
                         searchValue={params.search}
                         onSearchChange={onParamsChange}
                         placeholder="Cari keperluan..."
+                        actionButton={
+                            <a href={getPrintUrl()} target="_blank" className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" rel="noreferrer">
+                                <FileSpreadsheet className="size-4" />
+                            </a>
+                        }
                     />
                 ) : undefined
             }
@@ -185,6 +209,20 @@ export default function PurposeCategoryIndex() {
                         SkeletonComponent={DivisionCardSkeleton}
                         sortBy={params.sort_by}
                         sortDirection={params.sort_direction}
+                        additionalHeaderElements={
+                            <div className="flex gap-2">
+                                <CheckPermissions permissions={['lihat_master_manajemen_pengunjung']}>
+                                    <Button
+                                        href={getPrintUrl()}
+                                        variant="ghost"
+                                        className="hidden h-9 w-9 items-center justify-center p-0 hover:bg-slate-50 dark:hover:bg-slate-800 md:flex"
+                                        icon={<FileSpreadsheet className="size-4" />}
+                                        target="_blank"
+                                        title="Export Excel"
+                                    />
+                                </CheckPermissions>
+                            </div>
+                        }
                         onHeaderClick={(columnName) => {
                             const newSortDirection = params.sort_by === columnName && params.sort_direction === 'asc' ? 'desc' : 'asc';
                             setParams((prevParams) => ({
@@ -203,12 +241,13 @@ export default function PurposeCategoryIndex() {
                                         <span className="font-medium">{item.name}</span>
                                     </div>
                                 ),
-                                footer: <FormSearch name="name" onChange={onParamsChange} placeholder="Filter Nama" />,
+                                footer: <FormSearch name="name" value={params.name} onChange={onParamsChange} placeholder="Filter Nama" />,
                             },
                             {
                                 name: 'description',
                                 header: 'Deskripsi',
                                 render: (item: PurposeCategory) => <span className="text-gray-500 dark:text-slate-400">{item.description || '-'}</span>,
+                                footer: <FormSearch name="description" value={params.description} onChange={onParamsChange} placeholder="Filter Deskripsi" />,
                             },
                             {
                                 name: 'is_active',
@@ -239,6 +278,18 @@ export default function PurposeCategoryIndex() {
                                             {item.is_active ? 'Aktif' : 'Nonaktif'}
                                         </span>
                                     )
+                                ),
+                                footer: (
+                                    <FormSearchSelect
+                                        name="status"
+                                        value={params.status || ''}
+                                        onChange={onParamsChange}
+                                        options={[
+                                            { value: '', label: 'Semua Status' },
+                                            { value: 'active', label: 'Aktif' },
+                                            { value: 'inactive', label: 'Nonaktif' },
+                                        ]}
+                                    />
                                 ),
                             },
                             ...(hasManagePermission

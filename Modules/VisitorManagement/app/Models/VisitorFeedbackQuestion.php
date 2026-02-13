@@ -9,6 +9,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class VisitorFeedbackQuestion extends Model
 {
     use HasFactory;
+    
+    protected static function newFactory(): \Modules\VisitorManagement\Database\Factories\VisitorFeedbackQuestionFactory
+    {
+        return \Modules\VisitorManagement\Database\Factories\VisitorFeedbackQuestionFactory::new();
+    }
 
     protected $fillable = [
         'question',

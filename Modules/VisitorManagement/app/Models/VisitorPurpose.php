@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+use Modules\VisitorManagement\Database\Factories\VisitorPurposeFactory;
+
 class VisitorPurpose extends Model
 {
     use HasFactory;
@@ -21,6 +23,11 @@ class VisitorPurpose extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    protected static function newFactory(): VisitorPurposeFactory
+    {
+        return VisitorPurposeFactory::new();
+    }
 
     public function visitors(): HasMany
     {

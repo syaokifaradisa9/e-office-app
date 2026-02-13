@@ -10,6 +10,9 @@ use Modules\Inventory\Models\Item;
 use Modules\Inventory\Models\WarehouseOrder;
 use Modules\Inventory\Models\WarehouseOrderCart;
 use Modules\Inventory\Models\StockOpnameItem; // Added for opname variance
+use Carbon\Carbon;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Writer;
 
 class ReportService
 {
@@ -134,8 +137,11 @@ class ReportService
             $query->where('warehouse_orders.division_id', $divisionId);
         }
 
+        $driver = config('database.default');
+        $format = $driver === 'sqlite' ? 'strftime("%Y-%m", warehouse_orders.created_at)' : 'DATE_FORMAT(warehouse_orders.created_at, "%Y-%m")';
+
         return $query->select(
-            DB::raw('DATE_FORMAT(warehouse_orders.created_at, "%Y-%m") as month'),
+            DB::raw("$format as month"),
             DB::raw('COUNT(DISTINCT warehouse_orders.id) as total_orders'),
             DB::raw('COALESCE(SUM(warehouse_order_carts.quantity), 0) as total_items')
         )
@@ -181,8 +187,8 @@ class ReportService
         return StockOpnameItem::query()
             ->join('stock_opnames', 'stock_opname_items.stock_opname_id', '=', 'stock_opnames.id')
             ->join('items', 'stock_opname_items.item_id', '=', 'items.id')
-            ->select('items.name', DB::raw('SUM(difference) as total_difference'))
-            ->where('difference', '<', 0)
+            ->select('items.name', DB::raw('SUM(physical_stock - system_stock) as total_difference'))
+            ->whereRaw('(physical_stock - system_stock) < 0')
             ->when($divisionId, fn ($q) => $q->where('stock_opnames.division_id', $divisionId))
             ->groupBy('items.id', 'items.name')
             ->orderBy('total_difference') // Large negative values first
@@ -192,11 +198,14 @@ class ReportService
 
     private function getOpnameVarianceTrend(?string $divisionId)
     {
+        $driver = config('database.default');
+        $format = $driver === 'sqlite' ? 'strftime("%Y-%m", stock_opnames.opname_date)' : 'DATE_FORMAT(stock_opnames.opname_date, "%Y-%m")';
+
         return StockOpnameItem::query()
             ->join('stock_opnames', 'stock_opname_items.stock_opname_id', '=', 'stock_opnames.id')
             ->select(
-                DB::raw('DATE_FORMAT(stock_opnames.opname_date, "%Y-%m") as month'),
-                DB::raw('ABS(SUM(CASE WHEN difference < 0 THEN difference ELSE 0 END)) as total_minus')
+                DB::raw("$format as month"),
+                DB::raw('ABS(SUM(CASE WHEN (physical_stock - system_stock) < 0 THEN (physical_stock - system_stock) ELSE 0 END)) as total_minus')
             )
             ->when($divisionId, fn ($q) => $q->where('stock_opnames.division_id', $divisionId), fn ($q) => $q->whereNull('stock_opnames.division_id'))
             ->groupBy('month')
@@ -353,7 +362,114 @@ class ReportService
 
     public function printExcel(User $user)
     {
-        // Placeholder for excel export logic
-        return null;
+        $data = $this->getAllReportData();
+        $global = $data['global'];
+        $perDivision = $data['per_division'];
+
+        return response()->streamDownload(function () use ($global, $perDivision) {
+            $writer = new Writer();
+            $writer->openToFile('php://output');
+
+            // 1. Overview Sheet
+            $writer->getCurrentSheet()->setName('Ringkasan Global');
+            
+            $writer->addRow(Row::fromValues(['LAPORAN INVENTORY GLOBAL - ' . Carbon::now()->format('d F Y')]));
+            $writer->addRow(Row::fromValues(['']));
+            
+            $writer->addRow(Row::fromValues(['Statistik Permintaan Barang (Seluruh Sistem)']));
+            $writer->addRow(Row::fromValues([
+                'Status',
+                'Jumlah Order'
+            ]));
+            
+            $statusLabels = [
+                'Pending' => 'Menunggu',
+                'Confirmed' => 'Dikonfirmasi',
+                'Accepted' => 'Diproses',
+                'Delivery' => 'Dikirim',
+                'Delivered' => 'Sampai',
+                'Finished' => 'Selesai',
+                'Rejected' => 'Ditolak',
+                'Revision' => 'Revisi',
+            ];
+
+            foreach ($global['overview_stats'] as $status => $count) {
+                $writer->addRow(Row::fromValues([
+                    $statusLabels[$status] ?? $status,
+                    $count
+                ]));
+            }
+
+            $writer->addRow(Row::fromValues(['']));
+            $writer->addRow(Row::fromValues(['Tren Permintaan (12 Bulan Terakhir)']));
+            $writer->addRow(Row::fromValues(['Bulan', 'Total Order', 'Total Barang']));
+            foreach ($global['request_trend'] as $trend) {
+                $writer->addRow(Row::fromValues([
+                    $trend['month'],
+                    $trend['total_orders'],
+                    $trend['total_items']
+                ]));
+            }
+
+            // 2. Rankings Sheet
+            $newSheet = $writer->addNewSheetAndMakeItCurrent();
+            $newSheet->setName('Peringkat & Analisis');
+
+            $writer->addRow(Row::fromValues(['ANALISIS PERINGKAT BARANG & KATEGORI']));
+            $writer->addRow(Row::fromValues(['']));
+
+            $writer->addRow(Row::fromValues(['10 Barang Paling Banyak Diminta']));
+            $writer->addRow(Row::fromValues(['Nama Barang', 'Total Permintaan']));
+            foreach ($global['item_rankings']['most_requested'] as $item) {
+                $writer->addRow(Row::fromValues([$item->name, $item->total]));
+            }
+
+            $writer->addRow(Row::fromValues(['']));
+            $writer->addRow(Row::fromValues(['10 Barang Paling Banyak Keluar (Outbound)']));
+            $writer->addRow(Row::fromValues(['Nama Barang', 'Total Keluar']));
+            foreach ($global['item_rankings']['most_outbound'] as $item) {
+                $writer->addRow(Row::fromValues([$item->name, $item->total]));
+            }
+
+            $writer->addRow(Row::fromValues(['']));
+            $writer->addRow(Row::fromValues(['Barang Terancam Habis (Stok \u003c Critical)']));
+            $writer->addRow(Row::fromValues(['Nama Barang', 'Stok Saat Ini', 'Critical Level']));
+            foreach ($global['alerts']['critical_stock'] as $item) {
+                $writer->addRow(Row::fromValues([$item->name, $item->stock, $item->critical_stock ?? '-']));
+            }
+
+            $writer->addRow(Row::fromValues(['']));
+            $writer->addRow(Row::fromValues(['Stok Tertimbun (Tidak Ada Aktivitas \u003e 3 Bulan)']));
+            $writer->addRow(Row::fromValues(['Nama Barang', 'Stok Tersisa']));
+            foreach ($global['stock_analysis']['stagnant_stock'] as $item) {
+                $writer->addRow(Row::fromValues([$item->name, $item->stock]));
+            }
+
+            // 3. Per Division Summary
+            $newSheet = $writer->addNewSheetAndMakeItCurrent();
+            $newSheet->setName('Ringkasan Per Divisi');
+
+            $writer->addRow(Row::fromValues(['RINGKASAN PERMINTAAN PER DIVISI']));
+            $writer->addRow(Row::fromValues(['']));
+            $writer->addRow(Row::fromValues([
+                'Nama Divisi',
+                'Total Order Selesai',
+                'Total Barang Keluar',
+                'Stok Kritis',
+                'Fulfillment Rate (%)'
+            ]));
+
+            foreach ($perDivision as $div) {
+                $writer->addRow(Row::fromValues([
+                    $div['division_name'],
+                    $div['overview_stats']['Finished'] ?? 0,
+                    collect($div['item_rankings']['most_outbound'])->sum('total'),
+                    count($div['alerts']['critical_stock']),
+                    $div['alerts']['fulfillment_rate']['fulfillment_rate'] . '%'
+                ]));
+            }
+
+            $writer->close();
+        }, 'Laporan_Inventory_Komprehensif_' . date('Ymd_His') . '.xlsx');
     }
 }

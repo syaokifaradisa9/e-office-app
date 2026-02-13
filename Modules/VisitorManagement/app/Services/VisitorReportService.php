@@ -99,13 +99,18 @@ class VisitorReportService
     public function exportExcel()
     {
         $data = $this->getReportData();
+        $detailedVisitors = $this->visitorRepository->getDatatableQuery(['sort_by' => 'check_in_at', 'sort_direction' => 'desc'])
+            ->with(['division', 'purpose'])
+            ->get();
 
-        return response()->streamDownload(function () use ($data) {
+        return response()->streamDownload(function () use ($data, $detailedVisitors) {
             $writer = new \OpenSpout\Writer\XLSX\Writer();
             $writer->openToFile('php://output');
 
-            // 1. Overview Section
-            $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(['RINGKASAN LAPORAN TAHUN ' . Carbon::now()->year]));
+            // 1. Overview Sheet
+            $writer->getCurrentSheet()->setName('Ringkasan');
+            
+            $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(['RINGKASAN LAPORAN PENGUNJUNG TAHUN ' . Carbon::now()->year]));
             $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(['']));
             $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(['Statistik Utama']));
             $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues([
@@ -151,7 +156,7 @@ class VisitorReportService
                 ]));
             }
 
-            // 3. Purpose Rankings
+            // 3. Rankings
             $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(['']));
             $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(['PERINGKAT KEPERLUAN KUNJUNGAN']));
             $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(['Keperluan', 'Total Kunjungan']));
@@ -159,7 +164,6 @@ class VisitorReportService
                 $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues([$purpose->name, $purpose->total]));
             }
 
-            // 4. Division Rankings
             $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(['']));
             $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(['PERINGKAT DIVISI TUJUAN']));
             $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(['Divisi', 'Total Kunjungan']));
@@ -167,16 +171,38 @@ class VisitorReportService
                 $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues([$division->name, $division->total]));
             }
 
-            // 5. Top Organizations
+            // 4. Data Pengunjung Detail (New Sheet)
+            $newSheet = $writer->addNewSheetAndMakeItCurrent();
+            $newSheet->setName('Data Pengunjung');
+            
+            $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(['DATA PENGUNJUNG TERPERINCI']));
             $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(['']));
-            $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(['TOP ORGANISASI / INSTANSI']));
-            $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(['Organisasi', 'Total Kunjungan']));
-            foreach ($data['top_organizations'] as $org) {
-                $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues([$org['organization'], $org['total']]));
+            $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues([
+                'Nama Pengunjung',
+                'Instansi',
+                'No. Telepon',
+                'Divisi Tujuan',
+                'Keperluan',
+                'Check In',
+                'Check Out',
+                'Status'
+            ]));
+
+            foreach ($detailedVisitors as $visitor) {
+                $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues([
+                    $visitor->visitor_name,
+                    $visitor->organization ?? '-',
+                    $visitor->phone_number ?? '-',
+                    $visitor->division->name ?? '-',
+                    $visitor->purpose->name ?? '-',
+                    $visitor->check_in_at ? $visitor->check_in_at->format('d/m/Y H:i') : '-',
+                    $visitor->check_out_at ? $visitor->check_out_at->format('d/m/Y H:i') : '-',
+                    $visitor->status->label()
+                ]));
             }
 
             $writer->close();
-        }, 'Laporan_Statistik_Pengunjung_' . date('Ymd_His') . '.xlsx');
+        }, 'Laporan_Komprehensif_Pengunjung_' . date('Ymd_His') . '.xlsx');
     }
 
     private function getBusiestDays(): array

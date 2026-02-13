@@ -56,6 +56,7 @@ Route::middleware(['auth', 'verified'])->prefix('visitor')->name('visitor.')->gr
         Route::put('/{purpose}/update', 'update')->name('update');
         Route::delete('/{purpose}/delete', 'destroy')->name('destroy');
         Route::post('/{purpose}/toggle', 'toggleStatus')->name('toggle');
+        Route::get('/print/excel', 'printExcel')->name('print.excel');
     });
 
     // Feedback Questions (Master Data)
@@ -68,11 +69,13 @@ Route::middleware(['auth', 'verified'])->prefix('visitor')->name('visitor.')->gr
         Route::put('/{question}/update', 'update')->name('update');
         Route::delete('/{question}/delete', 'destroy')->name('destroy');
         Route::post('/{question}/toggle', 'toggleStatus')->name('toggle');
+        Route::get('/print/excel', 'printExcel')->name('print.excel');
     });
 
     // Reports (must be before /{visitor} wildcard)
     Route::controller(\Modules\VisitorManagement\Http\Controllers\VisitorReportController::class)->prefix('reports')->name('reports.')->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::get('/export', 'export')->name('export');
     });
     
     // Criticism and Suggestions

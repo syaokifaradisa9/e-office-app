@@ -199,6 +199,15 @@ export default function ReportIndex() {
                 subtitle="Analisis data kunjungan, tren bulanan, dan feedback pengunjung"
                 mobileFullWidth={false}
                 bodyClassName="p-6 md:p-8"
+                additionalButton={
+                    <Button
+                        href="/visitor/reports/export"
+                        variant="primary"
+                        label="Cetak Excel"
+                        icon={<FileSpreadsheet className="size-4" />}
+                        target="_blank"
+                    />
+                }
             >
                 {/* Tabs */}
                 <div className="mb-8 flex gap-6 border-b border-slate-200 dark:border-slate-700">

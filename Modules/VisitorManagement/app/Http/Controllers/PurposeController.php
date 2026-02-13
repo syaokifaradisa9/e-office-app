@@ -145,4 +145,15 @@ class PurposeController extends Controller
 
         return back()->with('success', 'Status keperluan berhasil diubah.');
     }
+
+    public function printExcel()
+    {
+        $user = auth()->user();
+        
+        if (!$user->hasPermissionTo(VisitorUserPermission::ViewMaster->value)) {
+            abort(403);
+        }
+
+        return $this->purposeService->exportExcel();
+    }
 }

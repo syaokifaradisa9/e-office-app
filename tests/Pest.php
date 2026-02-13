@@ -21,7 +21,9 @@ pest()->extend(Tests\TestCase::class)
         '../Modules/Inventory/tests/Feature', 
         '../Modules/Inventory/tests/Unit',
         '../Modules/Archieve/tests/Feature',
-        '../Modules/Archieve/tests/Unit'
+        '../Modules/Archieve/tests/Unit',
+        '../Modules/VisitorManagement/tests/Feature',
+        '../Modules/VisitorManagement/tests/Unit'
     );
 
 /*

@@ -142,4 +142,14 @@ class FeedbackQuestionController extends Controller
 
         return back()->with('success', 'Status pertanyaan berhasil diubah.');
     }
+    public function printExcel()
+    {
+        $user = auth()->user();
+        
+        if (!$user->hasPermissionTo(VisitorUserPermission::ViewFeedbackQuestion->value)) {
+            abort(403);
+        }
+
+        return $this->feedbackQuestionService->exportExcel();
+    }
 }

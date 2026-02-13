@@ -50,4 +50,27 @@ class FeedbackQuestionService
             'is_active' => !$question->is_active
         ]);
     }
+    public function exportExcel()
+    {
+        $data = $this->feedbackQuestionRepository->getDatatableQuery([])->get();
+
+        return response()->streamDownload(function () use ($data) {
+            $writer = new \OpenSpout\Writer\XLSX\Writer();
+            $writer->openToFile('php://output');
+
+            $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues([
+                'Pertanyaan',
+                'Status'
+            ]));
+
+            foreach ($data as $item) {
+                $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues([
+                    $item->question,
+                    $item->is_active ? 'Aktif' : 'Tidak Aktif'
+                ]));
+            }
+
+            $writer->close();
+        }, 'Master_Pertanyaan_Feedback_' . date('Ymd_His') . '.xlsx');
+    }
 }

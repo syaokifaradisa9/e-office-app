@@ -16,6 +16,11 @@ class Visitor extends Model
 {
     use HasFactory;
 
+    protected static function newFactory()
+    {
+        return \Modules\VisitorManagement\Database\Factories\VisitorFactory::new();
+    }
+
     protected $fillable = [
         'visitor_name',
         'phone_number',

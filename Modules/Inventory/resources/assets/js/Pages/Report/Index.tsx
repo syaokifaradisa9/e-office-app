@@ -194,7 +194,7 @@ export default function ReportIndex() {
                 bodyClassName="p-6 md:p-8"
                 additionalButton={
                     <Button
-                        href="/inventory/report/print-excel"
+                        href="/inventory/reports/print-excel"
                         className="w-full md:w-auto"
                         label="Export Excel"
                         icon={<FileSpreadsheet className="size-4" />}

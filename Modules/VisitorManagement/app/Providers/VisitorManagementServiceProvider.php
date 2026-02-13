@@ -36,6 +36,26 @@ class VisitorManagementServiceProvider extends ServiceProvider
     {
         $this->app->register(EventServiceProvider::class);
         $this->app->register(RouteServiceProvider::class);
+
+        $this->app->singleton(
+            \Modules\VisitorManagement\Repositories\Purpose\PurposeRepository::class,
+            \Modules\VisitorManagement\Repositories\Purpose\EloquentPurposeRepository::class
+        );
+
+        $this->app->singleton(
+            \Modules\VisitorManagement\Repositories\Visitor\VisitorRepository::class,
+            \Modules\VisitorManagement\Repositories\Visitor\EloquentVisitorRepository::class
+        );
+
+        $this->app->singleton(
+            \Modules\VisitorManagement\Repositories\Feedback\VisitorFeedbackRepository::class,
+            \Modules\VisitorManagement\Repositories\Feedback\EloquentVisitorFeedbackRepository::class
+        );
+
+        $this->app->singleton(
+            \Modules\VisitorManagement\Repositories\FeedbackQuestion\FeedbackQuestionRepository::class,
+            \Modules\VisitorManagement\Repositories\FeedbackQuestion\EloquentFeedbackQuestionRepository::class
+        );
     }
 
     /**

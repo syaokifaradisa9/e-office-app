@@ -26,4 +26,13 @@ class VisitorReportController extends Controller
             'reportData' => $reportData,
         ]);
     }
+
+    public function export()
+    {
+        if (!auth()->user()->can(VisitorUserPermission::ViewReport->value)) {
+            abort(403);
+        }
+
+        return $this->reportService->exportExcel();
+    }
 }

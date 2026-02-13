@@ -214,8 +214,13 @@ class EloquentVisitorRepository implements VisitorRepository
 
     public function getDetailedMonthlyTrend(int $year): array
     {
+        $driver = config('database.default');
+        $monthFormat = $driver === 'sqlite' 
+            ? "strftime('%Y-%m', check_in_at)" 
+            : "DATE_FORMAT(check_in_at, '%Y-%m')";
+
         return Visitor::select(
-                DB::raw("DATE_FORMAT(check_in_at, '%Y-%m') as month"),
+                DB::raw("$monthFormat as month"),
                 DB::raw('count(*) as total_visitors'),
                 DB::raw("SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed"),
                 DB::raw("SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected")
@@ -238,13 +243,16 @@ class EloquentVisitorRepository implements VisitorRepository
 
     public function getPeakHours(int $year): array
     {
+        $driver = config('database.default');
+        $hourFunc = $driver === 'sqlite' ? "strftime('%H', check_in_at)" : "HOUR(check_in_at)";
+
         return Visitor::select(
-                DB::raw("HOUR(check_in_at) as hour"),
+                DB::raw("$hourFunc as hour"),
                 DB::raw('count(*) as count')
             )
             ->whereYear('check_in_at', $year)
-            ->whereRaw('HOUR(check_in_at) >= 6')
-            ->whereRaw('HOUR(check_in_at) <= 18')
+            ->whereRaw("$hourFunc >= 6")
+            ->whereRaw("$hourFunc <= 18")
             ->groupBy('hour')
             ->orderBy('hour')
             ->pluck('count', 'hour')
@@ -253,8 +261,15 @@ class EloquentVisitorRepository implements VisitorRepository
 
     public function getBusiestDays(int $year): array
     {
+        $driver = config('database.default');
+        // MySQL: 1 (Sun) - 7 (Sat)
+        // SQLite: 0 (Sun) - 6 (Sat)
+        $dayFunc = $driver === 'sqlite' 
+            ? "(strftime('%w', check_in_at) + 1)" 
+            : "DAYOFWEEK(check_in_at)";
+
         return Visitor::select(
-                DB::raw('DAYOFWEEK(check_in_at) as day_num'),
+                DB::raw("$dayFunc as day_num"),
                 DB::raw('count(*) as count')
             )
             ->whereYear('check_in_at', $year)
@@ -279,9 +294,14 @@ class EloquentVisitorRepository implements VisitorRepository
 
     public function getAverageDuration(int $year): int
     {
+        $driver = config('database.default');
+        $durationSql = $driver === 'sqlite'
+            ? "(julianday(check_out_at) - julianday(check_in_at)) * 1440"
+            : "TIMESTAMPDIFF(MINUTE, check_in_at, check_out_at)";
+
         return (int) (Visitor::whereYear('check_in_at', $year)
             ->whereNotNull('check_out_at')
-            ->selectRaw('AVG(TIMESTAMPDIFF(MINUTE, check_in_at, check_out_at)) as avg_duration')
+            ->selectRaw("AVG($durationSql) as avg_duration")
             ->value('avg_duration') ?? 0);
     }
 

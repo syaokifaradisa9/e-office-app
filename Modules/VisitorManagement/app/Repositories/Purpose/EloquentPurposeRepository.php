@@ -53,6 +53,10 @@ class EloquentPurposeRepository implements PurposeRepository
             $query->where('name', 'like', '%' . $params['name'] . '%');
         }
 
+        if (isset($params['description']) && !empty($params['description'])) {
+            $query->where('description', 'like', '%' . $params['description'] . '%');
+        }
+
         if (isset($params['status']) && !empty($params['status'])) {
             $query->where('is_active', $params['status'] === 'active');
         }
