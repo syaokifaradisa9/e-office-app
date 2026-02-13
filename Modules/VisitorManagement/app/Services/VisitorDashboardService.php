@@ -83,4 +83,20 @@ class VisitorDashboardService
             ];
         })->toArray();
     }
+
+    public function getWeeklyTrend(): array
+    {
+        $last7Days = collect(range(6, 0))->map(function ($days) {
+            return Carbon::today()->subDays($days)->format('Y-m-d');
+        });
+
+        $data = $this->visitorRepository->getWeeklyTrendData(7);
+
+        return $last7Days->map(function ($date) use ($data) {
+            return [
+                'day' => Carbon::parse($date)->format('D'),
+                'count' => $data[$date] ?? 0,
+            ];
+        })->toArray();
+    }
 }

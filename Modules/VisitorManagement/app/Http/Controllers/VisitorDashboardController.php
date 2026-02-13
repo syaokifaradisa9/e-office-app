@@ -15,7 +15,9 @@ class VisitorDashboardController extends Controller
 
     public function index()
     {
-        $this->authorize(VisitorUserPermission::ViewDashboard->value);
+        if (!auth()->user()->can(VisitorUserPermission::ViewDashboard->value)) {
+            abort(403);
+        }
 
         return Inertia::render('VisitorManagement/Visitor/Dashboard', [
             'stats' => $this->dashboardService->getStatistics(),

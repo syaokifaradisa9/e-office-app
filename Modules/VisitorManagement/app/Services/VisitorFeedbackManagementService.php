@@ -22,9 +22,37 @@ class VisitorFeedbackManagementService
             });
         }
 
-        $results = $query->orderBy('is_read', 'asc')
-            ->orderBy('created_at', 'desc')
-            ->paginate($request->limit ?? 10)
+        // Footer search: visitor_name
+        if ($request->has('visitor_name') && $request->visitor_name != '') {
+            $query->whereHas('visitor', function($q) use ($request) {
+                $q->where('visitor_name', 'like', '%' . $request->visitor_name . '%');
+            });
+        }
+
+        // Footer search: status (read/unread)
+        if ($request->has('status') && $request->status != '') {
+            $isRead = ($request->status === 'read' || $request->status === '1' || $request->status === 'true');
+            $query->where('is_read', $isRead);
+        }
+
+        // Sort
+        if ($request->has('sort_by') && $request->has('sort_direction')) {
+            $sortBy = $request->sort_by;
+            $direction = $request->sort_direction;
+            
+            if ($sortBy === 'visitor_name') {
+                $query->join('visitors', 'visitor_feedbacks.visitor_id', '=', 'visitors.id')
+                    ->orderBy('visitors.visitor_name', $direction)
+                    ->select('visitor_feedbacks.*');
+            } else {
+                $query->orderBy($sortBy, $direction);
+            }
+        } else {
+            $query->orderBy('is_read', 'asc')
+                ->orderBy('created_at', 'desc');
+        }
+
+        $results = $query->paginate($request->limit ?? 10)
             ->through(function($feedback) {
                 return [
                     'id' => $feedback->id,

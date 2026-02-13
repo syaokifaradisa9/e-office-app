@@ -6,7 +6,6 @@ enum VisitorUserPermission: string
 {
     case ViewData = 'lihat_data_pengunjung';
     case ConfirmVisit = 'konfirmasi_kunjungan';
-    case ViewFeedback = 'lihat_ulasan_pengunjung';
     case ViewReport = 'lihat_laporan_pengunjung';
     case ViewDashboard = 'lihat_dashboard_pengunjung';
     case ViewMaster = 'lihat_master_manajemen_pengunjung';

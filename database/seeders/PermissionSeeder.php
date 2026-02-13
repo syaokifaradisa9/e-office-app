@@ -53,10 +53,6 @@ class PermissionSeeder extends Seeder
             'lihat_laporan_arsip_divisi',
             'lihat_laporan_arsip_keseluruhan',
 
-            // Archieve Document Permissions
-            'lihat_arsip_dokumen',
-            'kelola_arsip_dokumen',
-            'cari_arsip_dokumen',
         ];
 
         foreach ($permissions as $permission) {

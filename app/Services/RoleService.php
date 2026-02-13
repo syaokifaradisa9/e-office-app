@@ -149,7 +149,7 @@ class RoleService
             'manajemen_kunjungan' => [
                 'module' => 'Pengunjung',
                 'label' => 'Manajemen Sistem Kunjungan',
-                'keywords' => ['lihat_data_pengunjung', 'konfirmasi_kunjungan', 'lihat_ulasan_pengunjung', 'lihat_laporan_pengunjung', 'lihat_dashboard_pengunjung', 'buat_undangan_tamu'],
+                'keywords' => ['lihat_data_pengunjung', 'konfirmasi_kunjungan', 'lihat_laporan_pengunjung', 'lihat_dashboard_pengunjung', 'buat_undangan_tamu'],
             ],
             'pertanyaan_feedback' => [
                 'module' => 'Pengunjung',

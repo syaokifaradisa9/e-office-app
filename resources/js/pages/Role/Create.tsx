@@ -257,7 +257,6 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
             // Visitor Management
             lihat_data_pengunjung: 'Lihat Data Pengunjung',
             konfirmasi_kunjungan: 'Konfirmasi Kunjungan',
-            lihat_ulasan_pengunjung: 'Lihat Ulasan Pengunjung',
             lihat_laporan_pengunjung: 'Lihat Laporan Pengunjung',
             lihat_dashboard_pengunjung: 'Lihat Dashboard Pengunjung',
             lihat_master_manajemen_pengunjung: 'Lihat Data Keperluan Kunjungan',
