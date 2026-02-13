@@ -22,7 +22,10 @@ beforeEach(function () {
 
 describe('CategoryItemService', function () {
     
-    it('dapat membuat kategori baru dengan data valid', function () {
+    /**
+     * Memastikan service dapat membuat kategori baru jika diberikan data DTO yang valid.
+     */
+    it('can create a new category with valid data', function () {
         // Arrange
         $dto = new StoreCategoryItemDTO(
             name: 'Kategori Test',
@@ -57,7 +60,10 @@ describe('CategoryItemService', function () {
         expect($result->name)->toBe('Kategori Test');
     });
     
-    it('dapat mengupdate kategori yang sudah ada', function () {
+    /**
+     * Memastikan service dapat memperbarui data kategori yang sudah ada melalui repository.
+     */
+    it('can update an existing category', function () {
         // Arrange
         $existingCategory = new CategoryItem([
             'id' => 1,
@@ -99,7 +105,10 @@ describe('CategoryItemService', function () {
         expect($result->is_active)->toBeFalse();
     });
     
-    it('dapat menghapus kategori', function () {
+    /**
+     * Memastikan service dapat menghapus data kategori melalui repository.
+     */
+    it('can delete a category', function () {
         // Arrange
         $category = new CategoryItem([
             'id' => 1,
@@ -123,7 +132,10 @@ describe('CategoryItemService', function () {
         expect($result)->toBeTrue();
     });
     
-    it('cache ter-invalidasi setelah store', function () {
+    /**
+     * Memastikan cache kategori aktif dihapus (invalidasi) setelah proses penyimpanan data baru.
+     */
+    it('invalidates cache after storing a new category', function () {
         // Arrange
         Cache::put('inventory_categories_active', collect(['cached data']), 3600);
         
@@ -147,7 +159,10 @@ describe('CategoryItemService', function () {
         expect(Cache::has('inventory_categories_active'))->toBeFalse();
     });
     
-    it('cache ter-invalidasi setelah update', function () {
+    /**
+     * Memastikan cache kategori aktif dihapus setelah proses pembaruan data.
+     */
+    it('invalidates cache after updating a category', function () {
         // Arrange
         Cache::put('inventory_categories_active', collect(['cached data']), 3600);
         
@@ -166,7 +181,10 @@ describe('CategoryItemService', function () {
         expect(Cache::has('inventory_categories_active'))->toBeFalse();
     });
     
-    it('cache ter-invalidasi setelah delete', function () {
+    /**
+     * Memastikan cache kategori aktif dihapus setelah proses penghapusan data.
+     */
+    it('invalidates cache after deleting a category', function () {
         // Arrange
         Cache::put('inventory_categories_active', collect(['cached data']), 3600);
         
@@ -184,7 +202,10 @@ describe('CategoryItemService', function () {
         expect(Cache::has('inventory_categories_active'))->toBeFalse();
     });
     
-    it('mengembalikan semua kategori aktif dengan benar', function () {
+    /**
+     * Memastikan service mengembalikan koleksi kategori yang berstatus aktif dengan benar.
+     */
+    it('returns all active categories correctly', function () {
         // Arrange
         $categories = new EloquentCollection([
             new CategoryItem(['id' => 1, 'name' => 'Cat A', 'is_active' => true]),
@@ -206,7 +227,10 @@ describe('CategoryItemService', function () {
         expect($result->first()->name)->toBe('Cat A');
     });
     
-    it('cache kategori aktif setelah dipanggil pertama kali', function () {
+    /**
+     * Memastikan data kategori aktif disimpan di cache guna mengoptimalkan performa pada pemanggilan berikutnya.
+     */
+    it('caches active categories after the first call', function () {
         // Arrange
         $categories = new EloquentCollection([
             new CategoryItem(['id' => 1, 'name' => 'Cached', 'is_active' => true]),
@@ -231,7 +255,10 @@ describe('CategoryItemService', function () {
 
 describe('StoreCategoryItemDTO', function () {
     
-    it('dapat mentransformasi ke model payload dengan benar', function () {
+    /**
+     * Memastikan DTO dapat mengonversi properti class menjadi array payload untuk model Eloquent.
+     */
+    it('transforms to model payload correctly', function () {
         // Arrange
         $dto = new StoreCategoryItemDTO(
             name: 'Test Category',
@@ -250,7 +277,10 @@ describe('StoreCategoryItemDTO', function () {
         ]);
     });
     
-    it('dapat menangani description null', function () {
+    /**
+     * Memastikan DTO menangani input deskripsi yang bernilai null dengan benar.
+     */
+    it('handles null description correctly', function () {
         // Arrange
         $dto = new StoreCategoryItemDTO(
             name: 'No Description',

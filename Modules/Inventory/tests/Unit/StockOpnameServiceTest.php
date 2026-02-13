@@ -49,7 +49,10 @@ beforeEach(function () {
 
 describe('getItemsForOpname', function () {
     
-    it('mengembalikan item gudang jika division_id null', function () {
+    /**
+     * Memastikan service mengembalikan daftar barang dari gudang utama jika division_id bernilai null.
+     */
+    it('returns warehouse items if division_id is null', function () {
         $user = User::factory()->create();
         
         $items = $this->service->getItemsForOpname($user, null);
@@ -58,7 +61,10 @@ describe('getItemsForOpname', function () {
         expect($items->first()->division_id)->toBeNull();
     });
     
-    it('mengembalikan item divisi jika division_id diberikan', function () {
+    /**
+     * Memastikan service mengembalikan daftar barang dari divisi tertentu jika ID divisi diberikan.
+     */
+    it('returns division items if division_id is provided', function () {
         $user = User::factory()->create(['division_id' => $this->division->id]);
         
         $items = $this->service->getItemsForOpname($user, $this->division->id);
@@ -73,7 +79,10 @@ describe('getItemsForOpname', function () {
 
 describe('initializeOpname', function () {
     
-    it('dapat membuat stock opname gudang dengan status Pending', function () {
+    /**
+     * Memastikan inisialisasi stock opname gudang berhasil dan status awal adalah 'Pending'.
+     */
+    it('can initialize warehouse stock opname with Pending status', function () {
         $user = User::factory()->create();
         
         $dto = new StockOpnameDTO(
@@ -91,7 +100,10 @@ describe('initializeOpname', function () {
         expect($opname->status)->toBe(StockOpnameStatus::Pending);
     });
     
-    it('gagal jika masih ada opname aktif di gudang', function () {
+    /**
+     * Memastikan sistem menolak inisialisasi jika masih terdapat proses opname yang belum selesai di gudang.
+     */
+    it('fails to initialize if an active opname already exists in the warehouse', function () {
         $user = User::factory()->create();
         
         StockOpname::create([
@@ -118,7 +130,10 @@ describe('initializeOpname', function () {
 
 describe('savePhysicalStock draft', function () {
     
-    it('menyimpan sebagai draft dengan status Process', function () {
+    /**
+     * Memastikan data stok fisik dapat disimpan sebagai draf dengan status proses.
+     */
+    it('successfully saves physical stock as a draft with Process status', function () {
         $user = User::factory()->create();
         
         $opname = StockOpname::create([
@@ -149,7 +164,10 @@ describe('savePhysicalStock draft', function () {
 
 describe('savePhysicalStock confirm', function () {
     
-    it('konfirmasi mengubah status ke Stock Opname', function () {
+    /**
+     * Memastikan aksi konfirmasi berhasil mengubah status proses menjadi 'Stock Opname'.
+     */
+    it('changes status to Stock Opname upon confirmation', function () {
         $user = User::factory()->create();
         
         $opname = StockOpname::create([
@@ -171,7 +189,10 @@ describe('savePhysicalStock confirm', function () {
         expect($result->status)->toBe(StockOpnameStatus::StockOpname);
     });
 
-    it('mengatur physical_stock ke 0 jika kosong saat konfirmasi', function () {
+    /**
+     * Memastikan field physical_stock otomatis diisi 0 jika dibiarkan kosong saat konfirmasi.
+     */
+    it('sets physical_stock to 0 if left empty during confirmation', function () {
         $user = User::factory()->create();
         
         $opname = StockOpname::create([
@@ -202,7 +223,10 @@ describe('savePhysicalStock confirm', function () {
 
 describe('isMenuHidden', function () {
     
-    it('true jika ada opname aktif di gudang utama', function () {
+    /**
+     * Memastikan menu opname disembunyikan jika sedang ada proses opname aktif di gudang utama.
+     */
+    it('returns true if an active opname exists in the main warehouse', function () {
         $user = User::factory()->create();
         
         StockOpname::create([
@@ -215,7 +239,10 @@ describe('isMenuHidden', function () {
         expect($this->service->isMenuHidden($this->division->id))->toBeTrue();
     });
 
-    it('false jika status sudah Stock Opname', function () {
+    /**
+     * Memastikan menu tidak disembunyikan jika status opname sudah mencapai tahap akhir 'Stock Opname'.
+     */
+    it('returns false if opname status is already Stock Opname', function () {
         $user = User::factory()->create();
         
         StockOpname::create([
@@ -235,7 +262,10 @@ describe('isMenuHidden', function () {
 
 describe('canManage dan canView', function () {
     
-    it('canProcess true untuk opname Pending', function () {
+    /**
+     * Memastikan user dengan izin yang sesuai dapat memproses opname yang berstatus 'Pending'.
+     */
+    it('allows processing for Pending opname status', function () {
         $role = Role::firstOrCreate(['name' => 'Processor', 'guard_name' => 'web']);
         $role->syncPermissions([InventoryPermission::ProcessStockOpname->value]);
         
@@ -252,7 +282,10 @@ describe('canManage dan canView', function () {
         expect($this->service->canProcess($opname, $user))->toBeTrue();
     });
     
-    it('canProcess true untuk opname Process', function () {
+    /**
+     * Memastikan user dengan izin yang sesuai dapat memproses opname yang berstatus 'Process'.
+     */
+    it('allows processing for Process opname status', function () {
         $role = Role::firstOrCreate(['name' => 'Processor', 'guard_name' => 'web']);
         $role->syncPermissions([InventoryPermission::ProcessStockOpname->value]);
         
@@ -269,7 +302,10 @@ describe('canManage dan canView', function () {
         expect($this->service->canProcess($opname, $user))->toBeTrue();
     });
     
-    it('canFinalize true untuk opname Stock Opname', function () {
+    /**
+     * Memastikan user dengan izin finalisasi dapat menyelesaikan opname yang berstatus 'Stock Opname'.
+     */
+    it('allows finalization for Stock Opname status', function () {
         $role = Role::firstOrCreate(['name' => 'Finalizer', 'guard_name' => 'web']);
         $role->syncPermissions([InventoryPermission::FinalizeStockOpname->value]);
         

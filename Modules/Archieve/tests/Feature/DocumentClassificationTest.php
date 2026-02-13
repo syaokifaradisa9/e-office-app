@@ -23,7 +23,10 @@ beforeEach(function () {
 });
 
 describe('Document Classification Access Control', function () {
-    it('allows users with lihat_klasifikasi_arsip to access index, datatable, and print', function () {
+    /**
+     * Memastikan user dengan izin 'lihat_klasifikasi_arsip' dapat mengakses index, datatable, dan fitur print.
+     */
+    it('allows users with view_klasifikasi_arsip to access index, datatable, and print', function () {
         $user = User::factory()->create();
         $user->assignRole($this->viewRole);
 
@@ -32,7 +35,10 @@ describe('Document Classification Access Control', function () {
         $this->actingAs($user)->get('/archieve/classifications/print/excel')->assertStatus(200);
     });
 
-    it('denies users without kelola_klasifikasi_arsip from accessing management routes', function () {
+    /**
+     * Memastikan user tanpa izin 'kelola_klasifikasi_arsip' dilarang mengakses route manajemen (create, edit, delete).
+     */
+    it('denies users without manage_klasifikasi_arsip from accessing management routes', function () {
         $user = User::factory()->create();
         $user->assignRole($this->viewRole);
 
@@ -45,7 +51,10 @@ describe('Document Classification Access Control', function () {
         $this->actingAs($user)->delete("/archieve/classifications/{$classification->id}")->assertStatus(403);
     });
 
-    it('allows users with kelola_klasifikasi_arsip to access management routes', function () {
+    /**
+     * Memastikan user dengan izin 'kelola_klasifikasi_arsip' diperbolehkan mengakses route manajemen.
+     */
+    it('allows users with manage_klasifikasi_arsip to access management routes', function () {
         $user = User::factory()->create();
         $user->assignRole($this->manageRole);
 
@@ -57,6 +66,9 @@ describe('Document Classification Access Control', function () {
 });
 
 describe('Document Classification Datatable Features', function () {
+    /**
+     * Menguji fitur pencarian datatable baik secara global maupun pada kolom spesifik (kode/nama/deskripsi).
+     */
     it('can search globally and individually', function () {
         $user = User::factory()->create();
         $user->assignRole($this->viewRole);
@@ -89,6 +101,9 @@ describe('Document Classification Datatable Features', function () {
         expect($response->json('data.0.name'))->toBe('Legal');
     });
 
+    /**
+     * Memastikan fitur pagination dan limitasi jumlah data pada datatable bekerja dengan benar.
+     */
     it('can paginate and limit results', function () {
         $user = User::factory()->create();
         $user->assignRole($this->viewRole);
@@ -105,6 +120,9 @@ describe('Document Classification Datatable Features', function () {
 });
 
 describe('Document Classification Print Functionality', function () {
+    /**
+     * Memastikan fitur cetak (print) menghasilkan file excel (.xlsx) dengan header yang sesuai.
+     */
     it('returns xlsx file for printing classifications', function () {
         $user = User::factory()->create();
         $user->assignRole($this->viewRole);
@@ -117,6 +135,9 @@ describe('Document Classification Print Functionality', function () {
 });
 
 describe('Document Classification Form Validation', function () {
+    /**
+     * Memastikan field 'nama' dan 'kode' wajib diisi saat membuat klasifikasi baru.
+     */
     it('requires name and code when creating', function () {
         $user = User::factory()->create();
         $user->assignRole($this->manageRole);
@@ -129,6 +150,9 @@ describe('Document Classification Form Validation', function () {
         $response->assertSessionHasErrors(['name', 'code']);
     });
 
+    /**
+     * Memastikan 'kode' klasifikasi harus unik dan tidak boleh duplikat di database.
+     */
     it('requires code to be unique', function () {
         $user = User::factory()->create();
         $user->assignRole($this->manageRole);

@@ -20,7 +20,10 @@ describe('ItemService', function () {
         $this->category = CategoryItem::factory()->create();
     });
     
-    it('dapat mengeluarkan stok dengan jumlah valid', function () {
+    /**
+     * Memastikan service dapat mengurangi stok dengan jumlah pengeluaran yang valid.
+     */
+    it('can issue stock with an authorized and valid quantity', function () {
         // Arrange
         $item = Item::factory()->create([
             'category_id' => $this->category->id,
@@ -35,7 +38,10 @@ describe('ItemService', function () {
         expect($item->stock)->toBe(90);
     });
     
-    it('stok berkurang setelah issue berhasil', function () {
+    /**
+     * Memastikan jumlah stok barang di database benar-benar berkurang setelah proses issue berhasil.
+     */
+    it('reduces stock after a successful issue process', function () {
         // Arrange
         $item = Item::factory()->create([
             'category_id' => $this->category->id,
@@ -52,7 +58,10 @@ describe('ItemService', function () {
         expect($item->stock)->toBe($initialStock - $quantityToIssue);
     });
     
-    it('membuat transaksi setelah issue stok', function () {
+    /**
+     * Memastikan catatan transaksi (item_transaction) dibuat secara otomatis setelah proses issue stok.
+     */
+    it('creates an item_transaction record after issuing stock', function () {
         // Arrange
         $item = Item::factory()->create([
             'category_id' => $this->category->id,
@@ -71,7 +80,10 @@ describe('ItemService', function () {
         expect($transaction->description)->toBe('Test transaksi');
     });
     
-    it('dapat mengeluarkan seluruh stok', function () {
+    /**
+     * Memastikan service dapat menangani pengeluaran seluruh stok yang tersedia hingga mencapai nol.
+     */
+    it('can issue the entire available stock correctly', function () {
         // Arrange
         $item = Item::factory()->create([
             'category_id' => $this->category->id,
@@ -86,7 +98,10 @@ describe('ItemService', function () {
         expect($item->stock)->toBe(0);
     });
     
-    it('dapat mengeluarkan stok berkali-kali', function () {
+    /**
+     * Memastikan service dapat menangani pengeluaran stok yang dilakukan beberapa kali secara berurutan.
+     */
+    it('can issue stock multiple times sequentially', function () {
         // Arrange
         $item = Item::factory()->create([
             'category_id' => $this->category->id,
@@ -111,7 +126,10 @@ describe('ItemService', function () {
         expect($transactions)->toBe(3);
     });
 
-    it('tidak dapat mengeluarkan stok melebihi jumlah yang tersedia', function () {
+    /**
+     * Memastikan service melempar Exception jika user mencoba mengeluarkan stok melebihi jumlah yang ada.
+     */
+    it('cannot issue more stock than what is currently available', function () {
         // Arrange
         $item = Item::factory()->create([
             'category_id' => $this->category->id,
@@ -126,7 +144,10 @@ describe('ItemService', function () {
         expect($item->stock)->toBe(50);
     });
 
-    it('tidak dapat mengeluarkan stok dengan jumlah nol atau negatif', function () {
+    /**
+     * Memastikan service melempar Exception jika user mencoba mengeluarkan stok dengan jumlah nol atau negatif.
+     */
+    it('cannot issue stock with zero or negative quantity', function () {
         // Arrange
         $item = Item::factory()->create([
             'category_id' => $this->category->id,

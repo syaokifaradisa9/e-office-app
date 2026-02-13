@@ -29,9 +29,12 @@ beforeEach(function () {
 // PERMISSION TESTS (EDIT, UPDATE, DELETE)
 // ============================================
 
-describe('Permission untuk Edit dan Delete', function () {
+describe('Edit and Delete Permission', function () {
     
-    it('menolak akses halaman edit tanpa permission kelola', function () {
+    /**
+     * Memastikan user hanya dengan izin 'lihat' ditolak saat mengakses halaman edit.
+     */
+    it('denies edit page access without manage permission', function () {
         // User hanya dengan permission lihat
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewCategory->value]);
         
@@ -42,7 +45,10 @@ describe('Permission untuk Edit dan Delete', function () {
         $response->assertForbidden();
     });
     
-    it('mengizinkan akses halaman edit dengan permission kelola', function () {
+    /**
+     * Memastikan user dengan izin 'kelola' dapat mengakses halaman edit.
+     */
+    it('allows edit page access with manage permission', function () {
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageCategory->value]);
         
         $category = CategoryItem::factory()->create();
@@ -52,7 +58,10 @@ describe('Permission untuk Edit dan Delete', function () {
         $response->assertOk();
     });
     
-    it('menolak menyimpan update tanpa permission kelola', function () {
+    /**
+     * Memastikan user tanpa izin 'kelola' tidak dapat menyimpan perubahan (update).
+     */
+    it('denies storing update without manage permission', function () {
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewCategory->value]);
         
         $category = CategoryItem::factory()->create();
@@ -67,7 +76,10 @@ describe('Permission untuk Edit dan Delete', function () {
         $response->assertForbidden();
     });
     
-    it('mengizinkan menyimpan update dengan permission kelola', function () {
+    /**
+     * Memastikan user dengan izin 'kelola' dapat menyimpan perubahan (update).
+     */
+    it('allows storing update with manage permission', function () {
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageCategory->value]);
         
         $category = CategoryItem::factory()->create(['name' => 'Old Name']);
@@ -87,7 +99,10 @@ describe('Permission untuk Edit dan Delete', function () {
         ]);
     });
     
-    it('menolak menghapus kategori tanpa permission kelola', function () {
+    /**
+     * Memastikan user tanpa izin 'kelola' ditolak saat menghapus kategori.
+     */
+    it('denies category deletion without manage permission', function () {
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewCategory->value]);
         
         $category = CategoryItem::factory()->create();
@@ -98,7 +113,10 @@ describe('Permission untuk Edit dan Delete', function () {
         $response->assertForbidden();
     });
     
-    it('mengizinkan menghapus kategori dengan permission kelola', function () {
+    /**
+     * Memastikan user dengan izin 'kelola' dapat menghapus kategori.
+     */
+    it('allows category deletion with manage permission', function () {
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageCategory->value]);
         
         $category = CategoryItem::factory()->create();
@@ -120,7 +138,10 @@ describe('Permission untuk Edit dan Delete', function () {
 
 describe('CRUD Operations', function () {
     
-    it('dapat membuat kategori dengan data valid', function () {
+    /**
+     * Mengetes pembuatan kategori baru dengan input data yang valid.
+     */
+    it('can create category with valid data', function () {
         // Note: Route is /store
         $response = $this->actingAs($this->testUser)->post('/inventory/categories/store', [
             'name' => 'Kategori Baru',
@@ -137,7 +158,10 @@ describe('CRUD Operations', function () {
         ]);
     });
     
-    it('gagal membuat kategori dengan nama duplikat', function () {
+    /**
+     * Memastikan sistem menolak pendaftaran kategori dengan nama yang sudah terpakai.
+     */
+    it('fails to create category with duplicate name', function () {
         // Buat kategori pertama
         CategoryItem::factory()->create(['name' => 'Kategori Existing']);
         
@@ -151,7 +175,10 @@ describe('CRUD Operations', function () {
         $response->assertSessionHasErrors('name');
     });
     
-    it('dapat mengupdate kategori yang ada', function () {
+    /**
+     * Memastikan kategori yang ada dapat diperbarui datanya.
+     */
+    it('can update an existing category', function () {
         $category = CategoryItem::factory()->create([
             'name' => 'Old Name',
             'description' => 'Old Description'
@@ -174,7 +201,10 @@ describe('CRUD Operations', function () {
         ]);
     });
     
-    it('dapat menghapus kategori yang tidak digunakan', function () {
+    /**
+     * Memastikan kategori yang belum berelasi dengan item dapat dihapus.
+     */
+    it('can delete an unused category', function () {
         $category = CategoryItem::factory()->create();
         
         // Note: Route is /{categoryItem}/delete
@@ -187,7 +217,10 @@ describe('CRUD Operations', function () {
         ]);
     });
     
-    it('gagal menghapus kategori yang masih digunakan oleh barang', function () {
+    /**
+     * Memastikan integritas data: kategori yang masih punya item tidak boleh dihapus.
+     */
+    it('fails to delete category that is still used by items', function () {
         $category = CategoryItem::factory()->create();
         
         // Buat item yang menggunakan kategori ini
@@ -208,9 +241,12 @@ describe('CRUD Operations', function () {
 // VALIDATION
 // ============================================
 
-describe('Validasi', function () {
+describe('Validation', function () {
     
-    it('gagal membuat kategori tanpa nama (required)', function () {
+    /**
+     * Memastikan field 'name' wajib diisi (required).
+     */
+    it('fails to create category without name', function () {
         // Note: Route is /store
         $response = $this->actingAs($this->testUser)->post('/inventory/categories/store', [
             'name' => '',
@@ -221,7 +257,10 @@ describe('Validasi', function () {
         $response->assertSessionHasErrors('name');
     });
     
-    it('gagal membuat kategori dengan nama melebihi batas karakter', function () {
+    /**
+     * Memastikan field 'name' tidak boleh melebihi batas karakter database.
+     */
+    it('fails to create category with name exceeding character limit', function () {
         $longName = str_repeat('a', 256); // Assuming max is 255
         
         // Note: Route is /store
@@ -234,7 +273,10 @@ describe('Validasi', function () {
         $response->assertSessionHasErrors('name');
     });
     
-    it('gagal membuat kategori dengan nama yang sudah ada (unique)', function () {
+    /**
+     * Memastikan keunikan nama kategori (unique validation).
+     */
+    it('fails to create category with an already existing name', function () {
         CategoryItem::factory()->create(['name' => 'Existing Category']);
         
         // Note: Route is /store
@@ -247,7 +289,10 @@ describe('Validasi', function () {
         $response->assertSessionHasErrors('name');
     });
     
-    it('dapat membuat kategori tanpa deskripsi (optional)', function () {
+    /**
+     * Memastikan field 'description' bersifat opsional.
+     */
+    it('can create category without description', function () {
         // Note: Route is /store
         $response = $this->actingAs($this->testUser)->post('/inventory/categories/store', [
             'name' => 'Kategori Tanpa Deskripsi',
@@ -269,7 +314,10 @@ describe('Validasi', function () {
 
 describe('Datatable', function () {
     
-    it('pagination berfungsi dengan benar', function () {
+    /**
+     * Memastikan fitur pagination datatable bekerja (current page, total data, etc).
+     */
+    it('handles pagination correctly', function () {
         // Buat 25 kategori
         CategoryItem::factory()->count(25)->create();
         
@@ -291,7 +339,10 @@ describe('Datatable', function () {
         expect(count($data['data']))->toBeGreaterThan(0);
     });
     
-    it('pencarian/filter berfungsi dengan benar', function () {
+    /**
+     * Memastikan filter pencarian pada datatable mengembalikan data yang relevan.
+     */
+    it('handles searching/filtering correctly', function () {
         CategoryItem::factory()->create(['name' => 'Elektronik']);
         CategoryItem::factory()->create(['name' => 'Furniture']);
         CategoryItem::factory()->create(['name' => 'Alat Tulis']);
@@ -305,7 +356,10 @@ describe('Datatable', function () {
         expect($data['data'][0]['name'])->toBe('Elektronik');
     });
     
-    it('datatable mengembalikan data dengan benar', function () {
+    /**
+     * Memastikan request datatable tanpa filter mengembalikan seluruh data.
+     */
+    it('returns correct data structure from datatable', function () {
         CategoryItem::factory()->create(['name' => 'Zebra']);
         CategoryItem::factory()->create(['name' => 'Alpha']);
         CategoryItem::factory()->create(['name' => 'Beta']);
@@ -324,9 +378,12 @@ describe('Datatable', function () {
 // EXPORT EXCEL
 // ============================================
 
-describe('Export Excel', function () {
+describe('Excel Export', function () {
     
-    it('export mengembalikan file Excel yang valid', function () {
+    /**
+     * Memastikan file yang diunduh memiliki mime type Excel yang valid.
+     */
+    it('exports a valid Excel file', function () {
         CategoryItem::factory()->count(5)->create();
         
         $response = $this->actingAs($this->testUser)->get('/inventory/categories/print-excel');
@@ -335,7 +392,10 @@ describe('Export Excel', function () {
         $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     });
     
-    it('export menghormati permission lihat', function () {
+    /**
+     * Memastikan akses export ditolak jika user tidak punya izin 'lihat'.
+     */
+    it('respects view permission for export', function () {
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageCategory->value]); // Tanpa lihat
         
         CategoryItem::factory()->count(5)->create();

@@ -21,6 +21,9 @@ beforeEach(function () {
     }
 });
 
+/**
+ * Memastikan user yang memiliki izin dashboard gudang utama otomatis dialihkan ke halaman yang benar.
+ */
 it('redirects to main warehouse dashboard for authorized user', function () {
     $user = User::factory()->create();
     $user->givePermissionTo(InventoryPermission::ViewMainWarehouseDashboard->value);
@@ -30,6 +33,9 @@ it('redirects to main warehouse dashboard for authorized user', function () {
     $response->assertRedirect('/inventory/dashboard/main-warehouse');
 });
 
+/**
+ * Memastikan user yang memiliki izin dashboard gudang divisi otomatis dialihkan ke halaman yang benar.
+ */
 it('redirects to division warehouse dashboard for authorized user', function () {
     $division = Division::factory()->create();
     $user = User::factory()->create(['division_id' => $division->id]);
@@ -40,6 +46,9 @@ it('redirects to division warehouse dashboard for authorized user', function () 
     $response->assertRedirect('/inventory/dashboard/division-warehouse');
 });
 
+/**
+ * Memastikan akses ke halaman dashboard gudang utama berhasil bagi user berwenang.
+ */
 it('can access main warehouse dashboard', function () {
     $user = User::factory()->create();
     $user->givePermissionTo(InventoryPermission::ViewMainWarehouseDashboard->value);
@@ -50,6 +59,9 @@ it('can access main warehouse dashboard', function () {
     expect($response->inertiaPage()['component'])->toBe('Inventory/Dashboard/MainWarehouse');
 });
 
+/**
+ * Memastikan user tanpa izin 'lihat_dashboard_gudang_utama' dilarang mengakses halaman tsb.
+ */
 it('denies main warehouse dashboard for unauthorized user', function () {
     $user = User::factory()->create();
 
@@ -58,6 +70,9 @@ it('denies main warehouse dashboard for unauthorized user', function () {
     $response->assertForbidden();
 });
 
+/**
+ * Memastikan akses ke halaman dashboard gudang divisi berhasil bagi user berwenang.
+ */
 it('can access division warehouse dashboard', function () {
     $division = Division::factory()->create();
     $user = User::factory()->create(['division_id' => $division->id]);
@@ -69,6 +84,9 @@ it('can access division warehouse dashboard', function () {
     expect($response->inertiaPage()['component'])->toBe('Inventory/Dashboard/DivisionWarehouse');
 });
 
+/**
+ * Memastikan user tanpa izin 'lihat_dashboard_gudang_divisi' dilarang mengakses halaman tsb.
+ */
 it('denies division warehouse dashboard for unauthorized user', function () {
     $user = User::factory()->create();
 
@@ -77,6 +95,9 @@ it('denies division warehouse dashboard for unauthorized user', function () {
     $response->assertForbidden();
 });
 
+/**
+ * Memastikan daftar permintaan barang yang masih 'Pending' muncul pada dashboard gudang utama.
+ */
 it('shows pending orders on main warehouse dashboard', function () {
     $user = User::factory()->create();
     $user->givePermissionTo(InventoryPermission::ViewMainWarehouseDashboard->value);
@@ -97,6 +118,9 @@ it('shows pending orders on main warehouse dashboard', function () {
     expect($page['props'])->toHaveKey('statistics');
 });
 
+/**
+ * Memastikan daftar permintaan barang yang sudah 'Confirmed' muncul pada dashboard gudang utama.
+ */
 it('shows confirmed orders on main warehouse dashboard', function () {
     $user = User::factory()->create();
     $user->givePermissionTo(InventoryPermission::ViewMainWarehouseDashboard->value);
@@ -115,6 +139,9 @@ it('shows confirmed orders on main warehouse dashboard', function () {
     expect($response->inertiaPage()['props']['confirmedOrders'])->toHaveCount(1);
 });
 
+/**
+ * Memastikan daftar permintaan barang yang sudah 'Delivered' muncul pada dashboard gudang divisi.
+ */
 it('shows delivered orders on division warehouse dashboard', function () {
     $division = Division::factory()->create();
     $user = User::factory()->create(['division_id' => $division->id]);
@@ -133,6 +160,9 @@ it('shows delivered orders on division warehouse dashboard', function () {
     $response->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page->has('active_orders', 1));
 });
 
+/**
+ * Memastikan muncul pesan error informatif jika user mencoba akses dashboard divisi tapi belum masuk divisi manapun.
+ */
 it('shows error message for division user without division', function () {
     $user = User::factory()->create(['division_id' => null]);
     $user->givePermissionTo(InventoryPermission::ViewDivisionWarehouseDashboard->value);
@@ -143,6 +173,9 @@ it('shows error message for division user without division', function () {
     expect($response->inertiaPage()['props'])->toHaveKey('error');
 });
 
+/**
+ * Memastikan data pada dashboard divisi benar-benar terfilter hanya untuk divisi user yang bersangkutan.
+ */
 it('filters division dashboard by user division', function () {
     $division1 = Division::factory()->create();
     $division2 = Division::factory()->create();

@@ -35,163 +35,218 @@ beforeEach(function () {
 // PERMISSION TESTS
 // ============================================
 
-describe('Permission Akses Index', function () {
+describe('Index Access Permission', function () {
     
-    it('menolak akses index tanpa permission apapun', function () {
+    /**
+     * Memastikan user tanpa izin apapun ditolak akses ke indeks (403).
+     */
+    it('denies access to index without any permissions', function () {
+        // 1. Hapus semua izin dari role
         $this->testRole->syncPermissions([]);
         
+        // 2. Validasi penolakan akses (403)
         $response = $this->actingAs($this->testUser)->get('/inventory/items');
-        
         $response->assertForbidden();
     });
     
-    it('mengizinkan akses index dengan permission lihat', function () {
+    /**
+     * Memastikan staf dengan izin 'lihat_barang' dapat mengakses indeks.
+     */
+    it('allows index access with view permission', function () {
+        // 1. Berikan izin 'lihat_barang'
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewItem->value]);
         
+        // 2. Validasi akses OK (200)
         $response = $this->actingAs($this->testUser)->get('/inventory/items');
-        
         $response->assertOk();
     });
     
-    it('mengizinkan akses index dengan permission kelola', function () {
+    /**
+     * Memastikan staf dengan izin 'kelola_barang' dapat mengakses indeks.
+     */
+    it('allows index access with manage permission', function () {
+        // 1. Berikan izin 'kelola_barang'
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageItem->value]);
         
+        // 2. Validasi akses OK
         $response = $this->actingAs($this->testUser)->get('/inventory/items');
-        
         $response->assertOk();
     });
     
-    it('mengizinkan akses index dengan permission keluarkan_stok', function () {
+    /**
+     * Memastikan staf dengan izin 'keluarkan_stok' dapat mengakses indeks.
+     */
+    it('allows index access with issue stock permission', function () {
+        // 1. Berikan izin 'keluarkan_stok'
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::IssueItemGudang->value]);
         
+        // 2. Validasi akses OK
         $response = $this->actingAs($this->testUser)->get('/inventory/items');
-        
         $response->assertOk();
     });
 });
 
-describe('Permission CRUD', function () {
+describe('CRUD Permission', function () {
     
-    it('menolak akses halaman create tanpa permission kelola', function () {
+    /**
+     * Memastikan user hanya dengan izin lihat tidak bisa masuk ke halaman create.
+     */
+    it('denies create page access without manage permission', function () {
+        // 1. Berikan izin lihat (bukan kelola)
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewItem->value]);
         
+        // 2. Validasi penolakan akses create
         $response = $this->actingAs($this->testUser)->get('/inventory/items/create');
-        
         $response->assertForbidden();
     });
     
-    it('mengizinkan akses halaman create dengan permission kelola', function () {
+    /**
+     * Memastikan staf dengan izin kelola bisa masuk ke halaman create.
+     */
+    it('allows create page access with manage permission', function () {
+        // 1. Berikan izin kelola
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageItem->value]);
         
+        // 2. Validasi akses create OK
         $response = $this->actingAs($this->testUser)->get('/inventory/items/create');
-        
         $response->assertOk();
     });
     
-    it('menolak akses halaman edit tanpa permission kelola', function () {
+    /**
+     * Memastikan akses edit ditolak jika hanya punya izin lihat.
+     */
+    it('denies edit page access without manage permission', function () {
+        // 1. Persiapan izin lihat & data barang
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewItem->value]);
-        
         $item = Item::factory()->create(['category_id' => $this->category->id]);
         
+        // 2. Validasi penolakan akses edit
         $response = $this->actingAs($this->testUser)->get("/inventory/items/{$item->id}/edit");
-        
         $response->assertForbidden();
     });
     
-    it('mengizinkan akses halaman edit dengan permission kelola', function () {
+    /**
+     * Memastikan akses edit diizinkan dengan izin kelola.
+     */
+    it('allows edit page access with manage permission', function () {
+        // 1. Persiapan data dan izin kelola
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageItem->value]);
-        
         $item = Item::factory()->create(['category_id' => $this->category->id]);
         
+        // 2. Validasi akses edit OK
         $response = $this->actingAs($this->testUser)->get("/inventory/items/{$item->id}/edit");
-        
         $response->assertOk();
     });
     
-    it('menolak menyimpan update tanpa permission kelola', function () {
+    /**
+     * Memastikan request update ditolak tanpa izin kelola.
+     */
+    it('denies saving update without manage permission', function () {
+        // 1. Persiapan izin lihat dan aksi update
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewItem->value]);
-        
         $item = Item::factory()->create(['category_id' => $this->category->id]);
         
+        // 2. Validasi penolakan simpan update
         $response = $this->actingAs($this->testUser)->put("/inventory/items/{$item->id}/update", [
             'name' => 'Updated Name',
             'unit_of_measure' => 'pcs',
             'stock' => 10,
         ]);
-        
         $response->assertForbidden();
     });
     
-    it('menolak menghapus barang tanpa permission kelola', function () {
+    /**
+     * Memastikan penghapusan ditolak tanpa izin kelola.
+     */
+    it('denies deleting item without manage permission', function () {
+        // 1. Persiapan izin lihat dan data
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewItem->value]);
-        
         $item = Item::factory()->create(['category_id' => $this->category->id]);
         
+        // 2. Validasi penolakan hapus
         $response = $this->actingAs($this->testUser)->delete("/inventory/items/{$item->id}/delete");
-        
         $response->assertForbidden();
     });
     
-    it('mengizinkan menghapus barang dengan permission kelola', function () {
+    /**
+     * Memastikan penghapusan barang diizinkan dengan izin kelola.
+     */
+    it('allows deleting item with manage permission', function () {
+        // 1. Persiapan data dan izin kelola
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageItem->value]);
-        
         $item = Item::factory()->create(['category_id' => $this->category->id]);
         
+        // 2. Aksi hapus
         $response = $this->actingAs($this->testUser)->delete("/inventory/items/{$item->id}/delete");
         
+        // 3. Validasi redirect dan data hilang dari DB
         $response->assertRedirect();
-        
         $this->assertDatabaseMissing('items', ['id' => $item->id]);
     });
 });
 
-describe('Permission Issue Stock', function () {
+describe('Issue Stock Permission', function () {
     
-    it('menolak akses issue form tanpa permission keluarkan_stok', function () {
+    /**
+     * Memastikan akses ke form pengeluaran stok ditolak tanpa izin 'keluarkan_stok'.
+     */
+    it('denies issue form access without issue permission', function () {
+        // 1. Persiapan data
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewItem->value]);
-        
         $item = Item::factory()->create(['category_id' => $this->category->id, 'stock' => 100]);
         
+        // 2. Validasi penolakan akses form issue
         $response = $this->actingAs($this->testUser)->get("/inventory/items/{$item->id}/issue");
-        
         $response->assertForbidden();
     });
     
-    it('mengizinkan akses issue form dengan permission keluarkan_stok', function () {
+    /**
+     * Memastikan akses form pengeluaran stok diizinkan dengan izin yang sesuai.
+     */
+    it('allows issue form access with issue permission', function () {
+        // 1. Persiapan data dan izin issue
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::IssueItemGudang->value]);
-        
         $item = Item::factory()->create(['category_id' => $this->category->id, 'stock' => 100]);
         
+        // 2. Validasi akses OK
         $response = $this->actingAs($this->testUser)->get("/inventory/items/{$item->id}/issue");
-        
         $response->assertOk();
     });
     
-    it('menolak issue stok tanpa permission keluarkan_stok', function () {
+    /**
+     * Memastikan aksi pengeluaran stok ditolak jika tidak memiliki izin.
+     */
+    it('denies issuing stock without issue permission', function () {
+        // 1. Persiapan data tanpa izin issue
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewItem->value]);
-        
         $item = Item::factory()->create(['category_id' => $this->category->id, 'stock' => 100]);
         
+        // 2. Aksi issue
         $response = $this->actingAs($this->testUser)->post("/inventory/items/{$item->id}/issue", [
             'quantity' => 10,
             'description' => 'Test issue',
         ]);
         
+        // 3. Validasi penolakan
         $response->assertForbidden();
     });
     
-    it('mengizinkan issue stok dengan permission keluarkan_stok', function () {
+    /**
+     * Memastikan pengeluaran stok diizinkan dan memproses pengurangan jumlah stok.
+     */
+    it('allows issuing stock with issue permission', function () {
+        // 1. Persiapan data dan izin issue
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::IssueItemGudang->value]);
-        
         $item = Item::factory()->create(['category_id' => $this->category->id, 'stock' => 100]);
         
+        // 2. Aksi issue stok 10
         $response = $this->actingAs($this->testUser)->post("/inventory/items/{$item->id}/issue", [
             'quantity' => 10,
             'description' => 'Test issue',
         ]);
         
+        // 3. Validasi sukses, redirect, dan stok berkurang jadi 90
         $response->assertRedirect();
-        
         $item->refresh();
         expect($item->stock)->toBe(90);
     });
@@ -203,7 +258,11 @@ describe('Permission Issue Stock', function () {
 
 describe('CRUD Operations', function () {
     
-    it('dapat membuat barang dengan data valid', function () {
+    /**
+     * Memastikan pembuatan barang baru berhasil dengan data yang valid.
+     */
+    it('can create item with valid data', function () {
+        // 1. Aksi simpan barang baru
         $response = $this->actingAs($this->testUser)->post('/inventory/items/store', [
             'name' => 'Barang Baru',
             'category_id' => $this->category->id,
@@ -212,8 +271,8 @@ describe('CRUD Operations', function () {
             'description' => 'Deskripsi barang baru',
         ]);
         
+        // 2. Validasi redirect dan data tersimpan di DB
         $response->assertRedirect();
-        
         $this->assertDatabaseHas('items', [
             'name' => 'Barang Baru',
             'category_id' => $this->category->id,
@@ -222,13 +281,18 @@ describe('CRUD Operations', function () {
         ]);
     });
     
-    it('dapat mengupdate barang yang ada', function () {
+    /**
+     * Memastikan data barang dapat diperbarui.
+     */
+    it('can update existing item', function () {
+        // 1. Persiapan data awal
         $item = Item::factory()->create([
             'category_id' => $this->category->id,
             'name' => 'Old Name',
             'stock' => 10,
         ]);
         
+        // 2. Aksi update data
         $response = $this->actingAs($this->testUser)->put("/inventory/items/{$item->id}/update", [
             'name' => 'New Name',
             'category_id' => $this->category->id,
@@ -237,8 +301,8 @@ describe('CRUD Operations', function () {
             'description' => 'Updated description',
         ]);
         
+        // 3. Validasi redirect dan perubahan data di DB
         $response->assertRedirect();
-        
         $this->assertDatabaseHas('items', [
             'id' => $item->id,
             'name' => 'New Name',
@@ -246,17 +310,26 @@ describe('CRUD Operations', function () {
         ]);
     });
     
-    it('dapat menghapus barang', function () {
+    /**
+     * Memastikan barang dapat dihapus dari sistem.
+     */
+    it('can delete item', function () {
+        // 1. Persiapan data
         $item = Item::factory()->create(['category_id' => $this->category->id]);
         
+        // 2. Aksi hapus
         $response = $this->actingAs($this->testUser)->delete("/inventory/items/{$item->id}/delete");
         
+        // 3. Validasi redirect dan data hilang
         $response->assertRedirect();
-        
         $this->assertDatabaseMissing('items', ['id' => $item->id]);
     });
     
-    it('dapat membuat barang dengan stok 0', function () {
+    /**
+     * Memastikan sistem menerima pembuatan barang dengan stok nol.
+     */
+    it('can create item with zero stock', function () {
+        // 1. Aksi simpan barang stok 0 (diizinkan)
         $response = $this->actingAs($this->testUser)->post('/inventory/items/store', [
             'name' => 'Barang Tanpa Stok',
             'category_id' => $this->category->id,
@@ -264,8 +337,8 @@ describe('CRUD Operations', function () {
             'stock' => 0,
         ]);
         
+        // 2. Validasi sukses
         $response->assertRedirect();
-        
         $this->assertDatabaseHas('items', [
             'name' => 'Barang Tanpa Stok',
             'stock' => 0,
@@ -277,47 +350,66 @@ describe('CRUD Operations', function () {
 // VALIDATION
 // ============================================
 
-describe('Validasi', function () {
+describe('Validation', function () {
     
-    it('gagal membuat barang tanpa nama (required)', function () {
+    /**
+     * Validasi field 'name' wajib diisi.
+     */
+    it('fails to create item without name (required)', function () {
+        // 1. Aksi simpan tanpa nama
         $response = $this->actingAs($this->testUser)->post('/inventory/items/store', [
             'name' => '',
             'unit_of_measure' => 'pcs',
             'stock' => 10,
         ]);
         
+        // 2. Validasi adanya error pada field 'name'
         $response->assertSessionHasErrors('name');
     });
     
-    it('gagal membuat barang tanpa unit of measure (required)', function () {
+    /**
+     * Validasi field 'unit_of_measure' wajib diisi.
+     */
+    it('fails to create item without unit of measure (required)', function () {
+        // 1. Aksi simpan tanpa satuan (UoM)
         $response = $this->actingAs($this->testUser)->post('/inventory/items/store', [
             'name' => 'Test Item',
             'unit_of_measure' => '',
             'stock' => 10,
         ]);
         
+        // 2. Validasi error 'unit_of_measure'
         $response->assertSessionHasErrors('unit_of_measure');
     });
     
-    it('gagal membuat barang dengan stok negatif', function () {
+    /**
+     * Validasi stok tidak boleh bernilai negatif.
+     */
+    it('fails to create item with negative stock', function () {
+        // 1. Aksi simpan stok negatif (-10)
         $response = $this->actingAs($this->testUser)->post('/inventory/items/store', [
             'name' => 'Test Item',
             'unit_of_measure' => 'pcs',
             'stock' => -10,
         ]);
         
+        // 2. Validasi error 'stock'
         $response->assertSessionHasErrors('stock');
     });
     
-    it('dapat membuat barang tanpa kategori (nullable)', function () {
+    /**
+     * Memastikan barang dapat dibuat tanpa kategori.
+     */
+    it('can create item without category (nullable)', function () {
+        // 1. Aksi simpan tanpa memilih kategori
         $response = $this->actingAs($this->testUser)->post('/inventory/items/store', [
             'name' => 'Barang Tanpa Kategori',
             'unit_of_measure' => 'pcs',
             'stock' => 10,
         ]);
         
+        // 2. Validasi sukses tersimpan dengan category_id null
         $response->assertRedirect();
-        
         $this->assertDatabaseHas('items', [
             'name' => 'Barang Tanpa Kategori',
             'category_id' => null,
@@ -331,67 +423,89 @@ describe('Validasi', function () {
 
 describe('Issue Stock', function () {
     
-    it('dapat mengeluarkan stok dengan jumlah valid', function () {
+    /**
+     * Test pengurangan stok dengan jumlah yang diizinkan.
+     */
+    it('can issue stock with valid quantity', function () {
+        // 1. Persiapan barang dengan stok 100
         $item = Item::factory()->create(['category_id' => $this->category->id, 'stock' => 100]);
         
+        // 2. Aksi keluarkan 20 stok
         $response = $this->actingAs($this->testUser)->post("/inventory/items/{$item->id}/issue", [
             'quantity' => 20,
             'description' => 'Pengeluaran untuk divisi',
         ]);
         
+        // 3. Validasi sisa stok menjadi 80
         $response->assertRedirect();
-        
         $item->refresh();
         expect($item->stock)->toBe(80);
     });
     
-    it('gagal mengeluarkan stok melebihi stok tersedia', function () {
+    /**
+     * Memastikan sistem menolak pengeluaran jika stok tidak mencukupi.
+     */
+    it('fails to issue stock exceeding available stock', function () {
+        // 1. Persiapan stok 50
         $item = Item::factory()->create(['category_id' => $this->category->id, 'stock' => 50]);
         
+        // 2. Aksi keluarkan 100 (ilegal)
         $response = $this->actingAs($this->testUser)->post("/inventory/items/{$item->id}/issue", [
             'quantity' => 100,
             'description' => 'Pengeluaran melebihi stok',
         ]);
         
+        // 3. Validasi error quantity dan stok tetap 50
         $response->assertSessionHasErrors('quantity');
-        
-        // Stock should not change
         $item->refresh();
         expect($item->stock)->toBe(50);
     });
     
-    it('gagal mengeluarkan stok dengan jumlah 0', function () {
+    /**
+     * Validasi pengeluaran stok minimal 1.
+     */
+    it('fails to issue stock with zero quantity', function () {
+        // 1. Persiapan data
         $item = Item::factory()->create(['category_id' => $this->category->id, 'stock' => 100]);
         
+        // 2. Aksi issue quantity 0
         $response = $this->actingAs($this->testUser)->post("/inventory/items/{$item->id}/issue", [
             'quantity' => 0,
             'description' => 'Invalid issue',
         ]);
-        
         $response->assertSessionHasErrors('quantity');
     });
     
-    it('gagal mengeluarkan stok tanpa deskripsi', function () {
+    /**
+     * Menjamin setiap pengeluaran stok memiliki alasan/deskripsi.
+     */
+    it('fails to issue stock without description', function () {
+        // 1. Persiapan data
         $item = Item::factory()->create(['category_id' => $this->category->id, 'stock' => 100]);
         
+        // 2. Aksi issue tanpa memberikan alasan/deskripsi
         $response = $this->actingAs($this->testUser)->post("/inventory/items/{$item->id}/issue", [
             'quantity' => 10,
             'description' => '',
         ]);
-        
         $response->assertSessionHasErrors('description');
     });
     
-    it('membuat transaksi setelah issue stok', function () {
+    /**
+     * Memastikan log transaksi terbentuk di database setelah stok dikurangi.
+     */
+    it('creates transaction record after issuing stock', function () {
+        // 1. Persiapan data
         $item = Item::factory()->create(['category_id' => $this->category->id, 'stock' => 100]);
         
+        // 2. Aksi issue 25 stok
         $response = $this->actingAs($this->testUser)->post("/inventory/items/{$item->id}/issue", [
             'quantity' => 25,
             'description' => 'Test transaksi',
         ]);
         
+        // 3. Validasi adanya record transaksi di tabel 'item_transactions'
         $response->assertRedirect();
-        
         $this->assertDatabaseHas('item_transactions', [
             'item_id' => $item->id,
             'quantity' => 25,
@@ -406,35 +520,41 @@ describe('Issue Stock', function () {
 
 describe('Datatable', function () {
     
-    it('datatable mengembalikan data yang benar', function () {
+    /**
+     * Tes endpoint datatable mengembalikan data dalam format JSON yang benar.
+     */
+    it('datatable returns correct data format', function () {
+        // 1. Tambah 5 data barang
         Item::factory()->count(5)->create(['category_id' => $this->category->id]);
         
+        // 2. Request json datatable
         $response = $this->actingAs($this->testUser)->get('/inventory/items/datatable');
-        
         $response->assertOk();
         
+        // 3. Validasi struktur response memiliki key 'data'
         $data = $response->json();
-        // Just verify we got data back
         expect($data)->toHaveKey('data');
         expect(count($data['data']))->toBeGreaterThan(0);
     });
     
-    it('pencarian/filter berfungsi dengan benar', function () {
+    /**
+     * Test fitur filter pencarian pada datatable.
+     */
+    it('search/filter works correctly', function () {
+        // 1. Tambah variasi data barang
         Item::factory()->create(['category_id' => $this->category->id, 'name' => 'Laptop Dell']);
         Item::factory()->create(['category_id' => $this->category->id, 'name' => 'Mouse Logitech']);
         Item::factory()->create(['category_id' => $this->category->id, 'name' => 'Keyboard Mechanical']);
         
+        // 2. Cari berdasarkan kata kunci "Laptop"
         $response = $this->actingAs($this->testUser)->get('/inventory/items/datatable?search=Laptop');
-        
         $response->assertOk();
         
+        // 3. Validasi bahwa hasil pencarian mengandung "Laptop"
         $data = $response->json();
-        
-        // Should only find Laptop Dell when searching
         expect($data)->toHaveKey('data');
         expect(count($data['data']))->toBeGreaterThan(0);
         
-        // Check if search result contains Laptop
         $found = false;
         foreach ($data['data'] as $item) {
             if (str_contains($item['name'], 'Laptop')) {
@@ -452,11 +572,17 @@ describe('Datatable', function () {
 
 describe('Export Excel', function () {
     
-    it('export mengembalikan file Excel yang valid', function () {
+    /**
+     * Memastikan hasil ekspor mengembalikan file tipe Excel (.xlsx).
+     */
+    it('export returns valid Excel file', function () {
+        // 1. Tambah data barang
         Item::factory()->count(5)->create(['category_id' => $this->category->id]);
         
+        // 2. Request print excel
         $response = $this->actingAs($this->testUser)->get('/inventory/items/print-excel');
         
+        // 3. Validasi response adalah file Excel (.xlsx)
         $response->assertOk();
         $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     });

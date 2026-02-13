@@ -28,7 +28,6 @@ beforeEach(function () {
     // Role with Division Access
     $this->divisionRole = Role::firstOrCreate(['name' => 'Division Staff', 'guard_name' => 'web']);
     $this->divisionRole->syncPermissions([
-        ArchieveUserPermission::ViewDocument->value,
         ArchieveUserPermission::ViewDivision->value,
         ArchieveUserPermission::ManageDivision->value,
         ArchieveUserPermission::SearchDivisionScope->value,
@@ -63,17 +62,28 @@ beforeEach(function () {
 // ACCESS & PERMISSION TESTS
 // ============================================
 
-describe('Akses Halaman & Permission', function () {
+describe('Page Access & Permission', function () {
     
-    it('menolak akses index jika tidak memiliki permission', function () {
-        $user = User::factory()->create(); // No role
+    /**
+     * Memastikan user tanpa izin ditolak akses ke indeks dokumen (403).
+     */
+    it('denies index access without permission', function () {
+        // 1. Persiapan user tanpa role/izin
+        $user = User::factory()->create();
+        
+        // 2. Akses ditolak
         $response = $this->actingAs($user)->get('/archieve/documents');
         $response->assertForbidden();
     });
 
-    it('mengizinkan admin mengakses semua halaman', function () {
+    /**
+     * Memastikan Admin dengan izin lengkap dapat mengakses semua halaman arsip.
+     */
+    it('allows admin to access all pages', function () {
+        // 1. Acting sebagai admin
         $this->actingAs($this->adminUser);
         
+        // 2. Cek akses ke berbagai modul utama
         $this->get('/archieve/documents')->assertOk();
         $this->get('/archieve/categories')->assertOk();
         $this->get('/archieve/classifications')->assertOk();
@@ -81,13 +91,18 @@ describe('Akses Halaman & Permission', function () {
         $this->get('/archieve/reports/all')->assertOk();
     });
 
-    it('membatasi akses staff divisi', function () {
+    /**
+     * Memastikan staf divisi memiliki akses terbatas (hanya ke dokumen dan laporan divisi).
+     */
+    it('restricts division staff access', function () {
+        // 1. Acting sebagai user divisi
         $this->actingAs($this->divisionUser);
         
+        // 2. Akses halaman yang diizinkan
         $this->get('/archieve/documents')->assertOk();
         $this->get('/archieve/reports')->assertOk();
         
-        // Should be forbidden for global/admin pages
+        // 3. Akses halaman admin/global harus ditolak (403)
         $this->get('/archieve/categories')->assertForbidden();
         $this->get('/archieve/classifications')->assertForbidden();
         $this->get('/archieve/division-storages')->assertForbidden();
@@ -99,11 +114,17 @@ describe('Akses Halaman & Permission', function () {
 // DOCUMENT FLOW TESTS
 // ============================================
 
-describe('Alur Pengelolaan Dokumen', function () {
+describe('Document Management Flow', function () {
 
-    it('dapat mengunggah dokumen baru dan mengalokasikan storage', function () {
+    /**
+     * Test alur pengunggahan dokumen baru oleh user divisi.
+     * Memastikan file tersimpan dan kuota divisi terpotong.
+     */
+    it('can upload new document and allocate storage', function () {
+        // 1. Persiapan file dummy (1MB)
         $file = UploadedFile::fake()->create('test_document.pdf', 1024); // 1MB
         
+        // 2. Aksi simpan dokumen baru
         $response = $this->actingAs($this->divisionUser)->post('/archieve/documents', [
             'title' => 'Dokumen Kerja 2024',
             'classification_id' => $this->classification->id,
@@ -112,24 +133,30 @@ describe('Alur Pengelolaan Dokumen', function () {
             'file' => $file,
         ]);
 
+        // 3. Validasi redirect sukses
         $response->assertRedirect();
         
-        // Check DB
+        // 4. Pastikan record ada di DB
         $this->assertDatabaseHas('archieve_documents', [
             'title' => 'Dokumen Kerja 2024',
             'uploaded_by' => $this->divisionUser->id
         ]);
 
-        // Check Storage Allocation
+        // 5. Validasi kuota storage divisi terpakai 1MB
         $storage = DivisionStorage::where('division_id', $this->division->id)->first();
         expect($storage->used_size)->toBe(1024 * 1024);
         
-        // Check File exists
+        // 6. Validasi file fisik ada di storage disk
         $document = Document::latest()->first();
         Storage::disk('public')->assertExists($document->file_path);
     });
 
-    it('dapat memperbarui dokumen dan merelokasi storage', function () {
+    /**
+     * Test alur pembaruan dokumen (re-upload).
+     * Memastikan kuota lama dilepas dan kuota baru dialokasikan.
+     */
+    it('can update document and relocate storage', function () {
+        // 1. Persiapan dokumen awal (500KB)
         $oldSize = 500 * 1024; // 500KB
         $document = Document::factory()->create([
             'file_size' => $oldSize,
@@ -138,11 +165,10 @@ describe('Alur Pengelolaan Dokumen', function () {
         ]);
         $document->divisions()->attach($this->division->id, ['allocated_size' => $oldSize]);
         
-        // Initial used size
         $storage = DivisionStorage::where('division_id', $this->division->id)->first();
         $storage->update(['used_size' => $oldSize]);
 
-        // Update with new file
+        // 2. Aksi update dengan file baru (1MB)
         $newSizeKB = 1000; // 1000KB
         $newFile = UploadedFile::fake()->create('new_version.pdf', $newSizeKB);
         
@@ -155,14 +181,18 @@ describe('Alur Pengelolaan Dokumen', function () {
             '_method' => 'PUT'
         ]);
 
+        // 3. Validasi redirect dan update kuota storage (dari 500KB jadi 1MB)
         $response->assertRedirect();
         
         $storage->refresh();
-        // Old size released, new size allocated
         expect($storage->used_size)->toBe($newSizeKB * 1024);
     });
 
-    it('mengembalikan kuota storage saat dokumen dihapus', function () {
+    /**
+     * Memastikan kuota storage dikembalikan (menjadi 0) saat dokumen dihapus.
+     */
+    it('restores storage quota when document is deleted', function () {
+        // 1. Persiapan dokumen (2MB) dan pemakaian storage
         $size = 2000 * 1024; // 2MB
         $document = Document::factory()->create([
             'file_size' => $size,
@@ -173,8 +203,10 @@ describe('Alur Pengelolaan Dokumen', function () {
         $storage = DivisionStorage::where('division_id', $this->division->id)->first();
         $storage->update(['used_size' => $size]);
 
+        // 2. Aksi hapus dokumen
         $response = $this->actingAs($this->adminUser)->delete("/archieve/documents/{$document->id}");
         
+        // 3. Validasi redirect dan kuota storage kembali ke 0
         $response->assertRedirect();
         
         $storage->refresh();
@@ -187,21 +219,25 @@ describe('Alur Pengelolaan Dokumen', function () {
 // SEARCH & SCOPE TESTS
 // ============================================
 
-describe('Integrasi Pencarian & Scope', function () {
+describe('Search Integration & Scope', function () {
 
-    it('hanya melihat dokumen divisi sendiri jika memiliki scope divisi', function () {
+    /**
+     * Memastikan penegakan scope pencarian (personal/divisi) bekerja dengan benar.
+     */
+    it('only shows own division documents when using division scope', function () {
+        // 1. Persiapan data di 2 divisi berbeda
         $otherDivision = Division::factory()->create();
         
-        // Doc in own division
         $myDoc = Document::factory()->create(['title' => 'My Div Doc', 'classification_id' => $this->classification->id]);
         $myDoc->divisions()->attach($this->division->id, ['allocated_size' => 0]);
         
-        // Doc in other division
         $otherDoc = Document::factory()->create(['title' => 'Other Div Doc', 'classification_id' => $this->classification->id]);
         $otherDoc->divisions()->attach($otherDivision->id, ['allocated_size' => 0]);
 
+        // 2. Aksi pencarian sebagai user divisi
         $response = $this->actingAs($this->divisionUser)->get('/archieve/documents/search/results');
         
+        // 3. Validasi: Hanya dokumen dari divisi sendiri yang muncul
         $data = $response->json();
         $titles = collect($data['data'])->pluck('title');
         
@@ -209,7 +245,10 @@ describe('Integrasi Pencarian & Scope', function () {
         expect($titles)->not->toContain('Other Div Doc');
     });
 
-    it('admin dapat melihat seluruh dokumen tanpa terbatas scope', function () {
+    /**
+     * Memastikan Admin dapat mencari semua dokumen tanpa batasan scope divisi.
+     */
+    it('allows admin to search all documents without division scope restriction', function () {
         $otherDivision = Division::factory()->create();
         
         Document::factory()->create(['title' => 'Doc A', 'classification_id' => $this->classification->id])
@@ -229,20 +268,28 @@ describe('Integrasi Pencarian & Scope', function () {
 // DASHBOARD & REPORT TESTS
 // ============================================
 
-describe('Dashboard & Laporan', function () {
+describe('Dashboard & Reports', function () {
 
-    it('mengembalikan data dashboard yang sesuai role', function () {
+    /**
+     * Test integrasi dashboard: Memastikan tab yang muncul sesuai role user.
+     */
+    it('returns dashboard data matching user role', function () {
+        // 1. Akses dashboard
         $response = $this->actingAs($this->divisionUser)->get('/archieve/dashboard');
         
+        // 2. Validasi status dan tab (harusnya hanya tab 'division')
         $response->assertOk();
         $prop = $response->inertiaPage()['props'];
         
-        // Division user should only see division tab
         expect($prop['tabs'])->toHaveCount(1);
         expect($prop['tabs'][0]['id'])->toBe('division');
     });
 
-    it('mengembalikan data laporan divisi yang akurat', function () {
+    /**
+     * Test integrasi laporan: Memastikan statistik (jumlah dokumen & size) akurat.
+     */
+    it('returns accurate division report data', function () {
+        // 1. Persiapan 1 dokumen (5MB)
         $size = 5 * 1024 * 1024; // 5MB
         $doc = Document::factory()->create([
             'file_size' => $size,
@@ -250,8 +297,10 @@ describe('Dashboard & Laporan', function () {
         ]);
         $doc->divisions()->attach($this->division->id, ['allocated_size' => $size]);
 
+        // 2. Akses halaman laporan
         $response = $this->actingAs($this->divisionUser)->get('/archieve/reports');
         
+        // 3. Validasi statistik data yang dikirim ke Inertia
         $response->assertOk();
         $data = $response->inertiaPage()['props']['reportData'];
         

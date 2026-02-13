@@ -18,12 +18,18 @@ beforeEach(function () {
 |--------------------------------------------------------------------------
 */
 
+/**
+ * Memastikan halaman edit profil dapat diakses.
+ */
 it('can display edit profile page', function () {
+    // 1. Create user dan assign role
     $user = User::factory()->create();
     $user->assignRole('User');
 
+    // 2. Akses profile
     $response = $this->actingAs($user)->get('/profile');
 
+    // 3. Validasi status OK
     $response->assertStatus(200)
         ->assertInertia(fn ($page) => $page->component('Profile/Edit'));
 });
@@ -40,7 +46,11 @@ it('prevents unauthenticated access to profile page', function () {
 |--------------------------------------------------------------------------
 */
 
+/**
+ * Test update profil dengan data valid.
+ */
 it('can update profile with valid data', function () {
+    // 1. Persiapan data user lama
     $user = User::factory()->create([
         'name' => 'Old Name',
         'email' => 'old@example.com',
@@ -49,6 +59,7 @@ it('can update profile with valid data', function () {
     ]);
     $user->assignRole('User');
 
+    // 2. Kirim update data baru
     $response = $this->actingAs($user)->put('/profile/update', [
         'name' => 'New Name',
         'email' => 'new@example.com',
@@ -56,9 +67,11 @@ it('can update profile with valid data', function () {
         'address' => 'New Address',
     ]);
 
+    // 3. Validasi redirect dan pesan sukses
     $response->assertRedirect();
     $response->assertSessionHas('success');
 
+    // 4. Pastikan data di DB berubah
     $user->refresh();
     expect($user->name)->toBe('New Name')
         ->and($user->email)->toBe('new@example.com')
@@ -178,18 +191,24 @@ it('prevents unauthenticated access to password page', function () {
 |--------------------------------------------------------------------------
 */
 
+/**
+ * Test update password profil.
+ */
 it('can update password with valid data', function () {
+    // 1. Persiapan user dengan password lama
     $user = User::factory()->create([
         'password' => Hash::make('currentpassword'),
     ]);
     $user->assignRole('User');
 
+    // 2. Request ganti ke password baru
     $response = $this->actingAs($user)->put('/profile/password/update', [
         'current_password' => 'currentpassword',
         'password' => 'newpassword123',
         'password_confirmation' => 'newpassword123',
     ]);
 
+    // 3. Validasi redirect dan kesesuaian password baru di DB
     $response->assertRedirect();
     $response->assertSessionHas('success');
 

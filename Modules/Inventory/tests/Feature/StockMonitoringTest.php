@@ -30,9 +30,12 @@ beforeEach(function () {
 // 1. Akses halaman index dan print berdasarkan permission
 // ============================================================================
 
-describe('Akses Halaman (Permission: MonitorStock / MonitorAllStock)', function () {
+describe('Page Access (Permission: MonitorStock / MonitorAllStock)', function () {
 
-    it('user dengan MonitorStock dapat mengakses halaman index', function () {
+    /**
+     * Memastikan user dengan izin 'monitor_stok' dapat mengakses halaman index monitoring.
+     */
+    it('allows user with MonitorStock permission to access index page', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::MonitorStock->value);
 
@@ -40,7 +43,10 @@ describe('Akses Halaman (Permission: MonitorStock / MonitorAllStock)', function 
             ->assertOk();
     });
 
-    it('user dengan MonitorAllStock dapat mengakses halaman index', function () {
+    /**
+     * Memastikan user dengan izin 'monitor_semua_stok' dapat mengakses halaman index monitoring.
+     */
+    it('allows user with MonitorAllStock permission to access index page', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::MonitorAllStock->value);
 
@@ -48,14 +54,20 @@ describe('Akses Halaman (Permission: MonitorStock / MonitorAllStock)', function 
             ->assertOk();
     });
 
-    it('user tanpa permission tidak dapat mengakses halaman index', function () {
+    /**
+     * Memastikan user tanpa izin apapun ditolak saat mengakses halaman index monitoring.
+     */
+    it('denies user without permission from accessing index page', function () {
         $user = User::factory()->create();
 
         $this->actingAs($user)->get('/inventory/stock-monitoring')
             ->assertForbidden();
     });
 
-    it('user dengan MonitorStock dapat mengakses print-excel', function () {
+    /**
+     * Memastikan user dengan izin 'monitor_stok' dapat mengunduh laporan excel monitoring.
+     */
+    it('allows user with MonitorStock permission to access print-excel', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::MonitorStock->value);
 
@@ -63,7 +75,10 @@ describe('Akses Halaman (Permission: MonitorStock / MonitorAllStock)', function 
             ->assertOk();
     });
 
-    it('user dengan MonitorAllStock dapat mengakses print-excel', function () {
+    /**
+     * Memastikan user dengan izin 'monitor_semua_stok' dapat mengunduh laporan excel monitoring.
+     */
+    it('allows user with MonitorAllStock permission to access print-excel', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::MonitorAllStock->value);
 
@@ -71,14 +86,20 @@ describe('Akses Halaman (Permission: MonitorStock / MonitorAllStock)', function 
             ->assertOk();
     });
 
-    it('user tanpa permission tidak dapat mengakses print-excel', function () {
+    /**
+     * Memastikan user tanpa izin ditolak saat mencoba mengunduh laporan excel monitoring.
+     */
+    it('denies user without permission from accessing print-excel', function () {
         $user = User::factory()->create();
 
         $this->actingAs($user)->get('/inventory/stock-monitoring/print-excel')
             ->assertForbidden();
     });
 
-    it('user tanpa permission tidak dapat mengakses datatable', function () {
+    /**
+     * Memastikan user tanpa izin ditolak saat mengakses API datatable monitoring.
+     */
+    it('denies user without permission from accessing datatable', function () {
         $user = User::factory()->create();
 
         $this->actingAs($user)->get('/inventory/stock-monitoring/datatable')
@@ -92,7 +113,10 @@ describe('Akses Halaman (Permission: MonitorStock / MonitorAllStock)', function 
 
 describe('Datatable Filter Division (MonitorStock)', function () {
 
-    it('user dengan MonitorStock hanya melihat item divisi sendiri', function () {
+    /**
+     * Memastikan scoping data: user divisi hanya boleh melihat stok barang dari divisinya sendiri.
+     */
+    it('only shows own division items for users with MonitorStock', function () {
         $userA = User::factory()->create(['division_id' => $this->divisionA->id]);
         $userA->givePermissionTo(InventoryPermission::MonitorStock->value);
 
@@ -134,7 +158,10 @@ describe('Datatable Filter Division (MonitorStock)', function () {
 
 describe('Datatable Filter Division (MonitorAllStock)', function () {
 
-    it('user dengan MonitorAllStock melihat semua item divisi', function () {
+    /**
+     * Memastikan user dengan izin global dapat melihat seluruh stok divisi tanpa filter.
+     */
+    it('shows all division items for users with MonitorAllStock', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::MonitorAllStock->value);
 
@@ -168,7 +195,10 @@ describe('Datatable Filter Division (MonitorAllStock)', function () {
         $response->assertJsonCount(2, 'data');
     });
 
-    it('user MonitorAllStock bisa lihat division_id yang beda dengan miliknya', function () {
+    /**
+     * Memastikan user dengan izin global tetap bisa melihat stok divisi lain biarpun user tsb punya divisi sendiri.
+     */
+    it('allows MonitorAllStock users to see items from other divisions', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::MonitorAllStock->value);
 
@@ -194,7 +224,10 @@ describe('Datatable Filter Division (MonitorAllStock)', function () {
 
 describe('Issue Stock (Permission: IssueStock)', function () {
 
-    it('user dengan IssueStock dapat mengakses halaman issue', function () {
+    /**
+     * Memastikan user dengan izin 'pengeluaran_stok' dapat mengakses form pengeluaran barang.
+     */
+    it('allows users with IssueStock permission to access issue page', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::IssueStock->value);
 
@@ -210,7 +243,10 @@ describe('Issue Stock (Permission: IssueStock)', function () {
             ->assertOk();
     });
 
-    it('user tanpa IssueStock tidak dapat mengakses issue', function () {
+    /**
+     * Memastikan user tanpa izin 'pengeluaran_stok' ditolak saat mengakses form pengeluaran barang.
+     */
+    it('denies users without IssueStock permission from accessing issue page', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
 
         $item = Item::create([
@@ -225,7 +261,10 @@ describe('Issue Stock (Permission: IssueStock)', function () {
             ->assertForbidden();
     });
 
-    it('issue stock: stok berkurang dan item_transaction tercatat', function () {
+    /**
+     * Menguji proses pengeluaran stok: jumlah stok berkurang dan transaksi tercatat.
+     */
+    it('reduces stock and records item_transaction on issue', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::IssueStock->value);
 
@@ -258,13 +297,12 @@ describe('Issue Stock (Permission: IssueStock)', function () {
     });
 });
 
-// ============================================================================
-// 5. Datatable: Pagination, Limit, dan Search Global
-// ============================================================================
+describe('Datatable: Pagination, Limit, and Global Search', function () {
 
-describe('Datatable: Pagination, Limit, dan Search Global', function () {
-
-    it('pagination bekerja dengan benar (default 20 per halaman)', function () {
+    /**
+     * Memastikan fitur pagination pada datatable monitoring stok bekerja dengan benar.
+     */
+    it('handles pagination correctly', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::MonitorAllStock->value);
 
@@ -289,7 +327,10 @@ describe('Datatable: Pagination, Limit, dan Search Global', function () {
         $response2->assertJsonCount(5, 'data');
     });
 
-    it('limit bekerja dengan benar', function () {
+    /**
+     * Memastikan pengaturan limit (jumlah data per halaman) pada datatable monitoring stok efektif.
+     */
+    it('handles limit parameter correctly', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::MonitorAllStock->value);
 
@@ -310,7 +351,10 @@ describe('Datatable: Pagination, Limit, dan Search Global', function () {
         $response->assertJsonPath('total', 15);
     });
 
-    it('search global berdasarkan nama item', function () {
+    /**
+     * Memastikan pencarian global pada datatable dapat menemukan barang berdasarkan nama.
+     */
+    it('performs global search by item name', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::MonitorAllStock->value);
 
@@ -336,7 +380,10 @@ describe('Datatable: Pagination, Limit, dan Search Global', function () {
         $response->assertJsonPath('data.0.name', 'Kertas HVS A4');
     });
 
-    it('search global berdasarkan unit_of_measure', function () {
+    /**
+     * Memastikan pencarian global juga mencakup unit satuan barang (UOM).
+     */
+    it('performs global search by unit_of_measure', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::MonitorAllStock->value);
 
@@ -369,7 +416,10 @@ describe('Datatable: Pagination, Limit, dan Search Global', function () {
 
 describe('Datatable: Individual Column Filter (Footer Search)', function () {
 
-    it('filter berdasarkan kolom name', function () {
+    /**
+     * Memastikan filter pencarian spesifik pada kolom nama barang bekerja.
+     */
+    it('filters datatable by name column', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::MonitorAllStock->value);
 
@@ -395,7 +445,10 @@ describe('Datatable: Individual Column Filter (Footer Search)', function () {
         $response->assertJsonPath('data.0.name', 'Kertas HVS');
     });
 
-    it('filter berdasarkan kolom category_id', function () {
+    /**
+     * Memastikan filter pencarian berdasarkan ID kategori barang bekerja.
+     */
+    it('filters datatable by category_id column', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::MonitorAllStock->value);
 
@@ -421,7 +474,10 @@ describe('Datatable: Individual Column Filter (Footer Search)', function () {
         $response->assertJsonPath('data.0.name', 'Item ATK');
     });
 
-    it('filter category_id ALL mengambil semua kategori', function () {
+    /**
+     * Memastikan opsi filter 'ALL' pada kategori mengembalikan barang dari seluruh kategori.
+     */
+    it('returns all categories when category_id filter is set to ALL', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::MonitorAllStock->value);
 
@@ -446,7 +502,10 @@ describe('Datatable: Individual Column Filter (Footer Search)', function () {
         $response->assertJsonCount(2, 'data');
     });
 
-    it('filter berdasarkan kolom stock (minimum)', function () {
+    /**
+     * Memastikan filter pencarian berdasarkan jumlah stok (minimum) bekerja.
+     */
+    it('filters datatable by minimum stock value', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::MonitorAllStock->value);
 
@@ -472,7 +531,10 @@ describe('Datatable: Individual Column Filter (Footer Search)', function () {
         $response->assertJsonPath('data.0.name', 'Stok Tinggi');
     });
 
-    it('filter berdasarkan kolom stock_max (maksimum)', function () {
+    /**
+     * Memastikan filter pencarian berdasarkan jumlah stok (maksimum) bekerja.
+     */
+    it('filters datatable by maximum stock value', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::MonitorAllStock->value);
 
@@ -498,7 +560,10 @@ describe('Datatable: Individual Column Filter (Footer Search)', function () {
         $response->assertJsonPath('data.0.name', 'Stok Rendah');
     });
 
-    it('filter berdasarkan kolom unit_of_measure', function () {
+    /**
+     * Memastikan filter pencarian berdasarkan unit satuan barang (UOM) bekerja.
+     */
+    it('filters datatable by unit_of_measure column', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::MonitorAllStock->value);
 
@@ -524,7 +589,10 @@ describe('Datatable: Individual Column Filter (Footer Search)', function () {
         $response->assertJsonPath('data.0.name', 'Item Box');
     });
 
-    it('filter berdasarkan kolom division_id', function () {
+    /**
+     * Memastikan filter pencarian berdasarkan ID divisi pemilik barang bekerja.
+     */
+    it('filters datatable by division_id column', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::MonitorAllStock->value);
 
@@ -550,7 +618,10 @@ describe('Datatable: Individual Column Filter (Footer Search)', function () {
         $response->assertJsonPath('data.0.name', 'Item Divisi A');
     });
 
-    it('filter division_id ALL mengambil semua divisi', function () {
+    /**
+     * Memastikan opsi filter 'ALL' pada divisi mengembalikan barang dari seluruh divisi.
+     */
+    it('returns all divisions when division_id filter is set to ALL', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::MonitorAllStock->value);
 
@@ -582,7 +653,10 @@ describe('Datatable: Individual Column Filter (Footer Search)', function () {
 
 describe('Print Excel', function () {
 
-    it('print-excel menghasilkan response 200 dengan content-type xlsx', function () {
+    /**
+     * Memastikan request laporan excel menghasilkan file dengan mime type yang sesuai (.xlsx).
+     */
+    it('generates a valid Excel file response', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::MonitorAllStock->value);
 
@@ -603,13 +677,12 @@ describe('Print Excel', function () {
 });
 
 // ============================================================================
-// Konversi Stok
-// ============================================================================
+describe('Stock Conversion: Multiplier Validation', function () {
 
-// (a) Multiplier <= 1: tidak bisa konversi
-describe('Konversi: multiplier <= 1 tidak bisa konversi', function () {
-
-    it('item dengan multiplier 1 redirect dengan error saat akses halaman convert', function () {
+    /**
+     * Memastikan barang dengan multiplier 1 (satuan terkecil) tidak diperbolehkan masuk ke halaman konversi.
+     */
+    it('redirects with error when accessing conversion page for item with multiplier 1', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::ConvertStock->value);
         $user->givePermissionTo(InventoryPermission::MonitorStock->value);
@@ -628,7 +701,10 @@ describe('Konversi: multiplier <= 1 tidak bisa konversi', function () {
         $response->assertRedirect(route('inventory.stock-monitoring.index'));
     });
 
-    it('item dengan multiplier 1 gagal proses konversi', function () {
+    /**
+     * Memastikan sistem menolak proses konversi untuk barang yang memiliki multiplier 1.
+     */
+    it('fails to process conversion for item with multiplier 1', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::ConvertStock->value);
 
@@ -651,9 +727,12 @@ describe('Konversi: multiplier <= 1 tidak bisa konversi', function () {
 });
 
 // (b) Multiplier > 1 dengan reference_item_id: konversi normal
-describe('Konversi: multiplier > 1 dengan reference_item_id (normal)', function () {
+describe('Stock Conversion: Normal Use Case (Multiplier > 1)', function () {
 
-    it('konversi berhasil: sumber berkurang, target bertambah qty * multiplier', function () {
+    /**
+     * Menguji keberhasilan konversi: stok satuan besar berkurang, stok satuan kecil bertambah (qty * multiplier).
+     */
+    it('successfully converts stock: source decreases, target increases proportionately', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::ConvertStock->value);
         $user->givePermissionTo(InventoryPermission::MonitorStock->value);
@@ -691,7 +770,10 @@ describe('Konversi: multiplier > 1 dengan reference_item_id (normal)', function 
         $this->assertDatabaseHas('items', ['id' => $pcsItem->id, 'stock' => 1500]);
     });
 
-    it('konversi mencatat item_transaction ConversionOut dan ConversionIn', function () {
+    /**
+     * Memastikan setiap proses konversi mencatat transaksi ConversionOut (keluar) dan ConversionIn (masuk).
+     */
+    it('records ConversionOut and ConversionIn item_transactions', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::ConvertStock->value);
 
@@ -736,10 +818,12 @@ describe('Konversi: multiplier > 1 dengan reference_item_id (normal)', function 
     });
 });
 
-// (c) Multiplier > 1, reference_item_id null → auto-create dari main_reference
-describe('Konversi: multiplier > 1, reference_item_id null (auto-create dari main_reference)', function () {
+describe('Stock Conversion: Auto-Create Division Item', function () {
 
-    it('auto-create item divisi dari main_reference lalu konversi', function () {
+    /**
+     * Menguji skenario dimana item target (satuan kecil) belum ada di divisi, sistem harus otomatis membuatnya.
+     */
+    it('auto-creates division item from main_reference if missing before conversion', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::ConvertStock->value);
 

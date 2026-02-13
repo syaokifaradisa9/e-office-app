@@ -51,9 +51,12 @@ beforeEach(function () {
 // 1. Akses halaman index, datatable, print berdasarkan permission
 // ============================================================================
 
-describe('Akses Halaman (Permission: Lihat Permintaan Barang Divisi / Lihat Semua Permintaan Barang)', function () {
+describe('Page Access (Permission: ViewWarehouseOrderDivisi / ViewAllWarehouseOrder)', function () {
 
-    it('user dengan permission ViewWarehouseOrderDivisi dapat mengakses halaman index', function () {
+    /**
+     * Memastikan user dengan izin 'lihat_permintaan_barang_divisi' dapat mengakses halaman index.
+     */
+    it('allows user with ViewWarehouseOrderDivisi permission to access index page', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::ViewWarehouseOrderDivisi->value);
 
@@ -61,7 +64,10 @@ describe('Akses Halaman (Permission: Lihat Permintaan Barang Divisi / Lihat Semu
             ->assertOk();
     });
 
-    it('user dengan permission ViewAllWarehouseOrder dapat mengakses halaman index', function () {
+    /**
+     * Memastikan user dengan izin 'lihat_semua_permintaan_barang' dapat mengakses halaman index.
+     */
+    it('allows user with ViewAllWarehouseOrder permission to access index page', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::ViewAllWarehouseOrder->value);
 
@@ -69,14 +75,20 @@ describe('Akses Halaman (Permission: Lihat Permintaan Barang Divisi / Lihat Semu
             ->assertOk();
     });
 
-    it('user tanpa permission tidak dapat mengakses halaman index', function () {
+    /**
+     * Memastikan user tanpa izin apapun ditolak saat mengakses halaman index.
+     */
+    it('denies user without permission from accessing index page', function () {
         $user = User::factory()->create();
 
         $this->actingAs($user)->get('/inventory/warehouse-orders')
             ->assertForbidden();
     });
 
-    it('user dengan permission ViewWarehouseOrderDivisi dapat mengakses datatable', function () {
+    /**
+     * Memastikan user dengan izin 'lihat_permintaan_barang_divisi' dapat mengakses API datatable.
+     */
+    it('allows user with ViewWarehouseOrderDivisi permission to access datatable', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::ViewWarehouseOrderDivisi->value);
 
@@ -84,7 +96,10 @@ describe('Akses Halaman (Permission: Lihat Permintaan Barang Divisi / Lihat Semu
             ->assertOk();
     });
 
-    it('user dengan permission ViewAllWarehouseOrder dapat mengakses datatable', function () {
+    /**
+     * Memastikan user dengan izin 'lihat_semua_permintaan_barang' dapat mengakses API datatable.
+     */
+    it('allows user with ViewAllWarehouseOrder permission to access datatable', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::ViewAllWarehouseOrder->value);
 
@@ -92,14 +107,20 @@ describe('Akses Halaman (Permission: Lihat Permintaan Barang Divisi / Lihat Semu
             ->assertOk();
     });
 
-    it('user tanpa permission tidak dapat mengakses datatable', function () {
+    /**
+     * Memastikan user tanpa izin ditolak saat mengakses API datatable.
+     */
+    it('denies user without permission from accessing datatable', function () {
         $user = User::factory()->create();
 
         $this->actingAs($user)->get('/inventory/warehouse-orders/datatable')
             ->assertForbidden();
     });
 
-    it('user dengan permission ViewWarehouseOrderDivisi dapat mengakses print-excel', function () {
+    /**
+     * Memastikan user dengan izin 'lihat_permintaan_barang_divisi' dapat mengunduh laporan excel.
+     */
+    it('allows user with ViewWarehouseOrderDivisi permission to access print-excel', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::ViewWarehouseOrderDivisi->value);
 
@@ -107,7 +128,10 @@ describe('Akses Halaman (Permission: Lihat Permintaan Barang Divisi / Lihat Semu
             ->assertOk();
     });
 
-    it('user dengan permission ViewAllWarehouseOrder dapat mengakses print-excel', function () {
+    /**
+     * Memastikan user dengan izin 'lihat_semua_permintaan_barang' dapat mengunduh laporan excel.
+     */
+    it('allows user with ViewAllWarehouseOrder permission to access print-excel', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::ViewAllWarehouseOrder->value);
 
@@ -115,7 +139,10 @@ describe('Akses Halaman (Permission: Lihat Permintaan Barang Divisi / Lihat Semu
             ->assertOk();
     });
 
-    it('user tanpa permission tidak dapat mengakses print-excel', function () {
+    /**
+     * Memastikan user tanpa izin ditolak saat mencoba mengunduh laporan excel.
+     */
+    it('denies user without permission from accessing print-excel', function () {
         $user = User::factory()->create();
 
         $this->actingAs($user)->get('/inventory/warehouse-orders/print-excel')
@@ -129,7 +156,10 @@ describe('Akses Halaman (Permission: Lihat Permintaan Barang Divisi / Lihat Semu
 
 describe('Datatable Filter Division (ViewWarehouseOrderDivisi)', function () {
 
-    it('user dengan ViewWarehouseOrderDivisi hanya melihat data divisi sendiri', function () {
+    /**
+     * Memastikan scoping data: user divisi hanya boleh melihat permintaan dari divisinya sendiri.
+     */
+    it('only shows own division data for users with ViewWarehouseOrderDivisi', function () {
         $userA = User::factory()->create(['division_id' => $this->divisionA->id]);
         $userA->givePermissionTo(InventoryPermission::ViewWarehouseOrderDivisi->value);
 
@@ -165,7 +195,10 @@ describe('Datatable Filter Division (ViewWarehouseOrderDivisi)', function () {
 
 describe('Datatable Filter Division (ViewAllWarehouseOrder)', function () {
 
-    it('user dengan ViewAllWarehouseOrder melihat semua data tanpa filter divisi', function () {
+    /**
+     * Memastikan user dengan izin global dapat melihat seluruh data permintaan tanpa filter divisi.
+     */
+    it('shows all data without division filter for users with ViewAllWarehouseOrder', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::ViewAllWarehouseOrder->value);
 
@@ -197,9 +230,12 @@ describe('Datatable Filter Division (ViewAllWarehouseOrder)', function () {
 // 4. CRUD: Create, Store, Edit, Update, Delete (permission: Buat Permintaan Barang)
 // ============================================================================
 
-describe('CRUD Permintaan Barang (Permission: Buat Permintaan Barang)', function () {
+describe('Warehouse Order CRUD (Permission: CreateWarehouseOrder)', function () {
 
-    it('user dengan CreateWarehouseOrder dapat mengakses halaman create', function () {
+    /**
+     * Memastikan user dengan izin 'buat_permintaan_barang' dapat mengakses form tambah.
+     */
+    it('allows user with CreateWarehouseOrder permission to access create page', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::CreateWarehouseOrder->value);
 
@@ -207,7 +243,10 @@ describe('CRUD Permintaan Barang (Permission: Buat Permintaan Barang)', function
             ->assertOk();
     });
 
-    it('user tanpa CreateWarehouseOrder tidak dapat mengakses halaman create', function () {
+    /**
+     * Memastikan user tanpa izin 'buat_permintaan_barang' ditolak saat mengakses form tambah.
+     */
+    it('denies user without CreateWarehouseOrder from accessing create page', function () {
         $user = User::factory()->create();
 
         $this->actingAs($user)->get('/inventory/warehouse-orders/create')
@@ -239,7 +278,10 @@ describe('CRUD Permintaan Barang (Permission: Buat Permintaan Barang)', function
         expect($order->carts)->toHaveCount(2);
     });
 
-    it('store: validasi field items wajib diisi', function () {
+    /**
+     * Memastikan sistem menolak penyimpanan jika field 'items' (daftar barang) kosong.
+     */
+    it('fails to store if items field is empty', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::CreateWarehouseOrder->value);
 
@@ -247,7 +289,10 @@ describe('CRUD Permintaan Barang (Permission: Buat Permintaan Barang)', function
         $response->assertSessionHasErrors(['items']);
     });
 
-    it('user tanpa CreateWarehouseOrder tidak bisa store', function () {
+    /**
+     * Memastikan user tanpa izin 'buat_permintaan_barang' gagal saat mencoba menyimpan data.
+     */
+    it('denies store action for users without CreateWarehouseOrder', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
 
         $response = $this->actingAs($user)->post('/inventory/warehouse-orders/store', [
@@ -260,7 +305,10 @@ describe('CRUD Permintaan Barang (Permission: Buat Permintaan Barang)', function
         $response->assertForbidden();
     });
 
-    it('edit: user dengan CreateWarehouseOrder dapat mengedit order Pending', function () {
+    /**
+     * Memastikan user dengan izin yang sesuai dapat mengedit permintaan yang masih berstatus 'Pending'.
+     */
+    it('allows users with CreateWarehouseOrder to edit Pending orders', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::CreateWarehouseOrder->value);
 
@@ -281,7 +329,10 @@ describe('CRUD Permintaan Barang (Permission: Buat Permintaan Barang)', function
             ->assertOk();
     });
 
-    it('edit: tidak bisa mengedit order yang sudah Confirmed', function () {
+    /**
+     * Memastikan permintaan yang sudah berstatus 'Confirmed' tidak dapat diubah lagi.
+     */
+    it('cannot edit orders that are already Confirmed', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::CreateWarehouseOrder->value);
 
@@ -296,7 +347,10 @@ describe('CRUD Permintaan Barang (Permission: Buat Permintaan Barang)', function
             ->assertForbidden();
     });
 
-    it('update: dapat update order Pending dan status tetap Pending', function () {
+    /**
+     * Memastikan update data pada permintaan berstatus 'Pending' berhasil dan status tetap 'Pending'.
+     */
+    it('can update Pending orders and status remains Pending', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::CreateWarehouseOrder->value);
 
@@ -329,7 +383,10 @@ describe('CRUD Permintaan Barang (Permission: Buat Permintaan Barang)', function
         ]);
     });
 
-    it('update: tidak bisa update order Confirmed', function () {
+    /**
+     * Memastikan user dilarang memperbarui data pada permintaan yang sudah 'Confirmed'.
+     */
+    it('cannot update Confirmed orders', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::CreateWarehouseOrder->value);
 
@@ -350,7 +407,10 @@ describe('CRUD Permintaan Barang (Permission: Buat Permintaan Barang)', function
         $response->assertForbidden();
     });
 
-    it('delete: dapat menghapus order Pending', function () {
+    /**
+     * Memastikan permintaan berstatus 'Pending' dapat dihapus oleh user.
+     */
+    it('can delete Pending orders', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::CreateWarehouseOrder->value);
 
@@ -373,7 +433,10 @@ describe('CRUD Permintaan Barang (Permission: Buat Permintaan Barang)', function
         $this->assertDatabaseMissing('warehouse_orders', ['id' => $order->id]);
     });
 
-    it('delete: tidak bisa menghapus order Confirmed', function () {
+    /**
+     * Memastikan permintaan yang sudah 'Confirmed' tidak dapat dihapus.
+     */
+    it('cannot delete Confirmed orders', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::CreateWarehouseOrder->value);
 
@@ -395,9 +458,12 @@ describe('CRUD Permintaan Barang (Permission: Buat Permintaan Barang)', function
 // 5. Confirm & Reject (Permission: Konfirmasi Permintaan Barang)
 // ============================================================================
 
-describe('Konfirmasi & Tolak Permintaan (Permission: Konfirmasi Permintaan Barang)', function () {
+describe('Confirmation & Rejection (Permission: ConfirmWarehouseOrder)', function () {
 
-    it('confirm: user dengan ConfirmWarehouseOrder dapat mengkonfirmasi order Pending', function () {
+    /**
+     * Memastikan user dengan izin 'konfirmasi_permintaan_barang' dapat menyetujui permintaan berstatus 'Pending'.
+     */
+    it('allows users with ConfirmWarehouseOrder to confirm Pending orders', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::ConfirmWarehouseOrder->value);
 
@@ -418,7 +484,10 @@ describe('Konfirmasi & Tolak Permintaan (Permission: Konfirmasi Permintaan Baran
         ]);
     });
 
-    it('confirm: user tanpa ConfirmWarehouseOrder tidak bisa mengkonfirmasi', function () {
+    /**
+     * Memastikan user tanpa izin 'konfirmasi_permintaan_barang' ditolak saat mencoba menyetujui permintaan.
+     */
+    it('denies confirmation action for users without ConfirmWarehouseOrder', function () {
         $user = User::factory()->create();
 
         $requester = User::factory()->create(['division_id' => $this->divisionA->id]);
@@ -434,7 +503,10 @@ describe('Konfirmasi & Tolak Permintaan (Permission: Konfirmasi Permintaan Baran
         $response->assertForbidden();
     });
 
-    it('reject: user dengan ConfirmWarehouseOrder dapat menolak order Pending', function () {
+    /**
+     * Memastikan user dengan izin 'konfirmasi_permintaan_barang' dapat menolak permintaan berstatus 'Pending'.
+     */
+    it('allows users with ConfirmWarehouseOrder to reject Pending orders', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::ConfirmWarehouseOrder->value);
 
@@ -463,7 +535,10 @@ describe('Konfirmasi & Tolak Permintaan (Permission: Konfirmasi Permintaan Baran
         ]);
     });
 
-    it('reject: user tanpa ConfirmWarehouseOrder tidak bisa menolak', function () {
+    /**
+     * Memastikan user tanpa izin 'konfirmasi_permintaan_barang' ditolak saat mencoba menolak permintaan.
+     */
+    it('denies rejection action for users without ConfirmWarehouseOrder', function () {
         $user = User::factory()->create();
 
         $requester = User::factory()->create(['division_id' => $this->divisionA->id]);
@@ -481,7 +556,10 @@ describe('Konfirmasi & Tolak Permintaan (Permission: Konfirmasi Permintaan Baran
         $response->assertForbidden();
     });
 
-    it('confirm: dapat mengkonfirmasi order Revision', function () {
+    /**
+     * Memastikan permintaan berstatus 'Revision' juga dapat disetujui setelah diperbaiki.
+     */
+    it('allows users with ConfirmWarehouseOrder to confirm Revision orders', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::ConfirmWarehouseOrder->value);
 
@@ -507,9 +585,12 @@ describe('Konfirmasi & Tolak Permintaan (Permission: Konfirmasi Permintaan Baran
 // 6. Delivery (Permission: Serah Terima Barang)
 // ============================================================================
 
-describe('Serah Terima Barang (Permission: HandoverItem)', function () {
+describe('Handover Item (Permission: HandoverItem)', function () {
 
-    it('user dengan HandoverItem dapat mengakses halaman delivery', function () {
+    /**
+     * Memastikan user dengan izin 'serah_terima_barang' dapat mengakses form serah terima (delivery).
+     */
+    it('allows users with HandoverItem permission to access delivery page', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::HandoverItem->value);
 
@@ -531,7 +612,10 @@ describe('Serah Terima Barang (Permission: HandoverItem)', function () {
             ->assertOk();
     });
 
-    it('user tanpa HandoverItem tidak dapat mengakses delivery', function () {
+    /**
+     * Memastikan user tanpa izin 'serah_terima_barang' ditolak saat mengakses halaman delivery.
+     */
+    it('denies users without HandoverItem permission from accessing delivery page', function () {
         $user = User::factory()->create();
 
         $requester = User::factory()->create(['division_id' => $this->divisionA->id]);
@@ -546,7 +630,10 @@ describe('Serah Terima Barang (Permission: HandoverItem)', function () {
             ->assertForbidden();
     });
 
-    it('delivery: status berubah menjadi Delivered', function () {
+    /**
+     * Memastikan status permintaan berubah menjadi 'Delivered' setelah proses delivery selesai.
+     */
+    it('successfully changes status to Delivered after delivery', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::HandoverItem->value);
 
@@ -583,9 +670,12 @@ describe('Serah Terima Barang (Permission: HandoverItem)', function () {
 // 7. Receive (Permission: Terima Barang)
 // ============================================================================
 
-describe('Terima Barang (Permission: ReceiveItem)', function () {
+describe('Receive Items (Permission: ReceiveItem)', function () {
 
-    it('user dengan ReceiveItem dapat mengakses halaman receive', function () {
+    /**
+     * Memastikan user dengan izin 'terima_barang' dapat mengakses halaman form penerimaan (receive).
+     */
+    it('allows users with ReceiveItem permission to access receive page', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::ReceiveItem->value);
 
@@ -609,7 +699,10 @@ describe('Terima Barang (Permission: ReceiveItem)', function () {
             ->assertOk();
     });
 
-    it('user tanpa ReceiveItem tidak dapat mengakses receive', function () {
+    /**
+     * Memastikan user tanpa izin 'terima_barang' ditolak saat mencoba mengakses halaman form penerimaan.
+     */
+    it('denies users without ReceiveItem permission from accessing receive page', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
 
         $order = WarehouseOrder::create([
@@ -625,7 +718,10 @@ describe('Terima Barang (Permission: ReceiveItem)', function () {
             ->assertForbidden();
     });
 
-    it('receive: status berubah menjadi Finished', function () {
+    /**
+     * Memastikan status permintaan berubah menjadi 'Finished' setelah user mengkonfirmasi penerimaan barang.
+     */
+    it('successfully changes status to Finished after receive', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::ReceiveItem->value);
 
@@ -664,9 +760,12 @@ describe('Terima Barang (Permission: ReceiveItem)', function () {
 // 8. Delivery: item_transaction tercatat sebagai Barang Keluar
 // ============================================================================
 
-describe('Delivery: Pencatatan Item Transaction (Barang Keluar)', function () {
+describe('Delivery: Item Transaction Tracking (Outbound Stock)', function () {
 
-    it('saat delivery, item_transaction tercatat sebagai Out dengan item_id dan quantity yang benar', function () {
+    /**
+     * Memastikan setiap item dalam delivery dicatat sebagai transaksi 'Out' di database.
+     */
+    it('records an Outbound item_transaction for each item during delivery', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::HandoverItem->value);
 
@@ -724,9 +823,12 @@ describe('Delivery: Pencatatan Item Transaction (Barang Keluar)', function () {
 // 9. Receive: item_transaction tercatat sebagai Barang Masuk
 // ============================================================================
 
-describe('Receive: Pencatatan Item Transaction (Barang Masuk)', function () {
+describe('Receive: Item Transaction Tracking (Inbound Stock)', function () {
 
-    it('saat receive, item_transaction tercatat sebagai In dengan item_id dan quantity yang benar', function () {
+    /**
+     * Memastikan setiap item yang diterima dicatat sebagai transaksi 'In' pada inventaris divisi terkait.
+     */
+    it('records an Inbound item_transaction for each item during receive', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::ReceiveItem->value);
 
@@ -794,7 +896,10 @@ describe('Receive: Pencatatan Item Transaction (Barang Masuk)', function () {
         expect(ItemTransaction::where('type', ItemTransactionType::In->value)->count())->toBe(2);
     });
 
-    it('saat receive, stok division item bertambah sesuai quantity', function () {
+    /**
+     * Memastikan stok inventaris divisi peminta bertambah sesuai dengan jumlah barang yang diterima.
+     */
+    it('increases division item stock by the received quantity', function () {
         $user = User::factory()->create(['division_id' => $this->divisionA->id]);
         $user->givePermissionTo(InventoryPermission::ReceiveItem->value);
 
@@ -834,9 +939,12 @@ describe('Receive: Pencatatan Item Transaction (Barang Masuk)', function () {
 // 10. Datatable: Pagination, Limit, dan Global Search
 // ============================================================================
 
-describe('Datatable: Pagination, Limit, dan Search', function () {
+describe('Datatable: Pagination, Limit, and Search', function () {
 
-    it('pagination bekerja dengan benar', function () {
+    /**
+     * Memastikan mekanisme pagination (pindah halaman) bekerja dengan benar pada datatable.
+     */
+    it('handles pagination correctly', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::ViewAllWarehouseOrder->value);
 
@@ -865,7 +973,10 @@ describe('Datatable: Pagination, Limit, dan Search', function () {
         $response2->assertJsonCount(5, 'data');
     });
 
-    it('limit bekerja dengan benar', function () {
+    /**
+     * Memastikan pengaturan jumlah data per halaman (limit) bekerja sesuai input user.
+     */
+    it('handles limit parameter correctly', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::ViewAllWarehouseOrder->value);
 
@@ -894,7 +1005,10 @@ describe('Datatable: Pagination, Limit, dan Search', function () {
         $response2->assertJsonPath('last_page', 2);
     });
 
-    it('search global berfungsi mencari berdasarkan order_number', function () {
+    /**
+     * Memastikan fitur search global dapat menemukan permintaan berdasarkan nomor order.
+     */
+    it('can search for orders by order_number', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::ViewAllWarehouseOrder->value);
 
@@ -922,7 +1036,10 @@ describe('Datatable: Pagination, Limit, dan Search', function () {
         $response->assertJsonPath('data.0.order_number', 'WO-SEARCH-ABC');
     });
 
-    it('search global berfungsi mencari berdasarkan description', function () {
+    /**
+     * Memastikan fitur search global dapat menemukan permintaan berdasarkan deskripsi/keterangan.
+     */
+    it('can search for orders by description', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::ViewAllWarehouseOrder->value);
 
@@ -957,7 +1074,10 @@ describe('Datatable: Pagination, Limit, dan Search', function () {
 
 describe('Datatable: Individual Column Filter (Footer Search)', function () {
 
-    it('filter berdasarkan kolom order_number', function () {
+    /**
+     * Memastikan filter pencarian spesifik pada kolom nomor order (order_number) bekerja.
+     */
+    it('filters datatable by order_number column', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::ViewAllWarehouseOrder->value);
 
@@ -983,7 +1103,10 @@ describe('Datatable: Individual Column Filter (Footer Search)', function () {
         $response->assertJsonPath('data.0.order_number', 'WO-COL-ALPHA');
     });
 
-    it('filter berdasarkan kolom status', function () {
+    /**
+     * Memastikan filter pencarian berdasarkan status permintaan (Pending, Confirmed, etc) bekerja.
+     */
+    it('filters datatable by status column', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::ViewAllWarehouseOrder->value);
 
@@ -1021,7 +1144,10 @@ describe('Datatable: Individual Column Filter (Footer Search)', function () {
         $response2->assertJsonPath('data.0.order_number', 'WO-STAT-002');
     });
 
-    it('filter berdasarkan kolom division_id', function () {
+    /**
+     * Memastikan filter pencarian berdasarkan ID divisi peminta bekerja.
+     */
+    it('filters datatable by division_id column', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::ViewAllWarehouseOrder->value);
 
@@ -1048,7 +1174,10 @@ describe('Datatable: Individual Column Filter (Footer Search)', function () {
         $response->assertJsonPath('data.0.order_number', 'WO-DIVF-A');
     });
 
-    it('filter berdasarkan kolom user_id (nama user)', function () {
+    /**
+     * Memastikan filter pencarian berdasarkan nama user (peminta) bekerja.
+     */
+    it('filters datatable by user_id (user name)', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::ViewAllWarehouseOrder->value);
 
@@ -1075,7 +1204,10 @@ describe('Datatable: Individual Column Filter (Footer Search)', function () {
         $response->assertJsonPath('data.0.order_number', 'WO-USER-BUDI');
     });
 
-    it('filter berdasarkan kolom created_at (bulan/tahun)', function () {
+    /**
+     * Memastikan filter pencarian berdasarkan bulan dan tahun pembuatan (created_at) bekerja.
+     */
+    it('filters datatable by created_at (month/year)', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::ViewAllWarehouseOrder->value);
 
@@ -1103,7 +1235,10 @@ describe('Datatable: Individual Column Filter (Footer Search)', function () {
         $response->assertJsonPath('data.0.order_number', 'WO-DATE-JAN');
     });
 
-    it('filter status ALL mengambil semua data', function () {
+    /**
+     * Memastikan opsi filter 'ALL' pada status mengembalikan seluruh data permintaan.
+     */
+    it('returns all data when status filter is set to ALL', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::ViewAllWarehouseOrder->value);
 
@@ -1128,7 +1263,10 @@ describe('Datatable: Individual Column Filter (Footer Search)', function () {
         $response->assertJsonCount(2, 'data');
     });
 
-    it('filter division_id ALL mengambil semua data', function () {
+    /**
+     * Memastikan opsi filter 'ALL' pada divisi mengembalikan data permintaan dari seluruh divisi.
+     */
+    it('returns all data when division_id filter is set to ALL', function () {
         $user = User::factory()->create();
         $user->givePermissionTo(InventoryPermission::ViewAllWarehouseOrder->value);
 

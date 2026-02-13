@@ -4,6 +4,9 @@ use App\Models\Division;
 use App\Models\Position;
 use App\Models\User;
 
+/**
+ * Memastikan atribut fillable pada model User sudah benar.
+ */
 it('has correct fillable attributes', function () {
     $user = new User;
 
@@ -15,6 +18,9 @@ it('has correct fillable attributes', function () {
         ->and($user->getFillable())->toContain('is_active');
 });
 
+/**
+ * Memastikan is_active di-cast ke boolean.
+ */
 it('casts is_active to boolean', function () {
     $user = User::factory()->create(['is_active' => 1]);
 
@@ -22,6 +28,9 @@ it('casts is_active to boolean', function () {
         ->and($user->is_active)->toBeBool();
 });
 
+/**
+ * Memastikan password di-hash otomatis saat disimpan.
+ */
 it('hashes password automatically', function () {
     $user = User::factory()->create(['password' => 'secret123']);
 
@@ -36,6 +45,9 @@ it('hides password and remember_token in serialization', function () {
         ->and($user->toArray())->not->toHaveKey('remember_token');
 });
 
+/**
+ * Test relasi belonsTo ke Division.
+ */
 it('belongs to division relationship', function () {
     $division = Division::factory()->create();
     $user = User::factory()->create(['division_id' => $division->id]);
@@ -59,18 +71,27 @@ it('can have division and position', function () {
         ->and($user->position)->not->toBeNull();
 });
 
+/**
+ * Test aksesor untuk mendapatkan inisial nama (John Doe -> JD).
+ */
 it('generates initials correctly', function () {
     $user = User::factory()->create(['name' => 'John Doe']);
 
     expect($user->initials)->toBe('JD');
 });
 
+/**
+ * Inisial untuk nama tunggal.
+ */
 it('generates initials for single name', function () {
     $user = User::factory()->create(['name' => 'John']);
 
     expect($user->initials)->toBe('J');
 });
 
+/**
+ * Batasi inisial maksimal 2 karakter.
+ */
 it('limits initials to two characters', function () {
     $user = User::factory()->create(['name' => 'John Doe Smith']);
 

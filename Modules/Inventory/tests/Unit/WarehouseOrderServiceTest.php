@@ -26,6 +26,9 @@ beforeEach(function () {
     }
 });
 
+/**
+ * Memastikan service dapat membuat pesanan gudang baru dengan status awal 'Pending'.
+ */
 it('can create a warehouse order', function () {
     $user = User::factory()->create();
     $division = Division::factory()->create();
@@ -58,6 +61,9 @@ it('can create a warehouse order', function () {
     expect($order->carts)->toHaveCount(1);
 });
 
+/**
+ * Memastikan service dapat memperbarui data pesanan gudang yang sudah ada (termasuk item di dalamnya).
+ */
 it('can update a warehouse order', function () {
     $user = User::factory()->create();
     $division = Division::factory()->create();
@@ -103,6 +109,9 @@ it('can update a warehouse order', function () {
     expect($updated->carts->first()->item_id)->toBe($item2->id);
 });
 
+/**
+ * Memastikan service dapat memproses konfirmasi pesanan yang statusnya masih 'Pending'.
+ */
 it('can confirm a pending order', function () {
     $user = User::factory()->create();
     $division = Division::factory()->create();
@@ -120,6 +129,9 @@ it('can confirm a pending order', function () {
     expect($confirmed->accepted_date)->not->toBeNull();
 });
 
+/**
+ * Memastikan service dapat menolak pesanan dengan alasan penolakan yang dicatat di database.
+ */
 it('can reject an order with reason', function () {
     $user = User::factory()->create();
     $division = Division::factory()->create();
@@ -140,6 +152,9 @@ it('can reject an order with reason', function () {
     ]);
 });
 
+/**
+ * Memastikan validasi fungsional (canEdit) hanya memperbolehkan pengubahan data pada pesanan berstatus 'Pending'.
+ */
 it('checks if order can be edited', function () {
     $user = User::factory()->create();
     $division = Division::factory()->create();
@@ -162,6 +177,9 @@ it('checks if order can be edited', function () {
     expect($this->service->canEdit($confirmedOrder))->toBeFalse();
 });
 
+/**
+ * Memastikan validasi fungsional (canConfirm) hanya memperbolehkan konfirmasi pada pesanan yang belum diproses.
+ */
 it('checks if order can be confirmed', function () {
     $user = User::factory()->create();
     $division = Division::factory()->create();
@@ -184,6 +202,9 @@ it('checks if order can be confirmed', function () {
     expect($this->service->canConfirm($deliveredOrder))->toBeFalse();
 });
 
+/**
+ * Memastikan validasi fungsional (canDeliver) hanya memperbolehkan pengiriman pada pesanan yang sudah dikonfirmasi.
+ */
 it('checks if order can be delivered', function () {
     $user = User::factory()->create();
     $division = Division::factory()->create();
@@ -206,6 +227,9 @@ it('checks if order can be delivered', function () {
     expect($this->service->canDeliver($pendingOrder))->toBeFalse();
 });
 
+/**
+ * Memastikan validasi fungsional (canReceive) hanya memperbolehkan penerimaan pada pesanan yang sudah dikirim (Delivered).
+ */
 it('checks if order can be received', function () {
     $division = Division::factory()->create();
     $user = User::factory()->create(['division_id' => $division->id]);
@@ -228,6 +252,9 @@ it('checks if order can be received', function () {
     expect($this->service->canReceive($pendingOrder, $user))->toBeFalse();
 });
 
+/**
+ * Memastikan validasi akses (canView) memperbolehkan user peminta atau user dengan izin global untuk melihat pesanan.
+ */
 it('checks view permission', function () {
     $division = Division::factory()->create();
     $user = User::factory()->create(['division_id' => $division->id]);

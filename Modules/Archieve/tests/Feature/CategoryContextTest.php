@@ -23,7 +23,10 @@ beforeEach(function () {
 });
 
 describe('Category Context Access Control', function () {
-    it('allows users with lihat_kategori_arsip to access index, datatable, and print', function () {
+    /**
+     * Memastikan user dengan izin 'lihat_kategori_arsip' dapat mengakses index, datatable, dan fitur print.
+     */
+    it('allows users with view_kategori_arsip to access index, datatable, and print', function () {
         $user = User::factory()->create();
         $user->assignRole($this->viewRole);
 
@@ -32,7 +35,10 @@ describe('Category Context Access Control', function () {
         $this->actingAs($user)->get('/archieve/contexts/print/excel')->assertStatus(200);
     });
 
-    it('denies users without kelola_kategori_arsip from accessing management routes', function () {
+    /**
+     * Memastikan user tanpa izin 'kelola_kategori_arsip' dilarang mengakses route manajemen (create, edit, delete).
+     */
+    it('denies users without manage_kategori_arsip from accessing management routes', function () {
         $user = User::factory()->create();
         $user->assignRole($this->viewRole);
 
@@ -45,7 +51,10 @@ describe('Category Context Access Control', function () {
         $this->actingAs($user)->delete("/archieve/contexts/{$context->id}")->assertStatus(403);
     });
 
-    it('allows users with kelola_kategori_arsip to access management routes', function () {
+    /**
+     * Memastikan user dengan izin 'kelola_kategori_arsip' diperbolehkan mengakses route manajemen.
+     */
+    it('allows users with manage_kategori_arsip to access management routes', function () {
         $user = User::factory()->create();
         $user->assignRole($this->manageRole);
 
@@ -57,6 +66,9 @@ describe('Category Context Access Control', function () {
 });
 
 describe('Category Context Datatable Features', function () {
+    /**
+     * Menguji fitur pencarian datatable baik secara global maupun pada kolom spesifik (nama/deskripsi).
+     */
     it('can search globally and individually', function () {
         $user = User::factory()->create();
         $user->assignRole($this->viewRole);
@@ -83,6 +95,9 @@ describe('Category Context Datatable Features', function () {
         expect($response->json('data.0.name'))->toBe('Finance Records');
     });
 
+    /**
+     * Memastikan fitur pagination dan limitasi jumlah data pada datatable bekerja dengan benar.
+     */
     it('can paginate and limit results', function () {
         $user = User::factory()->create();
         $user->assignRole($this->viewRole);
@@ -99,6 +114,9 @@ describe('Category Context Datatable Features', function () {
 });
 
 describe('Category Context Print Functionality', function () {
+    /**
+     * Memastikan fitur cetak (print) menghasilkan file excel (.xlsx) dengan header yang sesuai.
+     */
     it('returns xlsx file for printing contexts', function () {
         $user = User::factory()->create();
         $user->assignRole($this->viewRole);

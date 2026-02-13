@@ -21,6 +21,9 @@ beforeEach(function () {
 
 describe('Category Permission Access Control', function () {
     
+    /**
+     * Memastikan user dilarang mengakses halaman kategori jika tidak memiliki izin apapun.
+     */
     it('denies access to category index without any category permission', function () {
         // User tanpa permission kategori
         $this->testRole->syncPermissions([]);
@@ -30,7 +33,10 @@ describe('Category Permission Access Control', function () {
         $response->assertForbidden();
     });
     
-    it('allows access to category index with lihat permission', function () {
+    /**
+     * Memastikan user dengan izin 'lihat_kategori_barang' diperbolehkan mengakses halaman index.
+     */
+    it('allows access to category index with view permission', function () {
         // User dengan permission lihat
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewCategory->value]);
         
@@ -39,7 +45,10 @@ describe('Category Permission Access Control', function () {
         $response->assertOk();
     });
     
-    it('allows access to category index with kelola permission', function () {
+    /**
+     * Memastikan user dengan izin 'kelola_kategori_barang' diperbolehkan mengakses halaman index.
+     */
+    it('allows access to category index with manage permission', function () {
         // User dengan permission kelola (tanpa lihat)
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageCategory->value]);
         
@@ -48,7 +57,10 @@ describe('Category Permission Access Control', function () {
         $response->assertOk();
     });
     
-    it('denies access to datatable without lihat permission', function () {
+    /**
+     * Memastikan akses API datatable dilarang jika user tidak memiliki izin 'lihat'.
+     */
+    it('denies access to datatable without view permission', function () {
         // User HANYA dengan kelola, TANPA lihat
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageCategory->value]);
         
@@ -57,7 +69,10 @@ describe('Category Permission Access Control', function () {
         $response->assertForbidden();
     });
     
-    it('allows access to datatable with lihat permission', function () {
+    /**
+     * Memastikan akses API datatable diperbolehkan bagi user dengan izin 'lihat'.
+     */
+    it('allows access to datatable with view permission', function () {
         // User dengan permission lihat
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewCategory->value]);
         
@@ -66,7 +81,10 @@ describe('Category Permission Access Control', function () {
         $response->assertOk();
     });
     
-    it('denies access to print-excel without lihat permission', function () {
+    /**
+     * Memastikan fitur print excel dilarang bagi user tanpa izin 'lihat'.
+     */
+    it('denies access to print-excel without view permission', function () {
         // User HANYA dengan kelola, TANPA lihat
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageCategory->value]);
         
@@ -75,7 +93,10 @@ describe('Category Permission Access Control', function () {
         $response->assertForbidden();
     });
     
-    it('allows access to print-excel with lihat permission', function () {
+    /**
+     * Memastikan fitur print excel diperbolehkan bagi user dengan izin 'lihat'.
+     */
+    it('allows access to print-excel with view permission', function () {
         // User dengan permission lihat
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewCategory->value]);
         
@@ -84,7 +105,10 @@ describe('Category Permission Access Control', function () {
         $response->assertOk();
     });
     
-    it('denies access to create page without kelola permission', function () {
+    /**
+     * Memastikan halaman tambah kategori dilarang bagi user tanpa izin 'kelola'.
+     */
+    it('denies access to create page without manage permission', function () {
         // User HANYA dengan lihat, TANPA kelola
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewCategory->value]);
         
@@ -93,7 +117,10 @@ describe('Category Permission Access Control', function () {
         $response->assertForbidden();
     });
     
-    it('allows access to create page with kelola permission', function () {
+    /**
+     * Memastikan halaman tambah kategori diperbolehkan bagi user dengan izin 'kelola'.
+     */
+    it('allows access to create page with manage permission', function () {
         // User dengan permission kelola
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageCategory->value]);
         
@@ -102,6 +129,9 @@ describe('Category Permission Access Control', function () {
         $response->assertOk();
     });
     
+    /**
+     * Memastikan user dengan kedua izin (lihat & kelola) memiliki akses penuh ke seluruh fitur.
+     */
     it('allows full access with both permissions', function () {
         // User dengan kedua permission
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewCategory->value, \Modules\Inventory\Enums\InventoryPermission::ManageCategory->value]);
@@ -119,7 +149,10 @@ describe('Category Permission Access Control', function () {
 
 describe('Frontend Permission Props', function () {
     
-    it('passes correct permissions to frontend when user has lihat only', function () {
+    /**
+     * Memastikan prop 'permissions' yang dikirim ke frontend sesuai (hanya 'lihat').
+     */
+    it('passes correct permissions to frontend when user has view only', function () {
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewCategory->value]);
         
         $response = $this->actingAs($this->testUser)->get('/inventory/categories');
@@ -135,7 +168,10 @@ describe('Frontend Permission Props', function () {
         );
     });
     
-    it('passes correct permissions to frontend when user has kelola only', function () {
+    /**
+     * Memastikan prop 'permissions' yang dikirim ke frontend sesuai (hanya 'kelola').
+     */
+    it('passes correct permissions to frontend when user has manage only', function () {
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ManageCategory->value]);
         
         $response = $this->actingAs($this->testUser)->get('/inventory/categories');
@@ -151,6 +187,9 @@ describe('Frontend Permission Props', function () {
         );
     });
     
+    /**
+     * Memastikan prop 'permissions' yang dikirim ke frontend mencakup keduanya jika user berwenang.
+     */
     it('passes both permissions to frontend when user has both', function () {
         $this->testRole->syncPermissions([\Modules\Inventory\Enums\InventoryPermission::ViewCategory->value, \Modules\Inventory\Enums\InventoryPermission::ManageCategory->value]);
         
