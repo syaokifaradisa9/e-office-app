@@ -310,7 +310,11 @@ export default function DocumentSearch({ classifications: initialClassifications
         <RootLayout title="Pencarian Dokumen">
             <div className="space-y-6">
                 {/* Advanced Filters */}
-                <ContentCard title="Filter Pencarian" mobileFullWidth>
+                <ContentCard
+                    title="Filter Pencarian"
+                    subtitle="Gunakan filter di bawah ini untuk mencari dokumen secara spesifik"
+                    mobileFullWidth
+                >
                     <div className="space-y-6">
                         {/* Search & User */}
                         <div className={`grid gap-4 ${!showStaffFilter ? 'sm:grid-cols-1' : 'sm:grid-cols-2'}`}>
@@ -414,6 +418,7 @@ export default function DocumentSearch({ classifications: initialClassifications
                 {/* Classification Tree with Documents */}
                 <ContentCard
                     title={hasActiveFilters ? 'Hasil Filter Klasifikasi' : 'Klasifikasi Dokumen'}
+                    subtitle={hasActiveFilters ? 'Daftar klasifikasi yang mengandung dokumen hasil pencarian Anda' : 'Telusuri struktur klasifikasi untuk menemukan dokumen yang Anda cari'}
                     mobileFullWidth
                 >
                     {hasActiveFilters && (

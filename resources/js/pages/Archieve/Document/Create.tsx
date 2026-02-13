@@ -244,7 +244,12 @@ export default function DocumentCreate({ document, contexts, classifications, di
     return (
         <RootLayout title={isEdit ? 'Edit Dokumen' : 'Upload Dokumen'}>
             <form onSubmit={handleSubmit}>
-                <ContentCard title={isEdit ? 'Edit Dokumen Arsip' : 'Upload Dokumen Baru'} backPath="/archieve/documents" mobileFullWidth>
+                <ContentCard
+                    title={isEdit ? 'Edit Dokumen Arsip' : 'Upload Dokumen Baru'}
+                    subtitle={isEdit ? 'Perbarui informasi detail dan file dokumen yang sudah ada' : 'Lengkapi formulir di bawah ini untuk mengunggah dokumen baru ke sistem'}
+                    backPath="/archieve/documents"
+                    mobileFullWidth
+                >
                     <div className="divide-y divide-slate-100 dark:divide-slate-700/50 -mx-6 -mb-6">
                         {/* Section 1: Basic Info */}
                         <div className="px-6 py-5">
