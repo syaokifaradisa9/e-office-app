@@ -11,6 +11,7 @@ import {
     AlertTriangle,
     BarChart3,
 } from 'lucide-react';
+import { ArchievePermission } from '@/enums/ArchievePermission';
 import {
     Chart as ChartJS,
     CategoryScale,

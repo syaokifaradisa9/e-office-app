@@ -14,6 +14,7 @@ import FloatingActionButton from '@/components/buttons/FloatingActionButton';
 import { DivisionCardSkeleton } from '@/components/skeletons/CardSkeleton';
 import Tooltip from '@/components/commons/Tooltip';
 import FormSelect from '@/components/forms/FormSelect';
+import { ArchievePermission } from '@/enums/ArchievePermission';
 
 interface Classification {
     id: number;
@@ -57,8 +58,8 @@ interface Params {
 
 export default function ClassificationIndex() {
     const { permissions, classifications } = usePage<PageProps>().props;
-    const hasViewPermission = permissions?.includes('lihat_klasifikasi_arsip');
-    const hasManagePermission = permissions?.includes('kelola_klasifikasi_arsip');
+    const hasViewPermission = permissions?.includes(ArchievePermission.VIEW_CLASSIFICATION);
+    const hasManagePermission = permissions?.includes(ArchievePermission.MANAGE_CLASSIFICATION);
 
     const [dataTable, setDataTable] = useState<PaginationData>({
         data: [],
@@ -184,7 +185,7 @@ export default function ClassificationIndex() {
                 subtitle="Atur tata kelola dan klasifikasi dokumen arsip Anda"
                 mobileFullWidth
                 additionalButton={
-                    <CheckPermissions permissions={['kelola_klasifikasi_arsip']}>
+                    <CheckPermissions permissions={[ArchievePermission.MANAGE_CLASSIFICATION]}>
                         <Button className="hidden w-full md:flex" label="Tambah Klasifikasi" href="/archieve/classifications/create" icon={<Plus className="size-4" />} />
                     </CheckPermissions>
                 }
@@ -309,7 +310,7 @@ export default function ClassificationIndex() {
                 )}
             </ContentCard>
 
-            <CheckPermissions permissions={['kelola_klasifikasi_arsip']}>
+            <CheckPermissions permissions={[ArchievePermission.MANAGE_CLASSIFICATION]}>
                 <FloatingActionButton href="/archieve/classifications/create" label="Tambah Klasifikasi" />
             </CheckPermissions>
         </RootLayout>

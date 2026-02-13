@@ -16,6 +16,7 @@ import {
     ChevronDown,
     ChevronUp,
 } from 'lucide-react';
+import { ArchievePermission } from '@/enums/ArchievePermission';
 import {
     Chart as ChartJS,
     CategoryScale,

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { usePage } from '@inertiajs/react';
 import { Search, ChevronRight, ChevronDown, FileText, Folder, FolderOpen, Download, Filter, X, File, Loader2, Check } from 'lucide-react';
+import { ArchievePermission } from '@/enums/ArchievePermission';
 
 import Button from '@/components/buttons/Button';
 import FormInput from '@/components/forms/FormInput';
@@ -57,9 +58,9 @@ export default function DocumentSearch({ classifications: initialClassifications
     const { permissions } = usePage<any>().props;
 
     // Explicit visibility logic based on permission levels
-    const hasKeseluruhan = permissions?.includes('pencarian_dokumen_keseluruhan');
-    const hasDivisi = permissions?.includes('pencarian_dokumen_divisi');
-    const hasPribadi = permissions?.includes('pencarian_dokumen_pribadi');
+    const hasKeseluruhan = permissions?.includes(ArchievePermission.SEARCH_ALL_SCOPE);
+    const hasDivisi = permissions?.includes(ArchievePermission.SEARCH_DIVISION_SCOPE);
+    const hasPribadi = permissions?.includes(ArchievePermission.SEARCH_PERSONAL_SCOPE);
 
     const showDivisionFilter = hasKeseluruhan;
     const showStaffFilter = hasKeseluruhan || hasDivisi;

@@ -108,6 +108,36 @@ class DocumentDatatableService
             $query->where('classification_id', $request->classification_id);
         }
 
+        if ($request->has('category') && $request->category != '') {
+            $query->whereHas('categories', function ($q) use ($request) {
+                $q->where('name', 'like', '%'.$request->category.'%');
+            });
+        }
+
+        if ($request->has('division') && $request->division != '') {
+            $query->whereHas('divisions', function ($q) use ($request) {
+                $q->where('name', 'like', '%'.$request->division.'%');
+            });
+        }
+
+        if ($request->has('uploader') && $request->uploader != '') {
+            $query->whereHas('uploader', function ($q) use ($request) {
+                $q->where('name', 'like', '%'.$request->uploader.'%');
+            });
+        }
+
+        if ($request->has('file_size') && $request->file_size != '') {
+            $query->where('file_size', 'like', '%'.$request->file_size.'%');
+        }
+
+        if ($request->has('created_at') && $request->created_at != '') {
+            $date = explode('-', $request->created_at);
+            if (count($date) == 2) {
+                $query->whereYear('created_at', $date[0])
+                    ->whereMonth('created_at', $date[1]);
+            }
+        }
+
         if ($request->has('search') && $request->search != '') {
             $query->where(function ($q) use ($request) {
                 $q->where('title', 'like', '%'.$request->search.'%')

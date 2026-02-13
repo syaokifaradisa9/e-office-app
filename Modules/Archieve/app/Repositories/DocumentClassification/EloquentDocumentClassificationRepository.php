@@ -66,8 +66,13 @@ class EloquentDocumentClassificationRepository implements DocumentClassification
                 }
             }]);
 
-        return $query->having('documents_count', '>', 0)
-            ->orderByDesc('documents_count')
+        if ($divisionId) {
+            $query->whereHas('documents', fn ($q) => $q->whereHas('divisions', fn ($dq) => $dq->where('division_id', $divisionId)));
+        } else {
+            $query->has('documents');
+        }
+
+        return $query->orderByDesc('documents_count')
             ->limit($limit)
             ->get()
             ->map(fn ($cls) => [

@@ -24,11 +24,6 @@ enum ArchieveUserPermission: string
     case ViewReportDivision = 'lihat_laporan_arsip_divisi';
     case ViewReportAll = 'lihat_laporan_arsip_keseluruhan';
 
-    // Document Permissions
-    case ViewDocument = 'lihat_arsip_dokumen';
-    case ManageDocument = 'kelola_arsip_dokumen';
-    case SearchDocument = 'cari_arsip_dokumen';
-
     // Document Access Scopes (Hardcoded previously)
     case ViewAll = 'lihat_semua_arsip';
     case ViewDivision = 'lihat_arsip_divisi';
@@ -37,6 +32,7 @@ enum ArchieveUserPermission: string
     case ManageDivision = 'kelola_arsip_divisi';
 
     // Search Scope Permissions (Used in DocumentService)
+    case SearchDocument = 'pencarian_dokumen';
     case SearchDivisionScope = 'pencarian_dokumen_divisi';
     case SearchAllScope = 'pencarian_dokumen_keseluruhan';
     case SearchPersonalScope = 'pencarian_dokumen_pribadi';

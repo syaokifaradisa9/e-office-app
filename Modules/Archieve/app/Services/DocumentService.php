@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Validation\ValidationException;
 use Modules\Archieve\DataTransferObjects\StoreDocumentDTO;
 use Modules\Archieve\DataTransferObjects\SearchDocumentDTO;
 use Modules\Archieve\Models\Document;
@@ -31,7 +32,10 @@ class DocumentService
 
     public function store(StoreDocumentDTO $dto, UploadedFile $file, User $uploader): Document
     {
-        return DB::transaction(function () use ($dto, $file, $uploader) {
+        $fileSize = $file->getSize();
+        $this->validateStorageLimit($dto->division_ids, $fileSize);
+
+        return DB::transaction(function () use ($dto, $file, $uploader, $fileSize) {
             // Store the file
             $filePath = $file->store('archieve/documents', 'public');
             $fileSize = $file->getSize();
@@ -65,10 +69,17 @@ class DocumentService
 
     public function update(Document $document, StoreDocumentDTO $dto, ?UploadedFile $file = null): Document
     {
-        return DB::transaction(function () use ($document, $dto, $file) {
-            $oldFileSize = $document->file_size;
-            $oldDivisionIds = $document->divisions->pluck('id')->toArray();
-            $fileSize = $oldFileSize;
+        $oldFileSize = $document->file_size;
+        $oldDivisionIds = $document->divisions->pluck('id')->toArray();
+        $fileSize = $file ? $file->getSize() : $oldFileSize;
+
+        // If file or divisions changed, check limit
+        if ($file || $dto->division_ids !== $oldDivisionIds) {
+            $this->validateStorageLimit($dto->division_ids, $fileSize, $document->id);
+        }
+
+        return DB::transaction(function () use ($document, $dto, $file, $oldFileSize, $oldDivisionIds, $fileSize) {
+            // File update logic
 
             // Update file if provided
             if ($file) {
@@ -133,6 +144,10 @@ class DocumentService
             return $this->divisionRepository->all();
         }
         
+        if (!$user->division_id) {
+            return collect();
+        }
+
         $division = $this->divisionRepository->find($user->division_id);
         return $division ? collect([$division]) : collect();
     }
@@ -143,6 +158,10 @@ class DocumentService
             return $this->userRepository->all();
         }
         
+        if (!$user->division_id) {
+            return collect();
+        }
+
         return $this->userRepository->getByDivisionWithColumns($user->division_id);
     }
 
@@ -236,18 +255,21 @@ class DocumentService
 
     private function applySearchScope($query, User $user): void
     {
-        // Enforce division scope if has 'divisi' permission but not 'keseluruhan'
-        if ($user->can(ArchieveUserPermission::SearchDivisionScope->value) && 
-            !$user->can(ArchieveUserPermission::SearchAllScope->value)) {
+        // 1. Jika memiliki SearchAllScope, jangan tambah filter apapun (Logic requirement #3)
+        if ($user->can(ArchieveUserPermission::SearchAllScope->value)) {
+            return;
+        }
+
+        // 2. Jika memiliki SearchDivisionScope, filter berdasarkan divisi user (Logic requirement #2)
+        if ($user->can(ArchieveUserPermission::SearchDivisionScope->value)) {
             $query->whereHas('divisions', function ($q) use ($user) {
                 $q->where('divisions.id', $user->division_id);
             });
+            return; // Kembalikan agar tidak masuk ke scope pribadi jika sudah kena scope divisi
         }
 
-        // Enforce personal scope if has 'pribadi' permission but not 'keseluruhan' or 'divisi'
-        if ($user->can(ArchieveUserPermission::SearchPersonalScope->value) && 
-            !$user->can(ArchieveUserPermission::SearchAllScope->value) && 
-            !$user->can(ArchieveUserPermission::SearchDivisionScope->value)) {
+        // 3. Jika memiliki SearchPersonalScope, filter berdasarkan user_id (Logic requirement #4)
+        if ($user->can(ArchieveUserPermission::SearchPersonalScope->value)) {
             $query->whereHas('users', function ($sq) use ($user) {
                 $sq->where('users.id', $user->id);
             });
@@ -344,6 +366,40 @@ class DocumentService
         foreach ($document->divisions as $division) {
             $allocatedSize = $division->pivot->allocated_size;
             $this->storageRepository->decrementUsedSize($division->id, $allocatedSize);
+        }
+    }
+
+    /**
+     * Validate that all selected divisions have enough storage.
+     */
+    private function validateStorageLimit(array $divisionIds, int $fileSize, ?int $excludeDocumentId = null): void
+    {
+        $divisionCount = count($divisionIds);
+        if ($divisionCount === 0) return;
+
+        $allocatedSizePerDivision = (int) floor($fileSize / $divisionCount);
+
+        foreach ($divisionIds as $divisionId) {
+            $storage = $this->storageRepository->findByDivision($divisionId);
+            
+            if (!$storage) continue;
+
+            $currentUsed = $storage->used_size;
+            
+            // If updating, subtract current allocation of this document for this division if it exists
+            if ($excludeDocumentId) {
+                $doc = $this->repository->find($excludeDocumentId);
+                $oldAllocation = $doc->divisions()->where('divisions.id', $divisionId)->first();
+                if ($oldAllocation) {
+                    $currentUsed -= $oldAllocation->pivot->allocated_size;
+                }
+            }
+
+            if (($currentUsed + $allocatedSizePerDivision) > $storage->max_size) {
+                throw ValidationException::withMessages([
+                    'file' => ["Penyimpanan divisi {$storage->division->name} tidak mencukupi."]
+                ]);
+            }
         }
     }
 }

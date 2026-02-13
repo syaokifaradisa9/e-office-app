@@ -22,6 +22,24 @@ class StoreDocumentRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        $user = $this->user();
+        if (!$user->can(ArchieveUserPermission::ManageAll->value) && 
+            $user->can(ArchieveUserPermission::ManageDivision->value)) {
+            
+            // Force division_ids to be only the user's division
+            if ($user->division_id) {
+                $this->merge([
+                    'division_ids' => [$user->division_id]
+                ]);
+            }
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>

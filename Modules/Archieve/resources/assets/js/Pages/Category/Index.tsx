@@ -14,6 +14,7 @@ import FloatingActionButton from '@/components/buttons/FloatingActionButton';
 import { DivisionCardSkeleton } from '@/components/skeletons/CardSkeleton';
 import Tooltip from '@/components/commons/Tooltip';
 import FormSelect from '@/components/forms/FormSelect';
+import { ArchievePermission } from '@/enums/ArchievePermission';
 
 interface Category {
     id: number;
@@ -50,8 +51,8 @@ interface Params {
 
 export default function CategoryIndex() {
     const { permissions } = usePage<PageProps>().props;
-    const hasViewPermission = permissions?.includes('lihat_kategori_arsip');
-    const hasManagePermission = permissions?.includes('kelola_kategori_arsip');
+    const hasViewPermission = permissions?.includes(ArchievePermission.VIEW_CATEGORY);
+    const hasManagePermission = permissions?.includes(ArchievePermission.MANAGE_CATEGORY);
 
     const [dataTable, setDataTable] = useState<PaginationData>({
         data: [],
@@ -175,7 +176,7 @@ export default function CategoryIndex() {
                 title="Kategori Arsip"
                 mobileFullWidth
                 additionalButton={
-                    <CheckPermissions permissions={['kelola_kategori_arsip']}>
+                    <CheckPermissions permissions={[ArchievePermission.MANAGE_CATEGORY]}>
                         <Button className="hidden w-full md:flex" label="Tambah Kategori" href="/archieve/categories/create" icon={<Plus className="size-4" />} />
                     </CheckPermissions>
                 }
@@ -281,7 +282,7 @@ export default function CategoryIndex() {
                 )}
             </ContentCard>
 
-            <CheckPermissions permissions={['kelola_kategori_arsip']}>
+            <CheckPermissions permissions={[ArchievePermission.MANAGE_CATEGORY]}>
                 <FloatingActionButton href="/archieve/categories/create" label="Tambah Kategori" />
             </CheckPermissions>
         </RootLayout>

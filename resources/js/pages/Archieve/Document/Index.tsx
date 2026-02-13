@@ -6,14 +6,16 @@ import { usePage } from '@inertiajs/react';
 import { Edit, Plus, Trash2, FileSpreadsheet, Shield, FileText, Download, Eye } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import ConfirmationAlert from '@/components/alerts/ConfirmationAlert';
-import FormSearch from '@/components/forms/FormSearch';
 import Button from '@/components/buttons/Button';
+import FormSearch from '@/components/forms/FormSearch';
+import FormSearchSelect from '@/components/forms/FormSearchSelect';
 import CheckPermissions from '@/components/utils/CheckPermissions';
 import MobileSearchBar from '@/components/forms/MobileSearchBar';
 import FloatingActionButton from '@/components/buttons/FloatingActionButton';
 import { DivisionCardSkeleton } from '@/components/skeletons/CardSkeleton';
 import Tooltip from '@/components/commons/Tooltip';
 import FormSelect from '@/components/forms/FormSelect';
+import { ArchievePermission } from '@/enums/ArchievePermission';
 
 interface Category {
     id: number;
@@ -80,13 +82,19 @@ interface Params {
     sort_by: string;
     sort_direction: 'asc' | 'desc';
     view_type: string;
+    category?: string;
+    division?: string;
+    uploader?: string;
+    title?: string;
+    file_size?: string;
+    created_at?: string;
 }
 
 export default function DocumentIndex() {
-    const { permissions, viewType, userDivisionId, userId } = usePage<PageProps>().props;
+    const { permissions, viewType, classifications } = usePage<PageProps>().props;
 
-    const hasManagePermission = permissions?.includes('kelola_semua_arsip')
-        || permissions?.includes('kelola_arsip_divisi');
+    const hasManagePermission = permissions?.includes(ArchievePermission.MANAGE_ALL)
+        || permissions?.includes(ArchievePermission.MANAGE_DIVISION);
 
     const [dataTable, setDataTable] = useState<PaginationData>({
         data: [],
@@ -99,7 +107,13 @@ export default function DocumentIndex() {
     });
     const [params, setParams] = useState<Params>({
         search: '',
+        title: '',
         classification_id: '',
+        category: '',
+        division: '',
+        uploader: '',
+        file_size: '',
+        created_at: '',
         limit: 20,
         page: 1,
         sort_by: 'created_at',
@@ -163,8 +177,9 @@ export default function DocumentIndex() {
         setParams({ ...params, page: parseInt(page) });
     }
 
-    function onParamsChange(e: { target: { name: string; value: string } }) {
-        setParams({ ...params, [e.target.name]: e.target.value });
+    function onParamsChange(e: { preventDefault?: () => void; target: { name: string; value: string } }) {
+        e.preventDefault?.();
+        setParams({ ...params, [e.target.name]: e.target.value, page: 1 });
     }
 
     function getPrintUrl() {
@@ -223,11 +238,12 @@ export default function DocumentIndex() {
             />
             <ContentCard
                 title={getTitle()}
+                subtitle={`Menampilkan ${getTitle().toLowerCase()} yang tersedia di sistem.`}
                 mobileFullWidth
                 additionalButton={
-                    hasManagePermission ? (
+                    <CheckPermissions permissions={[ArchievePermission.MANAGE_ALL, ArchievePermission.MANAGE_DIVISION]}>
                         <Button className="hidden w-full md:flex" label="Upload Dokumen" href="/archieve/documents/create" icon={<Plus className="size-4" />} />
-                    ) : undefined
+                    </CheckPermissions>
                 }
             >
                 <DataTable
@@ -271,6 +287,17 @@ export default function DocumentIndex() {
                             render: (item: Document) => (
                                 <span className="text-sm">{item.classification ? `[${item.classification.code}] ${item.classification.name}` : '-'}</span>
                             ),
+                            footer: (
+                                <FormSearchSelect
+                                    name="classification_id"
+                                    value={params.classification_id}
+                                    onChange={onParamsChange}
+                                    options={[
+                                        { label: 'Semua Klasifikasi', value: '' },
+                                        ...classifications.map(c => ({ label: `[${c.code}] ${c.name}`, value: c.id.toString() }))
+                                    ]}
+                                />
+                            ),
                         },
                         {
                             name: 'categories',
@@ -289,6 +316,7 @@ export default function DocumentIndex() {
                                     )}
                                 </div>
                             ),
+                            footer: <FormSearch name="category" onChange={onParamsChange} placeholder="Filter Kategori" />,
                         },
                         ...(viewType === 'all' ? [{
                             name: 'divisions',
@@ -307,11 +335,13 @@ export default function DocumentIndex() {
                                     )}
                                 </div>
                             ),
+                            footer: <FormSearch name="division" onChange={onParamsChange} placeholder="Filter Divisi" />,
                         }] : []),
                         {
                             name: 'file_size',
                             header: 'Ukuran',
                             render: (item: Document) => <span className="text-sm text-slate-500">{item.file_size_label}</span>,
+                            footer: <FormSearch name="file_size" onChange={onParamsChange} placeholder="Filter Ukuran" />,
                         },
                         {
                             name: 'created_at',
@@ -322,6 +352,7 @@ export default function DocumentIndex() {
                                     <span className="text-xs text-slate-400">{item.uploader?.name}</span>
                                 </div>
                             ),
+                            footer: <FormSearch type="month" name="created_at" onChange={onParamsChange} placeholder="Filter Tanggal" />,
                         },
                         {
                             header: 'Aksi',
@@ -363,9 +394,9 @@ export default function DocumentIndex() {
                 />
             </ContentCard>
 
-            {hasManagePermission && (
+            <CheckPermissions permissions={[ArchievePermission.MANAGE_ALL, ArchievePermission.MANAGE_DIVISION]}>
                 <FloatingActionButton href="/archieve/documents/create" label="Upload Dokumen" />
-            )}
+            </CheckPermissions>
         </RootLayout>
     );
 }

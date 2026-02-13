@@ -109,11 +109,6 @@ class RoleService
                 'label' => 'Laporan Arsip',
                 'keywords' => ['laporan_arsip'],
             ],
-            'dokumen_arsip' => [
-                'module' => 'Sistem Arsip Dokumen',
-                'label' => 'Akses Dokumen',
-                'keywords' => ['lihat_arsip_dokumen', 'kelola_arsip_dokumen', 'cari_arsip_dokumen'],
-            ],
             'kategori' => [
                 'module' => 'Sistem Manajemen Gudang',
                 'label' => 'Kategori Barang',
@@ -250,11 +245,10 @@ class RoleService
                     'Kategori Arsip' => 2,
                     'Klasifikasi Dokumen' => 3,
                     'Penyimpanan Divisi' => 4,
-                    'Akses Dokumen' => 5,
-                    'Lihat Arsip Digital' => 6,
-                    'Kelola Arsip Digital' => 7,
-                    'Akses Pencarian Dokumen' => 8,
-                    'Laporan Arsip' => 9,
+                    'Lihat Arsip Digital' => 5,
+                    'Kelola Arsip Digital' => 6,
+                    'Akses Pencarian Dokumen' => 7,
+                    'Laporan Arsip' => 8,
                 ];
                 
                 $aOrder = $order[$a['label']] ?? 99;
