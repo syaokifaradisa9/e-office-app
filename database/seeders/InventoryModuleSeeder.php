@@ -49,9 +49,9 @@ class InventoryModuleSeeder extends Seeder
 
         // 5. Create Superadmin User
         $superAdminUser = User::updateOrCreate(
-            ['email' => 'syaokifaradisa09@gmail.com'],
+            ['email' => 'superadmin@gmail.com'],
             [
-                'name' => 'Muhammad Syaoki Faradisa, S.Kom',
+                'name' => 'Superadmin',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
                 'is_active' => true,
