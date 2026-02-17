@@ -28,7 +28,7 @@ describe('Digital Search Integration', function () {
      */
     it('accesses search page and performs valid search', function () {
         // 1. Persiapan user dengan izin pencarian global
-        $user = createDigitalUser([ArchieveUserPermission::SearchDocument->value, ArchieveUserPermission::SearchAllScope->value]);
+        $user = createDigitalUser([ArchieveUserPermission::SearchAllScope->value]);
         
         // 2. Persiapan data dokumen untuk dicari
         $doc = Document::factory()->create(['title' => 'FindMe']);
@@ -76,7 +76,7 @@ describe('Digital Search Integration', function () {
         $div2 = Division::factory()->create(['name' => 'Divisi 2']);
         
         // 2. Persiapan user di Divisi 1
-        $user = createDigitalUser([ArchieveUserPermission::SearchDocument->value, ArchieveUserPermission::SearchDivisionScope->value], $div1->id);
+        $user = createDigitalUser([ArchieveUserPermission::SearchDivisionScope->value], $div1->id);
 
         // 3. Persiapan dokumen untuk Divisi 1
         $doc1 = Document::factory()->create(['title' => 'Doc Divisi 1']);
@@ -103,7 +103,7 @@ describe('Digital Search Integration', function () {
     it('shows all documents for SearchAllScope regardless of division', function () {
         // 1. Persiapan user dengan akses keseluruhan
         $div1 = Division::factory()->create();
-        $user = createDigitalUser([ArchieveUserPermission::SearchDocument->value, ArchieveUserPermission::SearchAllScope->value]);
+        $user = createDigitalUser([ArchieveUserPermission::SearchAllScope->value]);
 
         // 2. Tambah dokumen tanpa divisi dan dokumen dengan divisi lain
         Document::factory()->create(['title' => 'Doc A']);
@@ -125,7 +125,7 @@ describe('Digital Search Integration', function () {
      */
     it('filters search to personal documents for SearchPersonalScope', function () {
         // 1. Persiapan User A (penguji) dan User B
-        $userA = createDigitalUser([ArchieveUserPermission::SearchDocument->value, ArchieveUserPermission::SearchPersonalScope->value]);
+        $userA = createDigitalUser([ArchieveUserPermission::SearchPersonalScope->value]);
         $userB = User::factory()->create();
 
         // 2. Buat dokumen yang dibagikan ke User A

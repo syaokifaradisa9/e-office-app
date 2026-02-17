@@ -31,7 +31,6 @@ beforeEach(function () {
         ArchieveUserPermission::ViewDivision->value,
         ArchieveUserPermission::ManageDivision->value,
         ArchieveUserPermission::SearchDivisionScope->value,
-        ArchieveUserPermission::SearchDocument->value, // Added
         ArchieveUserPermission::ViewDashboardDivision->value,
         ArchieveUserPermission::ViewReportDivision->value,
     ]);
