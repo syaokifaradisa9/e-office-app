@@ -17,6 +17,18 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
+
+        $middleware->alias([
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'inventory_item_permission' => \Modules\Inventory\Http\Middleware\InventoryItemRoutePermissionCheck::class,
+            'check_active_opname' => \Modules\Inventory\Http\Middleware\CheckActiveStockOpname::class,
+            'division_permission' => \App\Http\Middleware\DivisionPermissionCheck::class,
+            'position_permission' => \App\Http\Middleware\PositionPermissionCheck::class,
+            'user_permission' => \App\Http\Middleware\UserPermissionCheck::class,
+            'role_permission' => \App\Http\Middleware\RolePermissionCheck::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

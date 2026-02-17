@@ -1,0 +1,20 @@
+<?php
+
+namespace Modules\Inventory\Database\Seeders;
+
+use Illuminate\Database\Seeder;
+
+class InventoryDatabaseSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $this->call([
+            InventoryPermissionSeeder::class,
+            CategoryItemSeeder::class,
+            ItemSeeder::class,
+            WarehouseOrderSeeder::class,
+            ItemTransactionSeeder::class,
+            StockOpnameSeeder::class,
+        ]);
+    }
+}
