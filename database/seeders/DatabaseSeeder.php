@@ -18,12 +18,13 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             DivisionSeeder::class,
-            InventoryModuleSeeder::class,
+            PositionSeeder::class,
+            AppPermissionSeeder::class,
+            \Modules\Archieve\Database\Seeders\ArchievePermissionSeeder::class,
             UserSeeder::class,
-            InventoryDatabaseSeeder::class,
-            CategoryContextSeeder::class,
-            DocumentClassificationSeeder::class,
-            VisitorManagementDatabaseSeeder::class,
+            \Modules\Archieve\Database\Seeders\ArchieveCategorySeeder::class,
+            \Modules\Archieve\Database\Seeders\DocumentClassificationSeeder::class,
+            \Modules\Archieve\Database\Seeders\DocumentSeeder::class,
         ]);
     }
 }

@@ -34,16 +34,7 @@ class RoleService
 
         // Define grouping rules for permissions with module separation
         $groupingRules = [
-            'permintaan' => [
-                'module' => 'Sistem Manajemen Gudang',
-                'label' => 'Permintaan Barang',
-                'keywords' => ['permintaan', 'serah_terima_barang', 'terima_barang', 'Permintaan Barang', 'Serah Terima Barang', 'Terima Barang'],
-            ],
-            'stok' => [
-                'module' => 'Sistem Manajemen Gudang',
-                'label' => 'Data Stok',
-                'keywords' => ['lihat_stok_divisi', 'lihat_semua_stok', 'konversi_stok_barang', 'pengeluaran_stok_barang', 'Stok Divisi', 'Stok Keseluruhan', 'Konversi Stok', 'Pengeluaran Stok'],
-            ],
+            // Data Master
             'divisi' => [
                 'module' => 'Data Master',
                 'label' => 'Divisi',
@@ -64,38 +55,43 @@ class RoleService
                 'label' => 'Role & Permission',
                 'keywords' => ['lihat_role', 'kelola_role'],
             ],
-            'kategori' => [
-                'module' => 'Sistem Manajemen Gudang',
-                'label' => 'Kategori Barang',
-                'keywords' => ['kategori', 'Kategori'],
+
+            // Arsiparis (Archieve)
+            'arsip_kategori' => [
+                'module' => 'Arsiparis',
+                'label' => 'Kategori Arsip',
+                'keywords' => ['kategori_arsip'],
             ],
-            'barang' => [
-                'module' => 'Sistem Manajemen Gudang',
-                'label' => 'Barang',
-                'keywords' => ['barang', 'Barang'],
+            'arsip_klasifikasi' => [
+                'module' => 'Arsiparis',
+                'label' => 'Klasifikasi Arsip',
+                'keywords' => ['klasifikasi_arsip'],
             ],
-            'transaksi' => [
-                'module' => 'Sistem Manajemen Gudang',
-                'label' => 'Monitor Transaksi',
-                'keywords' => ['transaksi_barang', 'Transaksi Barang'],
+            'arsip_dokumen' => [
+                'module' => 'Arsiparis',
+                'label' => 'Dokumen Arsip',
+                'keywords' => ['lihat_semua_arsip', 'kelola_semua_arsip', 'lihat_arsip_divisi', 'kelola_arsip_divisi', 'lihat_arsip_pribadi'],
             ],
-            'stok_opname' => [
-                'module' => 'Sistem Manajemen Gudang',
-                'label' => 'Stok Opname',
-                'keywords' => ['stock_opname', 'stok_opname', 'opname', 'Stock Opname'],
-                'columns' => 2,
+            'arsip_penyimpanan' => [
+                'module' => 'Arsiparis',
+                'label' => 'Penyimpanan Divisi',
+                'keywords' => ['penyimpanan_divisi'],
             ],
-            'laporan' => [
-                'module' => 'Sistem Manajemen Gudang',
-                'label' => 'Laporan Gudang',
-                'keywords' => ['laporan_gudang', 'Laporan Gudang'],
+            'arsip_dashboard' => [
+                'module' => 'Arsiparis',
+                'label' => 'Dashboard Arsip',
+                'keywords' => ['dashboard_arsip'],
             ],
-            'dashboard' => [
-                'module' => 'Sistem Manajemen Gudang',
-                'label' => 'Dashboard Gudang',
-                'keywords' => ['dashboard_gudang', 'Dashboard Gudang'],
+            'arsip_laporan' => [
+                'module' => 'Arsiparis',
+                'label' => 'Laporan Arsip',
+                'keywords' => ['laporan_arsip'],
             ],
-            // Visitor Management
+            'arsip_pencarian' => [
+                'module' => 'Arsiparis',
+                'label' => 'Pencarian Dokumen',
+                'keywords' => ['pencarian_dokumen'],
+            ],
         ];
 
         foreach ($permissions as $permission) {
@@ -146,8 +142,13 @@ class RoleService
             usort($group['permissions'], function ($a, $b) {
                 // Priority: Lihat (1), Kelola (2), Others (99)
                 $getPriority = function ($perm) {
-                    if (str_contains($perm, 'lihat')) return 1;
-                    if (str_contains($perm, 'kelola')) return 2;
+                    if (str_contains($perm, 'lihat')) {
+                        return 1;
+                    }
+                    if (str_contains($perm, 'kelola')) {
+                        return 2;
+                    }
+
                     return 99;
                 };
 
@@ -164,8 +165,8 @@ class RoleService
         unset($group);
 
         // Sort groups by module then by custom priority or label
-        uasort($grouped, function ($a, $b) use ($groupingRules) {
-            $moduleOrder = ['Data Master' => 1, 'Sistem Manajemen Gudang' => 2, 'Lainnya' => 99];
+        uasort($grouped, function ($a, $b) {
+            $moduleOrder = ['Data Master' => 1, 'Arsiparis' => 2, 'Lainnya' => 99];
             $aModuleOrder = $moduleOrder[$a['module']] ?? 50;
             $bModuleOrder = $moduleOrder[$b['module']] ?? 50;
 

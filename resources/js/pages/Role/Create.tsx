@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import { useState, useMemo, useEffect } from 'react';
-import { Save, Shield, Search, CheckSquare, Square, ChevronDown, ChevronRight, Database, Warehouse, Check, X, Filter } from 'lucide-react';
+import { Save, Shield, Search, CheckSquare, Square, ChevronDown, ChevronRight, Database, FileArchive, Check, X, Filter } from 'lucide-react';
 
 import Button from '../../components/buttons/Button';
 import FormInput from '../../components/forms/FormInput';
@@ -165,8 +165,8 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
             case 'Data Master':
             case 'DATA MASTER':
                 return <Database className="size-5" />;
-            case 'Sistem Manajemen Gudang':
-                return <Warehouse className="size-5" />;
+            case 'Arsiparis':
+                return <FileArchive className="size-5" />;
             default:
                 return <Shield className="size-5" />;
         }
@@ -184,8 +184,8 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
         switch (moduleName) {
             case 'Data Master':
                 return 'from-blue-500 to-blue-600';
-            case 'Sistem Manajemen Gudang':
-                return 'from-emerald-500 to-emerald-600';
+            case 'Arsiparis':
+                return 'from-amber-500 to-amber-600';
             default:
                 return 'from-slate-500 to-slate-600';
         }
@@ -371,7 +371,7 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                                 {availableModules.map((module) => {
                                     const displayLabels: Record<string, string> = {
                                         'Data Master': 'Data Master',
-                                        'Sistem Manajemen Gudang': 'Gudang',
+                                        'Arsiparis': 'Arsiparis',
                                     };
                                     const label = displayLabels[module] || module;
                                     const isActive = activeTab === module;

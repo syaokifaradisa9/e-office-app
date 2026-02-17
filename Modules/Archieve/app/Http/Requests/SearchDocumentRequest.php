@@ -13,8 +13,7 @@ class SearchDocumentRequest extends FormRequest
     public function authorize(): bool
     {
         $user = $this->user();
-        return $user->can(ArchieveUserPermission::SearchDocument->value) ||
-               $user->can(ArchieveUserPermission::SearchAllScope->value) ||
+        return $user->can(ArchieveUserPermission::SearchAllScope->value) ||
                $user->can(ArchieveUserPermission::SearchDivisionScope->value) ||
                $user->can(ArchieveUserPermission::SearchPersonalScope->value);
     }

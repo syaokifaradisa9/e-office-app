@@ -32,7 +32,6 @@ enum ArchieveUserPermission: string
     case ManageDivision = 'kelola_arsip_divisi';
 
     // Search Scope Permissions (Used in DocumentService)
-    case SearchDocument = 'pencarian_dokumen';
     case SearchDivisionScope = 'pencarian_dokumen_divisi';
     case SearchAllScope = 'pencarian_dokumen_keseluruhan';
     case SearchPersonalScope = 'pencarian_dokumen_pribadi';

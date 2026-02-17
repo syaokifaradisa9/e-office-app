@@ -40,10 +40,10 @@ class DashboardController extends Controller
         // ========================================
         // Module: Inventory
         // ========================================
-        if (File::isDirectory(base_path('Modules/Inventory'))) {
-            $inventoryService = app(\Modules\Inventory\Services\InventoryDashboardService::class);
-            $dashboardData['inventory'] = $inventoryService->getDashboardTabs();
-        }
+        // if (File::isDirectory(base_path('Modules/Inventory'))) {
+        //     $inventoryService = app(\Modules\Inventory\Services\InventoryDashboardService::class);
+        //     $dashboardData['inventory'] = $inventoryService->getDashboardTabs();
+        // }
 
         // ========================================
         // Module: Archieve
