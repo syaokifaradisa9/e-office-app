@@ -44,8 +44,9 @@ class InventoryModuleSeeder extends Seeder
         // 4. Create Superadmin Role
         $superAdminRole = Role::firstOrCreate(['name' => 'Superadmin', 'guard_name' => 'web']);
         
-        // Always sync all permissions to Superadmin
-        $superAdminRole->syncPermissions(Permission::all());
+        // Filter permissions for Superadmin (Core + Inventory only)
+        $superAdminPermissions = array_merge($basePermissions, $inventoryPermissions);
+        $superAdminRole->syncPermissions($superAdminPermissions);
 
         // 5. Create Superadmin User
         $superAdminUser = User::updateOrCreate(
@@ -138,9 +139,10 @@ class InventoryModuleSeeder extends Seeder
         );
         $adminDivisiUser->assignRole($adminDivisiRole);
 
-        // 10. Create Pimpinan Role (Same as Superadmin)
+        // 10. Create Pimpinan Role
         $pimpinanRole = Role::firstOrCreate(['name' => 'Pimpinan', 'guard_name' => 'web']);
-        $pimpinanRole->syncPermissions(Permission::all());
+        // Same as Superadmin (Core + Inventory only)
+        $pimpinanRole->syncPermissions($superAdminPermissions);
 
         // 11. Create Pimpinan User
         $pimpinanUser = User::updateOrCreate(
