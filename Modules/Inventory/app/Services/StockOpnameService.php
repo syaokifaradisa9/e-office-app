@@ -212,13 +212,15 @@ class StockOpnameService
             return false;
         }
 
-        // Users with Manage permission can manage ANY opname in their scope
-        if ($opname->division_id === null) {
-            if ($user->can(InventoryPermission::ManageWarehouseStockOpname->value)) {
-                return true;
-            }
-        } else {
-            if ($user->can(InventoryPermission::ManageDivisionStockOpname->value) && $opname->division_id === $user->division_id) {
+        // Users with CreateStockOpname permission can manage (edit/delete) the initialization
+        if ($user->can(InventoryPermission::CreateStockOpname->value)) {
+            // If it's a division opname, check if it's their division or they can view all
+            if ($opname->division_id !== null) {
+                if ($user->can(InventoryPermission::ViewAllStockOpname->value) || $opname->division_id === $user->division_id) {
+                    return true;
+                }
+            } else {
+                // Warehouse opname can be managed by anyone with the permission
                 return true;
             }
         }

@@ -34,8 +34,6 @@ enum InventoryPermission: string
     case CreateStockOpname = 'Tambah Stock Opname';
     case ProcessStockOpname = 'Proses Stock Opname';
     case FinalizeStockOpname = 'Finalisasi Stock Opname';
-    case ManageWarehouseStockOpname = 'Kelola Stock Opname Gudang';
-    case ManageDivisionStockOpname = 'Kelola Stock Opname Divisi';
 
     // Monitoring
     case MonitorItemTransaction = 'Monitor Transaksi Barang';

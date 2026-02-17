@@ -20,18 +20,14 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            PermissionSeeder::class,
             DivisionSeeder::class,
-            UserSeeder::class,
+            InventoryModuleSeeder::class,
             CategoryItemSeeder::class,
             ItemSeeder::class,
             WarehouseOrderSeeder::class,
-            InventoryPermissionSeeder::class,
             CategoryContextSeeder::class,
             DocumentClassificationSeeder::class,
             VisitorManagementDatabaseSeeder::class,
-            RoleSeeder::class,
-            SuperAdminSeeder::class,
         ]);
     }
 }
