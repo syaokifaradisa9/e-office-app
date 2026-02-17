@@ -129,7 +129,7 @@ export default function WarehouseOrderShow({ order }: Props) {
 
     return (
         <RootLayout title="Detail Permintaan" backPath="/inventory/warehouse-orders">
-            <ContentCard title="Detail Permintaan" backPath="/inventory/warehouse-orders">
+            <ContentCard title="Detail Permintaan" subtitle="Informasi lengkap mengenai status dan detail item permintaan barang" backPath="/inventory/warehouse-orders" mobileFullWidth bodyClassName="p-1 md:p-6">
                 <div className="space-y-8">
                     {/* Data Order Section */}
                     <div>

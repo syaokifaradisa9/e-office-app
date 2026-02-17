@@ -66,7 +66,7 @@ export default function CategoryIndex() {
     const [params, setParams] = useState<Params>({
         search: '',
         type: '',
-        limit: 20,
+        limit: 10,
         page: 1,
         sort_by: 'type',
         sort_direction: 'asc',

@@ -212,16 +212,19 @@ class StockOpnameService
             return false;
         }
 
-        if ($opname->user_id !== $user->id) {
-            return false;
-        }
-
+        // Users with Manage permission can manage ANY opname in their scope
         if ($opname->division_id === null) {
-            return $user->can(InventoryPermission::ManageWarehouseStockOpname->value);
+            if ($user->can(InventoryPermission::ManageWarehouseStockOpname->value)) {
+                return true;
+            }
+        } else {
+            if ($user->can(InventoryPermission::ManageDivisionStockOpname->value) && $opname->division_id === $user->division_id) {
+                return true;
+            }
         }
 
-        return $user->can(InventoryPermission::ManageDivisionStockOpname->value)
-            && $opname->division_id === $user->division_id;
+        // Owners can always manage their own pending opnames
+        return $opname->user_id === $user->id;
     }
 
     public function canProcess(StockOpname $opname, User $user): bool

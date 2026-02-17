@@ -41,9 +41,9 @@ export default function Issue() {
     }
 
     return (
-        <RootLayout title="Pengeluaran Stok Barang">
-            <ContentCard title="Pengeluaran Stok Barang" backPath={backPath}>
-                <form onSubmit={handleSubmit} className="max-w-lg space-y-6">
+        <RootLayout title="Pengeluaran Stok Barang" backPath={backPath}>
+            <ContentCard title="Pengeluaran Stok Barang" subtitle="Pengeluaran stok barang sesuai kebutuhan divisi" backPath={backPath} mobileFullWidth bodyClassName="p-1 md:p-6">
+                <form onSubmit={handleSubmit} className="w-full space-y-6">
                     {/* Item Info */}
                     <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
                         <h3 className="mb-3 font-medium text-slate-700 dark:text-slate-200">Informasi Barang</h3>

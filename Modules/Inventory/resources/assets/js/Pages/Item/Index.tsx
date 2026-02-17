@@ -3,7 +3,7 @@ import RootLayout from '@/components/layouts/RootLayout';
 import DataTable from '@/components/tables/Datatable';
 import { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
-import { Package, Edit, Plus, Trash2, FileSpreadsheet, ArrowRightLeft, LogOut } from 'lucide-react';
+import { Package, Edit, Plus, Trash2, FileSpreadsheet, ArrowRightLeft, ExternalLink } from 'lucide-react';
 import { InventoryPermission } from '../../types/permissions';
 import { router } from '@inertiajs/react';
 import ConfirmationAlert from '@/components/alerts/ConfirmationAlert';
@@ -12,7 +12,8 @@ import Button from '@/components/buttons/Button';
 import CheckPermissions from '@/components/utils/CheckPermissions';
 import MobileSearchBar from '@/components/forms/MobileSearchBar';
 import FloatingActionButton from '@/components/buttons/FloatingActionButton';
-import { DivisionCardSkeleton } from '@/components/skeletons/CardSkeleton';
+import { CategoryItemCardSkeleton } from '@/components/skeletons/CardSkeleton';
+import ItemCardItem from './ItemCardItem';
 import Tooltip from '@/components/commons/Tooltip';
 
 interface Item {
@@ -23,6 +24,7 @@ interface Item {
     stock: number;
     multiplier: number | null;
     reference_item: string | null;
+    description?: string | null;
     created_at?: string;
 }
 
@@ -66,7 +68,7 @@ export default function ItemIndex() {
     });
     const [params, setParams] = useState<Params>({
         search: '',
-        limit: 20,
+        limit: 10,
         page: 1,
         sort_by: 'name',
         sort_direction: 'asc',
@@ -146,9 +148,16 @@ export default function ItemIndex() {
                     onSearchChange={onParamsChange}
                     placeholder="Cari barang..."
                     actionButton={
-                        <a href={getPrintUrl()} target="_blank" className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" rel="noreferrer">
-                            <FileSpreadsheet className="size-4" />
-                        </a>
+                        <div className="flex items-center gap-1">
+                            <a
+                                href={getPrintUrl()}
+                                target="_blank"
+                                className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                                rel="noreferrer"
+                            >
+                                <FileSpreadsheet className="size-4" />
+                            </a>
+                        </div>
                     }
                 />
             }
@@ -181,14 +190,15 @@ export default function ItemIndex() {
                     />
                     <ContentCard
                         title="Barang Gudang Utama"
+                        subtitle="Kelola dan pantau stok barang gudang utama secara real-time"
                         mobileFullWidth
+                        bodyClassName="px-0 pb-24 pt-2 md:p-6"
                         additionalButton={
                             <CheckPermissions permissions={[InventoryPermission.ManageItem]}>
                                 <Button className="hidden w-full md:flex" label="Tambah Barang" href="/inventory/items/create" icon={<Plus className="size-4" />} />
                             </CheckPermissions>
                         }
                     >
-                        <p className="mb-4 text-sm text-gray-500 dark:text-slate-400">Daftar barang di gudang utama. Untuk melihat stok di seluruh divisi, gunakan menu <a href="/inventory/stock-monitoring" className="text-primary hover:underline">Monitoring Stok</a>.</p>
                         <DataTable
                             onChangePage={onChangePage}
                             onParamsChange={onParamsChange}
@@ -196,69 +206,23 @@ export default function ItemIndex() {
                             searchValue={params.search}
                             dataTable={dataTable}
                             isLoading={isLoading}
-                            SkeletonComponent={DivisionCardSkeleton}
+                            SkeletonComponent={CategoryItemCardSkeleton}
                             sortBy={params.sort_by}
                             sortDirection={params.sort_direction}
                             cardItem={(item: Item) => (
-                                <div className="p-4 border-b dark:border-slate-700 last:border-0 hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <div className="flex items-center gap-2">
-                                            <Package className="size-4 text-primary" />
-                                            <span className="font-semibold text-gray-900 dark:text-white">{item.name}</span>
-                                        </div>
-                                        <span className={`text-sm font-bold ${item.stock <= 10 ? 'text-red-600' : 'text-green-600'}`}>
-                                            {item.stock} {item.unit_of_measure}
-                                        </span>
-                                    </div>
-                                    <div className="text-sm text-gray-500 dark:text-slate-400 mb-3">
-                                        {item.category || '-'}
-                                    </div>
-                                    {(canManage || canIssue || canConvert) && (
-                                        <div className="flex justify-end gap-2">
-                                            {canConvert && item.multiplier && item.multiplier > 1 && item.stock > 0 && (
-                                                <Button
-                                                    href={`/inventory/items/${item.id}/convert`}
-                                                    className="!px-3 !py-1 text-xs"
-                                                    label="Konversi"
-                                                    variant="secondary"
-                                                    icon={<ArrowRightLeft className="size-3" />}
-                                                />
-                                            )}
-                                            {canManage && (
-                                                <Button
-                                                    href={`/inventory/items/${item.id}/edit`}
-                                                    className="!px-3 !py-1 text-xs !bg-yellow-500 hover:!bg-yellow-600 border-none text-white"
-                                                    label="Edit"
-                                                    icon={<Edit className="size-3" />}
-                                                />
-                                            )}
-                                            {canIssue && (
-                                                <Button
-                                                    href={`/inventory/items/${item.id}/issue`}
-                                                    className="!px-3 !py-1 text-xs !bg-orange-500 hover:!bg-orange-600 border-none text-white"
-                                                    label="Keluar"
-                                                    icon={<LogOut className="size-3" />}
-                                                />
-                                            )}
-                                            {canManage && (
-                                                <Button
-                                                    onClick={() => {
-                                                        setSelectedItem(item);
-                                                        setOpenConfirm(true);
-                                                    }}
-                                                    className="!px-3 !py-1 text-xs"
-                                                    label="Hapus"
-                                                    variant="danger"
-                                                    icon={<Trash2 className="size-3" />}
-                                                />
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
+                                <ItemCardItem
+                                    item={item}
+                                    onDelete={(item) => {
+                                        setSelectedItem(item);
+                                        setOpenConfirm(true);
+                                    }}
+                                />
                             )}
                             additionalHeaderElements={
                                 <div className="flex gap-2">
-                                    <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                                    <Tooltip text="Export Excel">
+                                        <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                                    </Tooltip>
                                 </div>
                             }
                             onHeaderClick={(columnName: string) => {
@@ -321,8 +285,9 @@ export default function ItemIndex() {
                                                     {canConvert && item.multiplier && item.multiplier > 1 && item.stock > 0 && (
                                                         <Tooltip text="Konversi">
                                                             <Button
+                                                                variant="ghost"
                                                                 href={`/inventory/items/${item.id}/convert`}
-                                                                className="!bg-transparent !p-1 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                                                                className="!p-1.5 !text-blue-600 hover:bg-blue-50 dark:!text-blue-400 dark:hover:bg-blue-900/20"
                                                                 icon={<ArrowRightLeft className="size-4" />}
                                                             />
                                                         </Tooltip>
@@ -330,8 +295,9 @@ export default function ItemIndex() {
                                                     {canManage && (
                                                         <Tooltip text="Edit">
                                                             <Button
+                                                                variant="ghost"
                                                                 href={`/inventory/items/${item.id}/edit`}
-                                                                className="!bg-transparent !p-1 text-yellow-600 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
+                                                                className="!p-1.5 !text-amber-500 hover:bg-amber-50 dark:!text-amber-400 dark:hover:bg-amber-900/20"
                                                                 icon={<Edit className="size-4" />}
                                                             />
                                                         </Tooltip>
@@ -339,20 +305,22 @@ export default function ItemIndex() {
                                                     {canIssue && (
                                                         <Tooltip text="Keluarkan Stok">
                                                             <Button
+                                                                variant="ghost"
                                                                 href={`/inventory/items/${item.id}/issue`}
-                                                                className="!bg-transparent !p-1 text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20"
-                                                                icon={<LogOut className="size-4" />}
+                                                                className="!p-1.5 !text-orange-500 hover:bg-orange-50 dark:!text-orange-400 dark:hover:bg-orange-900/20"
+                                                                icon={<ExternalLink className="size-4" />}
                                                             />
                                                         </Tooltip>
                                                     )}
                                                     {canManage && (
                                                         <Tooltip text="Hapus">
                                                             <Button
+                                                                variant="ghost"
                                                                 onClick={() => {
                                                                     setSelectedItem(item);
                                                                     setOpenConfirm(true);
                                                                 }}
-                                                                className="!bg-transparent !p-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                                                                className="!p-1.5 !text-red-500 hover:bg-red-50 dark:!text-red-400 dark:hover:bg-red-900/20"
                                                                 icon={<Trash2 className="size-4" />}
                                                             />
                                                         </Tooltip>

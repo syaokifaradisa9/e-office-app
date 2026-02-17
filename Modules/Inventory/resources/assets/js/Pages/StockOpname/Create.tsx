@@ -32,7 +32,9 @@ export default function StockOpnameCreate({ type = 'warehouse', divisions = [], 
         opname_date: opname?.opname_date
             ? new Date(opname.opname_date).toISOString().split('T')[0]
             : new Date().toISOString().split('T')[0],
-        division_id: opname?.division_id || (divisions.length > 0 ? divisions[0].id.toString() : ''),
+        division_id: opname
+            ? (opname.division_id === null ? 'warehouse' : opname.division_id.toString())
+            : (['warehouse', 'all'].includes(type) ? 'warehouse' : (divisions.length > 0 ? divisions[0].id.toString() : 'warehouse')),
         notes: opname?.notes || '',
     });
 
@@ -45,22 +47,22 @@ export default function StockOpnameCreate({ type = 'warehouse', divisions = [], 
         }
     };
 
-    const title = isEdit
-        ? type === 'warehouse'
-            ? 'Edit Stok Opname Gudang'
-            : 'Edit Stok Opname Divisi'
-        : type === 'warehouse'
-            ? 'Buat Stok Opname Gudang'
-            : 'Buat Stok Opname Divisi';
+    const title = isEdit ? 'Edit Stok Opname' : 'Buat Stok Opname';
 
-    const subtitle = type === 'warehouse' ? 'Gudang Utama' : (divisions.find(d => d.id.toString() === data.division_id.toString())?.name || 'Pilih Divisi');
+    const divName = divisions.find(d => d.id.toString() === data.division_id.toString())?.name || 'Gudang Pusat';
+    const subtitle = "Inisialisasi pemeriksaan stok fisik barang pada divisi atau gudang pusat";
     const backPath = `/inventory/stock-opname/${type}`;
+
+    const divisionOptions = [
+        { label: 'Gudang Utama (Pusat)', value: 'warehouse' },
+        ...divisions.map(d => ({ label: d.name, value: d.id.toString() }))
+    ];
 
     return (
         <RootLayout title={title} backPath={backPath}>
-            <ContentCard title={title} subtitle={subtitle} backPath={backPath}>
+            <ContentCard title={title} subtitle={subtitle} backPath={backPath} mobileFullWidth bodyClassName="p-1 md:p-6">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className={type === 'division' ? "grid grid-cols-1 gap-6 md:grid-cols-2" : "space-y-6"}>
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <FormInput
                             type="date"
                             label="Tanggal Opname"
@@ -71,17 +73,15 @@ export default function StockOpnameCreate({ type = 'warehouse', divisions = [], 
                             required
                         />
 
-                        {type === 'division' && (
-                            <FormSelect
-                                label="Divisi / Unit"
-                                name="division_id"
-                                value={data.division_id.toString()}
-                                onChange={(e) => setData('division_id', e.target.value)}
-                                error={errors.division_id}
-                                options={divisions.map(d => ({ label: d.name, value: d.id.toString() }))}
-                                required
-                            />
-                        )}
+                        <FormSelect
+                            label="Divisi / Unit"
+                            name="division_id"
+                            value={data.division_id.toString()}
+                            onChange={(e) => setData('division_id', e.target.value)}
+                            error={errors.division_id}
+                            options={divisionOptions}
+                            required
+                        />
                     </div>
 
                     <FormTextArea

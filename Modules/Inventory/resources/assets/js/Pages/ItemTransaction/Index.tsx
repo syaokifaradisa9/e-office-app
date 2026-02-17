@@ -1,5 +1,6 @@
 import ContentCard from '@/components/layouts/ContentCard';
 import RootLayout from '@/components/layouts/RootLayout';
+import Tooltip from '@/components/commons/Tooltip';
 import DataTable from '@/components/tables/Datatable';
 import { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
@@ -7,7 +8,8 @@ import { ArrowUpCircle, ArrowDownCircle, RefreshCw, FileSpreadsheet } from 'luci
 import { InventoryPermission } from '../../types/permissions';
 import Button from '@/components/buttons/Button';
 import MobileSearchBar from '@/components/forms/MobileSearchBar';
-import { DivisionCardSkeleton } from '@/components/skeletons/CardSkeleton';
+import { CategoryItemCardSkeleton } from '@/components/skeletons/CardSkeleton';
+import ItemTransactionCardItem from './ItemTransactionCardItem';
 import FormSearch from '@/components/forms/FormSearch';
 import FormSearchSelect from '@/components/forms/FormSearchSelect';
 import FormInput from '@/components/forms/FormInput';
@@ -90,7 +92,7 @@ export default function ItemTransactionIndex() {
     });
     const [params, setParams] = useState<Params>({
         search: '',
-        limit: 20,
+        limit: 10,
         page: 1,
         date: '',
         type: '',
@@ -167,14 +169,16 @@ export default function ItemTransactionIndex() {
                     onSearchChange={onParamsChange}
                     placeholder="Cari transaksi..."
                     actionButton={
-                        <a href={getPrintUrl()} target="_blank" className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" rel="noreferrer">
-                            <FileSpreadsheet className="size-4" />
-                        </a>
+                        <div className="flex items-center gap-1">
+                            <a href={getPrintUrl()} target="_blank" className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" rel="noreferrer">
+                                <FileSpreadsheet className="size-4" />
+                            </a>
+                        </div>
                     }
                 />
             }
         >
-            <ContentCard title="Transaksi Barang" mobileFullWidth>
+            <ContentCard title="Transaksi Barang" subtitle="Riwayat masuk, keluar, dan penyesuaian stok barang secara detail" mobileFullWidth bodyClassName="px-0 pt-2 pb-8 md:p-6">
                 <DataTable
                     onChangePage={onChangePage}
                     onParamsChange={onParamsChange}
@@ -182,12 +186,17 @@ export default function ItemTransactionIndex() {
                     searchValue={params.search}
                     dataTable={dataTable}
                     isLoading={isLoading}
-                    SkeletonComponent={DivisionCardSkeleton}
+                    SkeletonComponent={CategoryItemCardSkeleton}
                     sortBy={params.sort_by}
                     sortDirection={params.sort_direction}
+                    cardItem={(tx: ItemTransaction) => (
+                        <ItemTransactionCardItem item={tx} />
+                    )}
                     additionalHeaderElements={
                         <div className="flex gap-2">
-                            <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                            <Tooltip text="Export Excel">
+                                <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                            </Tooltip>
                         </div>
                     }
                     onHeaderClick={(columnName) => {

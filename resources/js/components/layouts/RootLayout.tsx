@@ -21,10 +21,12 @@ interface RootLayoutProps {
     noPadding?: boolean;
     forceCollapse?: boolean;
     backPath?: string;
+    onBackClick?: () => void;
     mobileSearchBar?: ReactNode;
+    desktopSearchBar?: ReactNode;
 }
 
-export default function RootLayout({ title, children, noPadding = false, forceCollapse = false, backPath, mobileSearchBar }: RootLayoutProps) {
+export default function RootLayout({ title, children, noPadding = false, forceCollapse = false, backPath, onBackClick, mobileSearchBar, desktopSearchBar }: RootLayoutProps) {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(forceCollapse);
     const [isAutoCollapsed, setIsAutoCollapsed] = useState(false);
@@ -100,13 +102,15 @@ export default function RootLayout({ title, children, noPadding = false, forceCo
                     isSidebarCollapsed={isSidebarCollapsed}
                     toggleSidebarCollapse={toggleSidebarCollapse}
                     backPath={backPath}
+                    onBackClick={onBackClick}
                     mobileSearchBar={mobileSearchBar}
+                    desktopSearchBar={desktopSearchBar}
                 />
 
-                <div className={`flex flex-1 md:pt-16 ${mobileSearchBar ? 'pt-[128px]' : 'pt-14'}`}>
+                <div className={`flex flex-1 md:pt-16 ${mobileSearchBar ? 'pt-[92px]' : 'pt-13'}`}>
                     <SideBar isOpen={isSidebarOpen} setIsOpen={setSidebarOpen} isCollapsed={isSidebarCollapsed} hasMobileSearchBar={!!mobileSearchBar} />
                     <main
-                        className={`flex flex-1 flex-col overflow-y-auto transition-all duration-300 ${noPadding ? 'p-0' : mobileSearchBar ? 'p-0 md:px-8 md:pb-8 md:pt-4' : 'p-0 md:px-8 md:pb-8 md:pt-4'} ${isSidebarCollapsed ? (noPadding ? 'md:pl-[80px]' : 'md:pl-[calc(theme(spacing.8)+80px)]') : noPadding ? 'md:pl-[256px]' : 'md:pl-[calc(theme(spacing.8)+256px)]'}`}
+                        className={`flex flex-1 flex-col overflow-y-auto ${noPadding ? 'p-0' : mobileSearchBar ? 'px-0 pt-0 md:px-8 md:pb-8 md:pt-4' : 'px-4 pb-6 pt-6 md:px-8 md:pb-8 md:pt-4'} ${isSidebarCollapsed ? (noPadding ? 'md:pl-[80px]' : 'md:pl-[calc(theme(spacing.8)+80px)]') : noPadding ? 'md:pl-[256px]' : 'md:pl-[calc(theme(spacing.8)+256px)]'}`}
                     >
                         <div className={`mx-auto w-full max-w-[1920px] flex-1 flex-col ${mobileSearchBar ? 'space-y-0 md:space-y-6' : 'space-y-0 md:space-y-6'}`}>{children}</div>
                     </main>

@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import { LogOut } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 
 import Button from '@/components/buttons/Button';
 import FormInput from '@/components/forms/FormInput';
@@ -38,10 +38,7 @@ export default function ItemIssue({ item }: Props) {
 
     return (
         <RootLayout title="Pengeluaran Barang Gudang" backPath="/inventory/items">
-            <ContentCard title="Pengeluaran Barang Gudang" mobileFullWidth>
-                <p className="mb-6 text-sm text-gray-500 dark:text-slate-400">
-                    Keluarkan stok barang dari gudang
-                </p>
+            <ContentCard title="Pengeluaran Barang Gudang" subtitle="Pengeluaran barang gudang dalam darurat tanpa diminta oleh divisi manapun" backPath="/inventory/items" mobileFullWidth bodyClassName="p-1 md:p-6">
 
                 <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
                     <h3 className="mb-3 text-sm font-medium text-gray-700 dark:text-slate-300">Informasi Barang</h3>
@@ -91,7 +88,7 @@ export default function ItemIssue({ item }: Props) {
                                 Keterangan <span className="text-red-500">*</span>
                             </label>
                             <textarea
-                                placeholder="Contoh: Untuk keperluan rapat, diambil oleh Budi"
+                                placeholder="Contoh: barang kadaluarsa/rusak/tidak bisa digunakan dan lainnya"
                                 value={data.description}
                                 onChange={(e) => setData('description', e.target.value)}
                                 rows={3}
@@ -120,7 +117,7 @@ export default function ItemIssue({ item }: Props) {
                             <Button
                                 type="submit"
                                 label="Keluarkan Barang Gudang"
-                                icon={<LogOut className="h-4 w-4" />}
+                                icon={<ExternalLink className="h-4 w-4" />}
                                 isLoading={processing}
                                 disabled={remainingStock < 0 || parseInt(data.quantity) <= 0 || !data.description}
                             />

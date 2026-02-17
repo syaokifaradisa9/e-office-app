@@ -42,6 +42,7 @@ export default function PositionCreate({ position }: Props) {
                 subtitle="Isi informasi jabatan di bawah ini"
                 mobileFullWidth
                 backPath="/position"
+                bodyClassName="p-1 md:p-6"
             >
 
                 <form onSubmit={handleSubmit} className="space-y-6">

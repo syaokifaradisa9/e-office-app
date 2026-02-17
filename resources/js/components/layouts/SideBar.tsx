@@ -37,7 +37,7 @@ export default function SideBar({ isOpen, setIsOpen, isCollapsed, hasMobileSearc
                 <aside
                     className={`
                         fixed left-0 w-64 bg-white dark:bg-slate-800 transform transition-all duration-300 ease-in-out border-r border-gray-300/90 dark:border-slate-700/50
-                        ${hasMobileSearchBar ? 'top-[108px]' : 'top-14'} bottom-0 z-30 border-t border-t-gray-200 dark:border-t-slate-700
+                        ${hasMobileSearchBar ? 'top-[98px]' : 'top-13'} bottom-0 z-30 border-t border-t-gray-200 dark:border-t-slate-700
                         md:top-0 md:bottom-0 md:z-0 md:translate-x-0 md:border-t-0
                         ${isCollapsed ? 'md:w-20' : 'md:w-64'}
                         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -48,11 +48,11 @@ export default function SideBar({ isOpen, setIsOpen, isCollapsed, hasMobileSearc
                         <div className="relative hidden h-16 flex-shrink-0 items-center justify-start border-b border-gray-300/90 px-2 dark:border-slate-700/50 md:flex"></div>
                         <div className="flex min-h-0 flex-1 flex-col">
                             <div ref={scrollRef} onScroll={handleScroll} className={`custom-scrollbar flex-1 overflow-y-auto ${isCollapsed ? 'overflow-x-hidden' : ''}`}>
-                                <div className={`${hasMobileSearchBar ? 'pt-8' : 'pt-3'} py-5 transition-all duration-300 lg:pt-0 ${isCollapsed ? 'px-2' : 'px-3'}`}>
+                                <div className={`pt-2 py-5 transition-all duration-300 lg:pt-0 ${isCollapsed ? 'px-2' : 'px-3'}`}>
                                     {/* Beranda */}
                                     <div className="mb-6">
                                         <div className="py-2">
-                                            <h3 className={`text-xs font-medium tracking-wider text-slate-500 dark:text-slate-400 ${isCollapsed ? 'hidden' : ''}`}>Beranda</h3>
+                                            <h3 className={`text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Beranda</h3>
                                         </div>
                                         <div className="space-y-1">
                                             <SidebarLink name="Dashboard" href="/dashboard" icon={LayoutDashboard} />
@@ -72,7 +72,7 @@ export default function SideBar({ isOpen, setIsOpen, isCollapsed, hasMobileSearc
                                         return (
                                             <div className="mb-6">
                                                 <div className="py-2">
-                                                    <h3 className={`text-xs font-medium tracking-wider text-slate-500 dark:text-slate-400 ${isCollapsed ? 'hidden' : ''}`}>Data Master</h3>
+                                                    <h3 className={`text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Data Master</h3>
                                                 </div>
                                                 <div className="space-y-1">
                                                     {showDivisi && <SidebarLink name="Divisi" href="/division" icon={Building2} />}

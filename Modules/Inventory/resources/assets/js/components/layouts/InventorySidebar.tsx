@@ -1,10 +1,12 @@
 import { BarChart3, Folder, Package, ShoppingCart, History, ClipboardCheck, FileBarChart } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
 import SidebarLink from '@/components/layouts/SideBarLink';
+import { useSidebarCollapse } from '@/components/layouts/SidebarContext';
 import { InventoryPermission } from '../../types/permissions';
 
 export default function InventorySidebar() {
     const { permissions, is_stock_opname_pending } = usePage<{ permissions: string[], is_stock_opname_pending: boolean }>().props;
+    const isCollapsed = useSidebarCollapse();
 
     // Define visibility for each menu item
     const showKategori = !is_stock_opname_pending && (
@@ -64,7 +66,7 @@ export default function InventorySidebar() {
             {hasDataMasterGudang && (
                 <div className="space-y-1">
                     <div className="py-2">
-                        <h3 className="inventory-sidebar-label text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">Data Master Gudang</h3>
+                        <h3 className={`inventory-sidebar-label text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Data Master BHP</h3>
                     </div>
                     {showKategori && (
                         <SidebarLink name="Kategori Barang" href="/inventory/categories" icon={Folder} />
@@ -82,7 +84,7 @@ export default function InventorySidebar() {
             {hasPengolahanData && (
                 <div className="space-y-1">
                     <div className="py-2">
-                        <h3 className="inventory-sidebar-label text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">Pengolahan Data Barang</h3>
+                        <h3 className={`inventory-sidebar-label text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Pengolahan Data BHP</h3>
                     </div>
                     {showPermintaan && (
                         <SidebarLink name="Permintaan Barang" href="/inventory/warehouse-orders" icon={ShoppingCart} />
@@ -97,7 +99,7 @@ export default function InventorySidebar() {
             {hasStockOpname && (
                 <div className="space-y-1">
                     <div className="py-2">
-                        <h3 className="inventory-sidebar-label text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">Stock Opname Barang</h3>
+                        <h3 className={`inventory-sidebar-label text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Stock Opname BHP</h3>
                     </div>
                     {showStockOpnameDivisi && (
                         <SidebarLink name="Stock Opname Divisi" href="/inventory/stock-opname/division" icon={ClipboardCheck} />
@@ -115,7 +117,7 @@ export default function InventorySidebar() {
             {hasLaporan && (
                 <div className="space-y-1">
                     <div className="py-2">
-                        <h3 className="inventory-sidebar-label text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">Laporan Sistem Gudang</h3>
+                        <h3 className={`inventory-sidebar-label text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Laporan Pengelolaan BHP</h3>
                     </div>
                     {showLaporanDivisi && (
                         <SidebarLink name="Laporan Divisi" href="/inventory/reports/division" icon={FileBarChart} />

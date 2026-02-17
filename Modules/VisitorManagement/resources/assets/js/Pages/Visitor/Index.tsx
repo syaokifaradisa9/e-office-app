@@ -12,9 +12,11 @@ import Badge from '@/components/badges/Badge';
 import Modal from '@/components/modals/Modal';
 import FormInput from '@/components/forms/FormInput';
 import FormTextArea from '@/components/forms/FormTextArea';
+import MobileSearchBar from '@/components/forms/MobileSearchBar';
 import { useForm } from '@inertiajs/react';
 import toast from 'react-hot-toast';
 import Tooltip from '@/components/commons/Tooltip';
+import VisitorCardItem from './VisitorCardItem';
 
 interface Visitor {
     id: number;
@@ -59,7 +61,7 @@ export default function VisitorIndex({ initialVisitors }: { initialVisitors: Pag
         visitor_name: '',
         division: '',
         month: '',
-        limit: 20,
+        limit: 10,
         page: 1,
         sort_by: 'created_at',
         sort_direction: 'desc',
@@ -148,7 +150,23 @@ export default function VisitorIndex({ initialVisitors }: { initialVisitors: Pag
     };
 
     return (
-        <RootLayout title="Manajemen Pengunjung">
+        <RootLayout
+            title="Manajemen Pengunjung"
+            mobileSearchBar={
+                <MobileSearchBar
+                    searchValue={params.search}
+                    onSearchChange={onParamsChange}
+                    placeholder="Cari pengunjung..."
+                    actionButton={
+                        <div className="flex items-center gap-1">
+                            <a href="/visitor/export" target="_blank" className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" rel="noreferrer">
+                                <FileSpreadsheet className="size-4" />
+                            </a>
+                        </div>
+                    }
+                />
+            }
+        >
             <Modal
                 show={confirmModal.open}
                 onClose={() => setConfirmModal({ ...confirmModal, open: false })}
@@ -199,6 +217,8 @@ export default function VisitorIndex({ initialVisitors }: { initialVisitors: Pag
             <ContentCard
                 title="Daftar Pengunjung"
                 subtitle="Kelola dan pantau data kunjungan tamu di instansi Anda"
+                mobileFullWidth
+                bodyClassName="px-0 pb-24 pt-2 md:p-6"
                 additionalButton={
                     <div className="flex gap-2">
                         <CheckPermissions permissions={['buat_undangan_tamu']}>
@@ -219,6 +239,14 @@ export default function VisitorIndex({ initialVisitors }: { initialVisitors: Pag
                     dataTable={dataTable}
                     limit={params.limit}
                     searchValue={params.search}
+                    cardItem={(item: Visitor) => (
+                        <VisitorCardItem
+                            item={item}
+                            onDetail={() => router.get(`/visitor/${item.id}`)}
+                            onApprove={(item) => setConfirmModal({ open: true, type: 'approved', visitor: item })}
+                            onReject={(item) => setConfirmModal({ open: true, type: 'rejected', visitor: item })}
+                        />
+                    )}
                     onParamsChange={(e) => {
                         const { name, value } = e.target;
                         setParams({ ...params, [name]: value, page: 1 });
@@ -233,14 +261,15 @@ export default function VisitorIndex({ initialVisitors }: { initialVisitors: Pag
                         if (page) setParams({ ...params, page: parseInt(page) });
                     }}
                     additionalHeaderElements={
-                        <Button
-                            href="/visitor/export"
-                            variant="ghost"
-                            className="flex h-9 w-9 items-center justify-center p-0 hover:bg-slate-50 dark:hover:bg-slate-800"
-                            icon={<FileSpreadsheet className="size-4" />}
-                            target="_blank"
-                            title="Export Excel"
-                        />
+                        <Tooltip text="Export Excel">
+                            <Button
+                                href="/visitor/export"
+                                variant="ghost"
+                                className="flex h-9 w-9 items-center justify-center p-0 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                icon={<FileSpreadsheet className="size-4" />}
+                                target="_blank"
+                            />
+                        </Tooltip>
                     }
                     columns={[
                         {

@@ -181,8 +181,9 @@ export default function ReportAll() {
         <RootLayout title="Laporan Inventory Global">
             <ContentCard
                 title="Dashboard Laporan Lintas Divisi"
-                mobileFullWidth={false}
-                bodyClassName="p-6 md:p-8"
+                subtitle="Pantau statistik inventaris menyeluruh, perbandingan antar divisi, dan performa stok global."
+                mobileFullWidth={true}
+                bodyClassName="p-1 md:p-6"
                 additionalButton={
                     <Button
                         href="/inventory/reports/print-excel"
@@ -200,13 +201,13 @@ export default function ReportAll() {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as typeof activeTab)}
                             className={`relative pb-3 text-sm font-medium transition-colors ${activeTab === tab.id
-                                ? 'text-white'
-                                : 'text-slate-400 hover:text-slate-300'
+                                ? 'text-slate-900 dark:text-white'
+                                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
                                 }`}
                         >
                             {tab.label}
                             {activeTab === tab.id && (
-                                <span className="absolute bottom-0 left-0 h-0.5 w-full bg-white" />
+                                <span className="absolute bottom-0 left-0 h-0.5 w-full bg-primary dark:bg-white" />
                             )}
                         </button>
                     ))}

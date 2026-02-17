@@ -48,6 +48,10 @@ class HandleInertiaRequests extends Middleware
                     'name' => $user->name,
                     'email' => $user->email,
                     'initials' => $user->initials,
+                    'division' => $user->division ? [
+                        'id' => $user->division->id,
+                        'name' => $user->division->name,
+                    ] : null,
                 ] : null,
             ],
             'loggeduser' => $user ? [
@@ -55,6 +59,7 @@ class HandleInertiaRequests extends Middleware
                 'name' => $user->name,
                 'email' => $user->email,
                 'division_id' => $user->division_id,
+                'division_name' => $user->division?->name,
                 'position' => $user->position?->name,
             ] : null,
             'permissions' => $user ? $user->getAllPermissions()->pluck('name')->toArray() : [],

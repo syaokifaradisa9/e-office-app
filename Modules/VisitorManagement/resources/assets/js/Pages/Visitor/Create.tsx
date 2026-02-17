@@ -31,7 +31,7 @@ export default function VisitorInvitation() {
     };
 
     return (
-        <RootLayout title="Buat Undangan Pengunjung">
+        <RootLayout title="Buat Undangan Pengunjung" backPath="/visitor">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
                     <ContentCard

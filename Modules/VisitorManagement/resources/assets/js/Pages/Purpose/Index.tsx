@@ -13,6 +13,8 @@ import MobileSearchBar from '@/components/forms/MobileSearchBar';
 import FloatingActionButton from '@/components/buttons/FloatingActionButton';
 import { DivisionCardSkeleton } from '@/components/skeletons/CardSkeleton';
 import Tooltip from '@/components/commons/Tooltip';
+import { ArchievePermission } from '@/enums/ArchievePermission';
+import PurposeCardItem from './PurposeCardItem';
 
 interface PurposeCategory {
     id: number;
@@ -65,7 +67,7 @@ export default function PurposeCategoryIndex() {
     });
     const [params, setParams] = useState<Params>({
         search: '',
-        limit: 20,
+        limit: 10,
         page: 1,
         sort_by: 'name',
         sort_direction: 'asc',
@@ -150,9 +152,11 @@ export default function PurposeCategoryIndex() {
                         onSearchChange={onParamsChange}
                         placeholder="Cari keperluan..."
                         actionButton={
-                            <a href={getPrintUrl()} target="_blank" className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" rel="noreferrer">
-                                <FileSpreadsheet className="size-4" />
-                            </a>
+                            <div className="flex items-center gap-1">
+                                <a href={getPrintUrl()} target="_blank" className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" rel="noreferrer">
+                                    <FileSpreadsheet className="size-4" />
+                                </a>
+                            </div>
                         }
                     />
                 ) : undefined
@@ -179,6 +183,7 @@ export default function PurposeCategoryIndex() {
                 title="Keperluan Kunjungan"
                 subtitle="Kelola kategori keperluan yang tersedia untuk pengunjung saat check-in"
                 mobileFullWidth
+                bodyClassName="px-0 pb-24 pt-2 md:p-6"
                 additionalButton={
                     <CheckPermissions permissions={['kelola_master_manajemen_pengunjung']}>
                         <Button
@@ -209,6 +214,17 @@ export default function PurposeCategoryIndex() {
                         SkeletonComponent={DivisionCardSkeleton}
                         sortBy={params.sort_by}
                         sortDirection={params.sort_direction}
+                        cardItem={(item: PurposeCategory) => (
+                            <PurposeCardItem
+                                item={item}
+                                canManage={!!hasManagePermission}
+                                onToggleStatus={handleToggleStatus}
+                                onDelete={(item) => {
+                                    setSelectedItem(item);
+                                    setOpenConfirm(true);
+                                }}
+                            />
+                        )}
                         additionalHeaderElements={
                             <div className="flex gap-2">
                                 <CheckPermissions permissions={['lihat_master_manajemen_pengunjung']}>

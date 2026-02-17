@@ -16,6 +16,7 @@ import { DivisionCardSkeleton } from '@/components/skeletons/CardSkeleton';
 import Tooltip from '@/components/commons/Tooltip';
 import FormSelect from '@/components/forms/FormSelect';
 import { ArchievePermission } from '@/enums/ArchievePermission';
+import DocumentCardItem from './DocumentCardItem';
 
 interface Category {
     id: number;
@@ -41,6 +42,7 @@ interface Document {
     categories: Category[];
     divisions: Division[];
     file_name: string;
+    file_path: string;
     file_size_label: string;
     uploader?: { name: string };
     created_at: string;
@@ -114,7 +116,7 @@ export default function DocumentIndex() {
         uploader: '',
         file_size: '',
         created_at: '',
-        limit: 20,
+        limit: 10,
         page: 1,
         sort_by: 'created_at',
         sort_direction: 'desc',
@@ -213,9 +215,11 @@ export default function DocumentIndex() {
                     onSearchChange={onParamsChange}
                     placeholder="Cari dokumen..."
                     actionButton={
-                        <a href={getPrintUrl()} target="_blank" className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" rel="noreferrer">
-                            <FileSpreadsheet className="size-4" />
-                        </a>
+                        <div className="flex items-center gap-1">
+                            <a href={getPrintUrl()} target="_blank" className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" rel="noreferrer">
+                                <FileSpreadsheet className="size-4" />
+                            </a>
+                        </div>
                     }
                 />
             }
@@ -240,6 +244,7 @@ export default function DocumentIndex() {
                 title={getTitle()}
                 subtitle={`Menampilkan ${getTitle().toLowerCase()} yang tersedia di sistem.`}
                 mobileFullWidth
+                bodyClassName="px-0 pb-24 pt-2 md:p-6"
                 additionalButton={
                     <CheckPermissions permissions={[ArchievePermission.MANAGE_ALL, ArchievePermission.MANAGE_DIVISION]}>
                         <Button className="hidden w-full md:flex" label="Upload Dokumen" href="/archieve/documents/create" icon={<Plus className="size-4" />} />
@@ -254,11 +259,22 @@ export default function DocumentIndex() {
                     dataTable={dataTable}
                     isLoading={isLoading}
                     SkeletonComponent={DivisionCardSkeleton}
+                    cardItem={(item: Document) => (
+                        <DocumentCardItem
+                            item={item}
+                            onDelete={(item) => {
+                                setSelectedItem(item);
+                                setOpenConfirm(true);
+                            }}
+                        />
+                    )}
                     sortBy={params.sort_by}
                     sortDirection={params.sort_direction}
                     additionalHeaderElements={
                         <div className="flex gap-2">
-                            <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                            <Tooltip text="Export Excel">
+                                <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                            </Tooltip>
                         </div>
                     }
                     onHeaderClick={(columnName) => {
@@ -360,9 +376,10 @@ export default function DocumentIndex() {
                                 <div className="flex justify-end gap-1">
                                     <Tooltip text="Download">
                                         <Button
+                                            variant="ghost"
                                             href={`/storage/${item.file_name}`}
                                             target="_blank"
-                                            className="!bg-transparent !p-1 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                                            className="!p-1.5 !text-blue-600 hover:bg-blue-50 dark:!text-blue-400 dark:hover:bg-blue-900/20"
                                             icon={<Download className="size-4" />}
                                         />
                                     </Tooltip>
@@ -370,18 +387,20 @@ export default function DocumentIndex() {
                                         <>
                                             <Tooltip text="Edit">
                                                 <Button
+                                                    variant="ghost"
                                                     href={`/archieve/documents/${item.id}/edit`}
-                                                    className="!bg-transparent !p-1 text-yellow-600 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
+                                                    className="!p-1.5 !text-amber-500 hover:bg-amber-50 dark:!text-amber-400 dark:hover:bg-amber-900/20"
                                                     icon={<Edit className="size-4" />}
                                                 />
                                             </Tooltip>
                                             <Tooltip text="Hapus">
                                                 <Button
+                                                    variant="ghost"
                                                     onClick={() => {
                                                         setSelectedItem(item);
                                                         setOpenConfirm(true);
                                                     }}
-                                                    className="!bg-transparent !p-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                                                    className="!p-1.5 !text-red-500 hover:bg-red-50 dark:!text-red-400 dark:hover:bg-red-900/20"
                                                     icon={<Trash2 className="size-4" />}
                                                 />
                                             </Tooltip>

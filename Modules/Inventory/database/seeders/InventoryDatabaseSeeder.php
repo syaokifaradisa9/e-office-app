@@ -13,6 +13,8 @@ class InventoryDatabaseSeeder extends Seeder
             CategoryItemSeeder::class,
             ItemSeeder::class,
             WarehouseOrderSeeder::class,
+            ItemTransactionSeeder::class,
+            StockOpnameSeeder::class,
         ]);
     }
 }

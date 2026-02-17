@@ -42,6 +42,7 @@ export default function DivisionCreate({ division }: Props) {
                 subtitle="Isi informasi divisi di bawah ini"
                 backPath="/division"
                 mobileFullWidth
+                bodyClassName="p-1 md:p-6"
             >
 
                 <form onSubmit={handleSubmit} className="space-y-6">

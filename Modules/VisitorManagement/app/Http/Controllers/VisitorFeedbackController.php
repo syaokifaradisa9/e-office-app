@@ -51,4 +51,28 @@ class VisitorFeedbackController extends Controller
 
         return $this->service->exportExcel();
     }
+
+    public function destroy($id)
+    {
+        if (!auth()->user()->can(VisitorUserPermission::ManageCriticismFeedback->value)) {
+            abort(403);
+        }
+
+        $this->service->delete($id);
+
+        return back()->with('success', 'Berhasil menghapus kritik dan saran');
+    }
+
+    public function show($id)
+    {
+        if (!auth()->user()->can(VisitorUserPermission::ViewCriticismFeedback->value)) {
+            abort(403);
+        }
+
+        $feedback = $this->service->findById($id);
+
+        return Inertia::render('VisitorManagement/Feedback/FeedbackDetail', [
+            'feedback' => $feedback
+        ]);
+    }
 }

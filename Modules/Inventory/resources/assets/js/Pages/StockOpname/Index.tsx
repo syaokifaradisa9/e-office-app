@@ -10,7 +10,8 @@ import ConfirmationAlert from '@/components/alerts/ConfirmationAlert';
 import Button from '@/components/buttons/Button';
 import MobileSearchBar from '@/components/forms/MobileSearchBar';
 import FloatingActionButton from '@/components/buttons/FloatingActionButton';
-import { DivisionCardSkeleton } from '@/components/skeletons/CardSkeleton';
+import { CategoryItemCardSkeleton } from '@/components/skeletons/CardSkeleton';
+import StockOpnameCardItem from './StockOpnameCardItem';
 import Tooltip from '@/components/commons/Tooltip';
 
 interface StockOpname {
@@ -76,7 +77,7 @@ export default function StockOpnameIndex() {
     });
     const [params, setParams] = useState<Params>({
         search: '',
-        limit: 20,
+        limit: 10,
         page: 1,
         sort_by: 'created_at',
         sort_direction: 'desc',
@@ -144,12 +145,19 @@ export default function StockOpnameIndex() {
     const hasDivisionView = permissions?.includes(InventoryPermission.ViewDivisionStockOpname);
 
     // For the "Create" button:
-    const showCreate = type !== 'all' && hasCreate;
+    const showCreate = hasCreate;
 
+    const userDivision = (props.loggeduser as any)?.division_name;
     const titleMap = {
         warehouse: 'Stock Opname Gudang',
-        division: 'Stock Opname Divisi',
+        division: userDivision ? `Stock Opname Divisi ${userDivision}` : 'Stock Opname Divisi',
         all: 'Semua Stock Opname',
+    };
+
+    const subtitleMap = {
+        warehouse: 'Audit dan verifikasi stok fisik barang pada Gudang Pusat',
+        division: 'Pendataan dan opname barang inventaris yang telah didistribusikan ke unit kerja/divisi',
+        all: 'Monitoring komprehensif seluruh aktivitas pemeriksaan stok barang di gudang pusat dan unit kerja',
     };
 
     return (
@@ -161,9 +169,11 @@ export default function StockOpnameIndex() {
                     onSearchChange={onParamsChange}
                     placeholder="Cari stock opname..."
                     actionButton={
-                        <a href={getPrintUrl()} target="_blank" className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" rel="noreferrer">
-                            <FileSpreadsheet className="size-4" />
-                        </a>
+                        <div className="flex items-center gap-1">
+                            <a href={getPrintUrl()} target="_blank" className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" rel="noreferrer">
+                                <FileSpreadsheet className="size-4" />
+                            </a>
+                        </div>
                     }
                 />
             }
@@ -202,7 +212,9 @@ export default function StockOpnameIndex() {
             />
             <ContentCard
                 title={titleMap[type]}
+                subtitle={subtitleMap[type]}
                 mobileFullWidth
+                bodyClassName="px-0 pb-24 pt-2 md:p-6"
                 additionalButton={
                     showCreate && (
                         <Button className="hidden w-full md:flex" label="Buat Stock Opname" href={`/inventory/stock-opname/${type}/create`} icon={<Plus className="size-4" />} />
@@ -216,12 +228,14 @@ export default function StockOpnameIndex() {
                     searchValue={params.search}
                     dataTable={dataTable}
                     isLoading={isLoading}
-                    SkeletonComponent={DivisionCardSkeleton}
+                    SkeletonComponent={CategoryItemCardSkeleton}
                     sortBy={params.sort_by}
                     sortDirection={params.sort_direction}
                     additionalHeaderElements={
                         <div className="flex gap-2">
-                            <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                            <Tooltip text="Export Excel">
+                                <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                            </Tooltip>
                         </div>
                     }
                     onHeaderClick={(columnName: string) => {
@@ -231,6 +245,38 @@ export default function StockOpnameIndex() {
                             sort_by: columnName,
                             sort_direction: newSortDirection,
                         }));
+                    }}
+                    cardItem={(opname: StockOpname) => {
+                        const rowType = opname.division ? 'division' : 'warehouse';
+                        const canEditRow = type !== 'all' && hasCreate && opname.status === 'Pending';
+                        const canConfirmRow = type !== 'all' && (
+                            (hasProcess && ['Pending', 'Proses'].includes(opname.status)) ||
+                            (hasFinalize && opname.status === 'Stock Opname')
+                        );
+
+                        return (
+                            <StockOpnameCardItem
+                                item={{
+                                    ...opname,
+                                    division_id: 0,
+                                    division: opname.division ? { id: 0, name: opname.division } : null,
+                                    user: { id: 0, name: opname.user }
+                                }}
+                                canEdit={!!canEditRow}
+                                canConfirm={!!canConfirmRow}
+                                onDelete={() => {
+                                    setSelectedOpname(opname);
+                                    setOpenConfirm(true);
+                                }}
+                                onConfirm={() => {
+                                    if (hasProcess && ['Pending', 'Proses'].includes(opname.status)) {
+                                        router.get(`/inventory/stock-opname/${rowType}/${opname.id}/process`);
+                                    } else if (hasFinalize && opname.status === 'Stock Opname') {
+                                        router.get(`/inventory/stock-opname/${rowType}/${opname.id}/finalize`);
+                                    }
+                                }}
+                            />
+                        );
                     }}
                     columns={[
                         {
@@ -272,8 +318,9 @@ export default function StockOpnameIndex() {
                                     <div className="flex justify-end gap-1">
                                         <Tooltip text="Lihat Detail">
                                             <Button
+                                                variant="ghost"
                                                 href={`/inventory/stock-opname/${rowType}/${opname.id}/detail`}
-                                                className="!bg-transparent !p-1 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                                                className="!bg-transparent !p-1 !text-blue-600 hover:bg-blue-50 dark:!text-blue-400 dark:hover:bg-blue-900/20"
                                                 icon={<Eye className="size-4" />}
                                             />
                                         </Tooltip>
@@ -281,18 +328,20 @@ export default function StockOpnameIndex() {
                                             <>
                                                 <Tooltip text="Edit">
                                                     <Button
+                                                        variant="ghost"
                                                         href={`/inventory/stock-opname/${rowType}/${opname.id}/edit`}
-                                                        className="!bg-transparent !p-1 text-yellow-600 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
+                                                        className="!bg-transparent !p-1 !text-yellow-600 hover:bg-yellow-50 dark:!text-yellow-400 dark:hover:bg-yellow-900/20"
                                                         icon={<Edit className="size-4" />}
                                                     />
                                                 </Tooltip>
                                                 <Tooltip text="Hapus">
                                                     <Button
+                                                        variant="ghost"
                                                         onClick={() => {
                                                             setSelectedOpname(opname);
                                                             setOpenConfirm(true);
                                                         }}
-                                                        className="!bg-transparent !p-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                                                        className="!bg-transparent !p-1 !text-red-600 hover:bg-red-50 dark:!text-red-400 dark:hover:bg-red-900/20"
                                                         icon={<Trash2 className="size-4" />}
                                                     />
                                                 </Tooltip>
@@ -301,8 +350,9 @@ export default function StockOpnameIndex() {
                                         {type !== 'all' && hasProcess && ['Pending', 'Proses'].includes(opname.status) && (
                                             <Tooltip text="Proses Stock Opname">
                                                 <Button
+                                                    variant="ghost"
                                                     href={`/inventory/stock-opname/${rowType}/${opname.id}/process`}
-                                                    className="!bg-transparent !p-1 text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/20"
+                                                    className="!bg-transparent !p-1 !text-orange-600 hover:bg-orange-50 dark:!text-orange-400 dark:hover:bg-orange-900/20"
                                                     icon={<ClipboardCheck className="size-4" />}
                                                 />
                                             </Tooltip>
@@ -310,9 +360,10 @@ export default function StockOpnameIndex() {
                                         {type !== 'all' && hasFinalize && opname.status === 'Stock Opname' && (
                                             <Tooltip text="Finalisasi">
                                                 <Button
+                                                    variant="ghost"
                                                     href={`/inventory/stock-opname/${rowType}/${opname.id}/finalize`}
-                                                    className="!bg-transparent !p-1 text-purple-600 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-900/20"
-                                                    icon={<Check className="size-4 text-purple-600" />}
+                                                    className="!bg-transparent !p-1 !text-purple-600 hover:bg-purple-50 dark:!text-purple-400 dark:hover:bg-purple-900/20"
+                                                    icon={<Check className="size-4" />}
                                                 />
                                             </Tooltip>
                                         )}

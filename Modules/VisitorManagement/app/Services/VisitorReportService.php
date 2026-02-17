@@ -66,8 +66,8 @@ class VisitorReportService
         $year = Carbon::now()->year;
 
         return [
-            'most_visited' => $this->visitorRepository->getPurposeRankings($year, 10, 'desc'),
-            'least_visited' => $this->visitorRepository->getPurposeRankings($year, 10, 'asc'),
+            'most_visited' => $this->visitorRepository->getPurposeRankings($year, 5, 'desc'),
+            'least_visited' => $this->visitorRepository->getPurposeRankings($year, 5, 'asc'),
         ];
     }
 
@@ -76,8 +76,8 @@ class VisitorReportService
         $year = Carbon::now()->year;
 
         return [
-            'most_visited' => $this->visitorRepository->getDivisionRankings($year, 10, 'desc'),
-            'least_visited' => $this->visitorRepository->getDivisionRankings($year, 10, 'asc'),
+            'most_visited' => $this->visitorRepository->getDivisionRankings($year, 5, 'desc'),
+            'least_visited' => $this->visitorRepository->getDivisionRankings($year, 5, 'asc'),
         ];
     }
 
@@ -225,7 +225,7 @@ class VisitorReportService
 
     private function getTopOrganizations(): array
     {
-        return $this->visitorRepository->getTopOrganizations(Carbon::now()->year);
+        return $this->visitorRepository->getTopOrganizations(Carbon::now()->year, 5);
     }
 
     private function getAverageVisitDuration(): array
@@ -271,7 +271,7 @@ class VisitorReportService
 
     private function getRepeatVisitors(): array
     {
-        return $this->visitorRepository->getRepeatVisitors(Carbon::now()->year);
+        return $this->visitorRepository->getRepeatVisitors(Carbon::now()->year, 5);
     }
 
     private function getActiveVisitors(): int

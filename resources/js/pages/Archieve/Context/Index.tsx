@@ -11,9 +11,10 @@ import Button from '@/components/buttons/Button';
 import CheckPermissions from '@/components/utils/CheckPermissions';
 import MobileSearchBar from '@/components/forms/MobileSearchBar';
 import FloatingActionButton from '@/components/buttons/FloatingActionButton';
-import { DivisionCardSkeleton } from '@/components/skeletons/CardSkeleton';
+import { CategoryItemCardSkeleton } from '@/components/skeletons/CardSkeleton';
 import Tooltip from '@/components/commons/Tooltip';
 import { ArchievePermission } from '@/enums/ArchievePermission';
+import ContextCardItem from './ContextCardItem';
 
 interface Context {
     id: number;
@@ -64,7 +65,7 @@ export default function ContextIndex() {
     });
     const [params, setParams] = useState<Params>({
         search: '',
-        limit: 20,
+        limit: 10,
         page: 1,
         name: '',
         description: '',
@@ -142,9 +143,16 @@ export default function ContextIndex() {
                         onSearchChange={onParamsChange}
                         placeholder="Cari konteks..."
                         actionButton={
-                            <a href={getPrintUrl()} target="_blank" className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" rel="noreferrer">
-                                <FileSpreadsheet className="size-4" />
-                            </a>
+                            <div className="flex items-center gap-1">
+                                <a
+                                    href={getPrintUrl()}
+                                    target="_blank"
+                                    className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                                    rel="noreferrer"
+                                >
+                                    <FileSpreadsheet className="size-4" />
+                                </a>
+                            </div>
                         }
                     />
                 ) : undefined
@@ -170,6 +178,7 @@ export default function ContextIndex() {
                 title="Konteks Arsip"
                 subtitle="Kelola pengelompokan konteks arsip dokumen Anda"
                 mobileFullWidth
+                bodyClassName="px-0 pb-24 pt-2 md:p-6"
                 additionalButton={
                     <CheckPermissions permissions={[ArchievePermission.MANAGE_CATEGORY]}>
                         <Button className="hidden w-full md:flex" label="Tambah Konteks" href="/archieve/contexts/create" icon={<Plus className="size-4" />} />
@@ -192,12 +201,23 @@ export default function ContextIndex() {
                         searchValue={params.search}
                         dataTable={dataTable}
                         isLoading={isLoading}
-                        SkeletonComponent={DivisionCardSkeleton}
+                        SkeletonComponent={CategoryItemCardSkeleton}
                         sortBy={params.sort_by}
                         sortDirection={params.sort_direction}
+                        cardItem={(item: Context) => (
+                            <ContextCardItem
+                                item={item}
+                                onDelete={(item) => {
+                                    setSelectedItem(item);
+                                    setOpenConfirm(true);
+                                }}
+                            />
+                        )}
                         additionalHeaderElements={
                             <div className="flex gap-2">
-                                <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                                <Tooltip text="Export Excel">
+                                    <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                                </Tooltip>
                             </div>
                         }
                         onHeaderClick={(columnName) => {

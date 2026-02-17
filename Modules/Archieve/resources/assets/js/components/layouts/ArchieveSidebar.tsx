@@ -1,11 +1,13 @@
 import { Folder, FileText, Layers, HardDrive, FileArchive, Search, BarChart3 } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
 import SidebarLink from '@/components/layouts/SideBarLink';
+import { useSidebarCollapse } from '@/components/layouts/SidebarContext';
 import { ArchievePermission } from '@/enums/ArchievePermission';
 import CheckPermissions from '@/components/utils/CheckPermissions';
 
 export default function ArchieveSidebar() {
     const { url } = usePage();
+    const isCollapsed = useSidebarCollapse();
 
     return (
         <div className="mb-6 space-y-4">
@@ -20,7 +22,7 @@ export default function ArchieveSidebar() {
             >
                 <div className="space-y-1">
                     <div className="py-2">
-                        <h3 className="inventory-sidebar-label text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">Data Master Arsip</h3>
+                        <h3 className={`inventory-sidebar-label text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Data Master Arsip</h3>
                     </div>
                     <CheckPermissions
                         permissions={[
@@ -59,7 +61,7 @@ export default function ArchieveSidebar() {
             >
                 <div className="space-y-1">
                     <div className="py-2">
-                        <h3 className="inventory-sidebar-label text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">Pengelolaan Arsip</h3>
+                        <h3 className={`inventory-sidebar-label text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Pengelolaan Arsip</h3>
                     </div>
 
                     <CheckPermissions
@@ -114,7 +116,7 @@ export default function ArchieveSidebar() {
             >
                 <div className="space-y-1">
                     <div className="py-2">
-                        <h3 className="inventory-sidebar-label text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">Laporan Arsip</h3>
+                        <h3 className={`inventory-sidebar-label text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Laporan Arsip</h3>
                     </div>
                     <CheckPermissions permissions={[ArchievePermission.VIEW_REPORT_DIVISION]}>
                         <SidebarLink

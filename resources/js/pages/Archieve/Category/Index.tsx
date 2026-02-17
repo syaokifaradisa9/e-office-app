@@ -11,10 +11,11 @@ import Button from '@/components/buttons/Button';
 import CheckPermissions from '@/components/utils/CheckPermissions';
 import MobileSearchBar from '@/components/forms/MobileSearchBar';
 import FloatingActionButton from '@/components/buttons/FloatingActionButton';
-import { DivisionCardSkeleton } from '@/components/skeletons/CardSkeleton';
+import { CategoryItemCardSkeleton } from '@/components/skeletons/CardSkeleton';
 import Tooltip from '@/components/commons/Tooltip';
 import FormSelect from '@/components/forms/FormSelect';
 import { ArchievePermission } from '@/enums/ArchievePermission';
+import CategoryCardItem from './CategoryCardItem';
 
 interface Category {
     id: number;
@@ -79,7 +80,7 @@ export default function CategoryIndex() {
         name: '',
         description: '',
         context_id: '',
-        limit: 20,
+        limit: 10,
         page: 1,
         sort_by: 'context_id',
         sort_direction: 'asc',
@@ -160,9 +161,16 @@ export default function CategoryIndex() {
                         onSearchChange={onParamsChange}
                         placeholder="Cari kategori..."
                         actionButton={
-                            <a href={getPrintUrl()} target="_blank" className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" rel="noreferrer">
-                                <FileSpreadsheet className="size-4" />
-                            </a>
+                            <div className="flex items-center gap-1">
+                                <a
+                                    href={getPrintUrl()}
+                                    target="_blank"
+                                    className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                                    rel="noreferrer"
+                                >
+                                    <FileSpreadsheet className="size-4" />
+                                </a>
+                            </div>
                         }
                     />
                 ) : undefined
@@ -188,6 +196,7 @@ export default function CategoryIndex() {
                 title="Kategori Arsip"
                 subtitle="Daftar pengelompokan jenis dokumen arsip"
                 mobileFullWidth
+                bodyClassName="px-0 pb-24 pt-2 md:p-6"
                 additionalButton={
                     <CheckPermissions permissions={[ArchievePermission.MANAGE_CATEGORY]}>
                         <Button className="hidden w-full md:flex" label="Tambah Kategori" href="/archieve/categories/create" icon={<Plus className="size-4" />} />
@@ -210,12 +219,23 @@ export default function CategoryIndex() {
                         searchValue={params.search}
                         dataTable={dataTable}
                         isLoading={isLoading}
-                        SkeletonComponent={DivisionCardSkeleton}
+                        SkeletonComponent={CategoryItemCardSkeleton}
                         sortBy={params.sort_by}
                         sortDirection={params.sort_direction}
+                        cardItem={(item: Category) => (
+                            <CategoryCardItem
+                                item={item}
+                                onDelete={(item) => {
+                                    setSelectedItem(item);
+                                    setOpenConfirm(true);
+                                }}
+                            />
+                        )}
                         additionalHeaderElements={
                             <div className="flex gap-2">
-                                <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                                <Tooltip text="Export Excel">
+                                    <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                                </Tooltip>
                             </div>
                         }
                         onHeaderClick={(columnName) => {

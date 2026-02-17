@@ -42,6 +42,7 @@ export default function ProfileEdit() {
             <ContentCard
                 title="Edit Profil"
                 mobileFullWidth
+                bodyClassName="p-1 md:p-6"
             >
                 <p className="mb-6 text-sm text-gray-500 dark:text-slate-400">Perbarui informasi profil Anda</p>
 

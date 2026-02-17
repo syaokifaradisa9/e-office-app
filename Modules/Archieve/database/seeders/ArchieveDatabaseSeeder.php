@@ -14,6 +14,7 @@ class ArchieveDatabaseSeeder extends Seeder
         $this->call([
             ArchievePermissionSeeder::class,
             ArchieveCategorySeeder::class,
+            DocumentSeeder::class,
         ]);
     }
 }

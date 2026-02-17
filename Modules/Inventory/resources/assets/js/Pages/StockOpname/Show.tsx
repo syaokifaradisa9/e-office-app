@@ -60,9 +60,21 @@ export default function StockOpnameShow({ opname }: Props) {
     const isPastOpnameDate = new Date(opname.opname_date).setHours(0, 0, 0, 0) < new Date().setHours(0, 0, 0, 0);
     const finalizeAllowed = opname.status === 'Stock Opname' && isPastOpnameDate;
 
+    const formatDate = (dateString: string) => {
+        if (!dateString) return '-';
+        const datePart = dateString.includes('T') ? dateString.split('T')[0] : dateString;
+        const date = new Date(datePart.replace(/-/g, '/'));
+        if (isNaN(date.getTime())) return dateString;
+        return date.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+    };
+
     return (
         <RootLayout title="Detail Stock Opname" backPath={`/inventory/stock-opname/${type}`}>
-            <ContentCard title="Detail Stock Opname" backPath={`/inventory/stock-opname/${type}`} mobileFullWidth>
+            <ContentCard title="Detail Stock Opname" backPath={`/inventory/stock-opname/${type}`} mobileFullWidth bodyClassName="p-1 md:p-6">
                 <div className="space-y-8">
                     {/* Header Info */}
                     <div>
@@ -78,11 +90,7 @@ export default function StockOpnameShow({ opname }: Props) {
                                 <div>
                                     <p className="text-sm text-gray-500 dark:text-slate-400">Tanggal Opname</p>
                                     <p className="font-medium text-gray-900 dark:text-white">
-                                        {new Date(opname.opname_date).toLocaleDateString('id-ID', {
-                                            day: 'numeric',
-                                            month: 'long',
-                                            year: 'numeric',
-                                        })}
+                                        {formatDate(opname.opname_date)}
                                     </p>
                                 </div>
                             </div>

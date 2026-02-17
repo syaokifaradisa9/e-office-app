@@ -62,10 +62,6 @@ class StockOpnameController extends Controller
      */
     public function create(Request $request, string $type = 'warehouse')
     {
-        if (! in_array($type, ['warehouse', 'division'])) {
-            abort(404);
-        }
-
         /** @var User $user */
         $user = $request->user();
 
@@ -84,7 +80,7 @@ class StockOpnameController extends Controller
      * warehouse type → division_id must be null
      * division type → division_id = user's division_id
      */
-    public function store(StoreStockOpnameRequest $request, string $type = 'warehouse')
+    public function store(StoreStockOpnameRequest $request, string $type = 'all')
     {
         /** @var User $user */
         $user = $request->user();
@@ -95,30 +91,13 @@ class StockOpnameController extends Controller
 
         $dto = StockOpnameDTO::fromStoreRequest($request);
 
-        // Enforce division_id based on type
-        if ($type === 'warehouse') {
-            $dto = new StockOpnameDTO(
-                opname_date: $dto->opname_date,
-                division_id: null,
-                notes: $dto->notes,
-                status: \Modules\Inventory\Enums\StockOpnameStatus::Pending
-            );
-        } elseif ($type === 'division') {
-            $dto = new StockOpnameDTO(
-                opname_date: $dto->opname_date,
-                division_id: $user->division_id,
-                notes: $dto->notes,
-                status: \Modules\Inventory\Enums\StockOpnameStatus::Pending
-            );
-        }
-
         try {
             $this->stockOpnameService->initializeOpname($dto, $user);
-            $message = $type === 'warehouse'
-                ? 'Stok Opname Gudang berhasil diinisialisasi.'
-                : 'Stok Opname Divisi berhasil diinisialisasi.';
+            
+            $targetType = $dto->division_id ? 'division' : 'warehouse';
 
-            return to_route('inventory.stock-opname.index', ['type' => $type])->with('success', $message);
+            return to_route('inventory.stock-opname.index', ['type' => $targetType])
+                ->with('success', 'Stok Opname berhasil diinisialisasi.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -243,7 +222,11 @@ class StockOpnameController extends Controller
 
         try {
             $stockOpname->update($dto->toArray());
-            return to_route('inventory.stock-opname.index', ['type' => $type])->with('success', 'Stok Opname berhasil diperbarui.');
+            
+            $targetType = $dto->division_id ? 'division' : 'warehouse';
+            
+            return to_route('inventory.stock-opname.index', ['type' => $targetType])
+                ->with('success', 'Stok Opname berhasil diperbarui.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }

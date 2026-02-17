@@ -49,5 +49,11 @@ class VisitorManagementDatabaseSeeder extends Seeder
         foreach ($questions as $question) {
             VisitorFeedbackQuestion::firstOrCreate(['question' => $question]);
         }
+
+        // 4. Seed Mock Visitors
+        $this->call(VisitorSeeder::class);
+
+        // 5. Seed Feedback & Ratings
+        $this->call(VisitorFeedbackSeeder::class);
     }
 }

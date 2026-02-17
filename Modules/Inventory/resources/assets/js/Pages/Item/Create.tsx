@@ -72,9 +72,11 @@ export default function ItemCreate({ item, categories, referenceItems = [] }: Pr
         <RootLayout title={isEdit ? 'Edit Barang' : 'Tambah Barang'} backPath="/inventory/items">
             <ContentCard
                 title={isEdit ? 'Edit Barang' : 'Tambah Barang Baru'}
+                subtitle={isEdit ? 'Perbarui informasi detail dan data konversi barang' : 'Daftarkan barang baru ke dalam sistem inventaris gudang utama'}
+                backPath="/inventory/items"
                 mobileFullWidth
+                bodyClassName="p-1 md:p-6"
             >
-                <p className="mb-6 text-sm text-gray-500 dark:text-slate-400">Isi informasi barang gudang utama di bawah ini</p>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <FormInput name="name" label="Nama Barang" placeholder="Masukkan nama barang" value={data.name} onChange={(e) => setData('name', e.target.value)} error={errors.name} required />

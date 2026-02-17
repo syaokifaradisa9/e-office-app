@@ -29,7 +29,7 @@ class WarehouseOrderService
             $order = $this->orderRepository->create([
                 'user_id' => $user->id,
                 'division_id' => $dto->division_id,
-                'order_number' => 'WO-'.date('YmdHis').'-'.rand(100, 999),
+                'order_number' => $this->orderRepository->generateOrderNumber(),
                 'description' => $dto->description,
                 'notes' => $dto->notes,
                 'status' => WarehouseOrderStatus::Pending,

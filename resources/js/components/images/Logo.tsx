@@ -13,7 +13,7 @@ export default function Logo({ className = '', showText = true, iconSize = 'size
             <div className="flex items-center justify-center rounded-xl bg-primary/10 p-2">
                 <Building2 className={`${iconSize} text-primary`} strokeWidth={1.5} />
             </div>
-            {showText && <div className={`font-bold ${textSize} tracking-tight text-slate-800 dark:text-white`}>E-Office</div>}
+            {showText && <div className={`font-bold ${textSize} tracking-tight text-slate-800 dark:text-white`}>e-Office</div>}
         </div>
     );
 }

@@ -131,21 +131,21 @@ export default function VisitorList({ visitors }: VisitorListProps) {
             className="group flex flex-col gap-4 p-5 transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 sm:flex-row sm:items-center sm:justify-between"
         >
             <div className="flex items-start gap-4">
-                <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 shadow-sm ring-1 ring-slate-200/50 transition-transform group-hover:scale-105 dark:from-slate-800 dark:to-slate-700 dark:text-slate-400 dark:ring-slate-700">
+                <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 shadow-sm ring-1 ring-slate-200/50 transition-transform group-hover:scale-105 dark:from-slate-800 dark:to-slate-700 dark:text-slate-400 dark:ring-slate-700 sm:size-14">
                     {visitor.photo_url ? (
                         <img src={visitor.photo_url} alt={visitor.visitor_name} className="h-full w-full object-cover" />
                     ) : (
-                        <User className="size-6" />
+                        <User className="size-6 sm:size-7" />
                     )}
                 </div>
-                <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-3">
-                        <h3 className="font-bold text-slate-900 dark:text-white">
+                <div className="min-w-0 flex-1 pt-0.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white sm:text-base">
                             {visitor.visitor_name}
                         </h3>
                         {getStatusBadge(visitor.status)}
                     </div>
-                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500 sm:text-sm">
                         {visitor.organization && (
                             <span className="flex items-center gap-1.5">
                                 <Building2 className="size-3.5 text-slate-400" />
@@ -161,53 +161,60 @@ export default function VisitorList({ visitors }: VisitorListProps) {
                         {visitor.check_in_at && (
                             <span className="flex items-center gap-1.5">
                                 <Clock className="size-3.5 text-slate-400" />
-                                Check-in: {formatTime(visitor.check_in_at)}
+                                {formatTime(visitor.check_in_at)}
                             </span>
                         )}
                     </div>
                 </div>
             </div>
-            <div className="flex shrink-0 gap-2 pl-16 sm:pl-0">
-                {visitor.status === 'invited' && (
-                    <div className="flex gap-2">
+            <div className="flex shrink-0 gap-2 pl-16 sm:pl-0 sm:contents">
+                <div className="flex w-full gap-2 sm:w-auto sm:justify-end">
+                    {visitor.status === 'invited' && (
+                        <>
+                            <Button
+                                onClick={() => handleEditOrCheckIn(visitor)}
+                                label="Lanjut Check-In"
+                                icon={<Calendar className="size-4" />}
+                                className="flex-1 sm:flex-none"
+                            />
+                            <Button
+                                onClick={() => handleCancelVisit(visitor)}
+                                disabled={cancellingId === visitor.id}
+                                label="Batal"
+                                icon={<Ban className="size-4" />}
+                                variant="danger"
+                                className="flex-1 sm:flex-none"
+                            />
+                        </>
+                    )}
+                    {visitor.status === 'pending' && (
+                        <>
+                            <Button
+                                onClick={() => handleEditOrCheckIn(visitor)}
+                                label="Edit"
+                                icon={<Edit className="size-4" />}
+                                variant="outline"
+                                className="flex-1 sm:flex-none"
+                            />
+                            <Button
+                                onClick={() => handleCancelVisit(visitor)}
+                                disabled={cancellingId === visitor.id}
+                                label="Batal"
+                                icon={<Ban className="size-4" />}
+                                variant="danger"
+                                className="flex-1 sm:flex-none"
+                            />
+                        </>
+                    )}
+                    {visitor.status === 'approved' && (
                         <Button
-                            onClick={() => handleEditOrCheckIn(visitor)}
-                            label="Lanjut Check-In"
-                            icon={<Calendar className="size-4" />}
+                            onClick={() => handleCheckout(visitor.id)}
+                            label="Check-Out"
+                            icon={<LogOut className="size-4" />}
+                            className="w-full sm:w-auto"
                         />
-                        <Button
-                            onClick={() => handleCancelVisit(visitor)}
-                            disabled={cancellingId === visitor.id}
-                            label="Batal"
-                            icon={<Ban className="size-4" />}
-                            variant="danger"
-                        />
-                    </div>
-                )}
-                {visitor.status === 'pending' && (
-                    <div className="flex gap-2">
-                        <Button
-                            onClick={() => handleEditOrCheckIn(visitor)}
-                            label="Edit Data"
-                            icon={<Edit className="size-4" />}
-                            variant="outline"
-                        />
-                        <Button
-                            onClick={() => handleCancelVisit(visitor)}
-                            disabled={cancellingId === visitor.id}
-                            label="Batal"
-                            icon={<Ban className="size-4" />}
-                            variant="danger"
-                        />
-                    </div>
-                )}
-                {visitor.status === 'approved' && (
-                    <Button
-                        onClick={() => handleCheckout(visitor.id)}
-                        label="Check-Out"
-                        icon={<LogOut className="size-4" />}
-                    />
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -235,28 +242,28 @@ export default function VisitorList({ visitors }: VisitorListProps) {
                         {/* Main Card */}
                         <div className="overflow-hidden rounded-2xl bg-white shadow-xl shadow-slate-200/50 ring-1 ring-slate-200/50 dark:bg-slate-900 dark:shadow-none dark:ring-slate-800">
                             {/* Header */}
-                            <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-5 dark:border-slate-800 dark:from-slate-900 dark:to-slate-800/50">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
+                            <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-5 py-4 dark:border-slate-800 dark:from-slate-900 dark:to-slate-800/50 sm:px-6 sm:py-5">
+                                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="flex items-start gap-3">
                                         <Link
                                             href="/visitor/check-in"
-                                            className="-ml-2 flex size-10 items-center justify-center rounded-full text-slate-500 transition-all hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                                            className="-ml-1 flex size-9 items-center justify-center rounded-full text-slate-500 transition-all hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white sm:size-10"
                                             title="Kembali ke Check-In"
                                         >
-                                            <ChevronLeft className="size-6" />
+                                            <ChevronLeft className="size-5 sm:size-6" />
                                         </Link>
-                                        <div>
-                                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                                        <div className="min-w-0 pr-2">
+                                            <h2 className="text-lg font-bold text-slate-900 dark:text-white leading-tight sm:text-xl">
                                                 Daftar Pengunjung Aktif
                                             </h2>
-                                            <p className="mt-1 text-sm text-slate-500">
+                                            <p className="mt-1 text-xs text-slate-500 leading-relaxed sm:text-sm">
                                                 Cari nama Anda untuk Check-Out, Edit Data, atau Melanjutkan Undangan
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 dark:bg-slate-800">
-                                        <Users className="size-4 text-slate-500" />
-                                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                                    <div className="flex shrink-0 items-center gap-2 self-start rounded-full bg-emerald-50 px-3 py-1.5 text-emerald-600 dark:bg-emerald-900/20 sm:self-center sm:px-4 sm:py-2">
+                                        <Users className="size-3.5 sm:size-4" />
+                                        <span className="text-xs font-bold sm:text-sm">
                                             {filteredVisitors.length} Pengunjung
                                         </span>
                                     </div>

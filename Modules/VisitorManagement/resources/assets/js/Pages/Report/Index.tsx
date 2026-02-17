@@ -1,5 +1,6 @@
 import ContentCard from '@/components/layouts/ContentCard';
 import RootLayout from '@/components/layouts/RootLayout';
+import UiTooltip from '@/components/commons/Tooltip';
 import { usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import {
@@ -200,13 +201,15 @@ export default function ReportIndex() {
                 mobileFullWidth={false}
                 bodyClassName="p-6 md:p-8"
                 additionalButton={
-                    <Button
-                        href="/visitor/reports/export"
-                        variant="primary"
-                        label="Cetak Excel"
-                        icon={<FileSpreadsheet className="size-4" />}
-                        target="_blank"
-                    />
+                    <UiTooltip text="Cetak Laporan">
+                        <Button
+                            href="/visitor/reports/export"
+                            variant="primary"
+                            label="Cetak Excel"
+                            icon={<FileSpreadsheet className="size-4" />}
+                            target="_blank"
+                        />
+                    </UiTooltip>
                 }
             >
                 {/* Tabs */}
@@ -466,7 +469,7 @@ export default function ReportIndex() {
                         <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
                             <h4 className="mb-4 flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200">
                                 <ClipboardCheck className="size-5 text-emerald-500" />
-                                Keperluan Kunjungan
+                                Top 5 Keperluan Kunjungan
                             </h4>
                             <div className="space-y-2">
                                 {(purpose_rankings.most_visited || []).length > 0 ? (
@@ -489,7 +492,7 @@ export default function ReportIndex() {
                         <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
                             <h4 className="mb-4 flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200">
                                 <Building2 className="size-5 text-blue-500" />
-                                Divisi Tujuan
+                                Top 5 Divisi Tujuan
                             </h4>
                             <div className="space-y-2">
                                 {(division_rankings.most_visited || []).length > 0 ? (
@@ -512,7 +515,7 @@ export default function ReportIndex() {
                         <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
                             <h4 className="mb-4 flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200">
                                 <Building2 className="size-5 text-indigo-500" />
-                                Top Organisasi
+                                Top 5 Organisasi
                             </h4>
                             <div className="space-y-2">
                                 {(top_organizations || []).length > 0 ? (
@@ -535,7 +538,7 @@ export default function ReportIndex() {
                         <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
                             <h4 className="mb-4 flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200">
                                 <Users className="size-5 text-violet-500" />
-                                Pengunjung Berulang
+                                Top 5 Pengunjung Berulang
                             </h4>
                             <div className="space-y-2">
                                 {(repeat_visitors || []).length > 0 ? (

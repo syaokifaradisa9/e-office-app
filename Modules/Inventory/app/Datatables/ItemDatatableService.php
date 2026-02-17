@@ -26,6 +26,7 @@ class ItemDatatableService
                 'stock' => $item->stock,
                 'multiplier' => $item->multiplier,
                 'reference_item' => $item->referenceItem?->name,
+                'description' => $item->description,
                 'created_at' => $item->created_at->format('Y-m-d H:i:s'),
             ]);
 

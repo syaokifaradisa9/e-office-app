@@ -24,47 +24,54 @@ export default function PositionCardItem({ item, onDelete }: PositionCardItemPro
     const hasManagePermission = permissions?.includes('kelola_jabatan');
 
     return (
-        <div className="transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/30">
-            <div className="flex flex-col gap-1 px-4 py-4">
-                {/* Header: Name with Icon */}
-                <div className="flex items-center gap-2">
-                    <Briefcase className="size-4 text-primary" />
-                    <div className="truncate text-base font-semibold text-gray-900 dark:text-white">{item.name}</div>
+        <div className="group transition-colors duration-150 hover:bg-slate-50/80 dark:hover:bg-slate-700/20">
+            <div className="flex items-start gap-3.5 px-4 py-4">
+                {/* Icon */}
+                <div className="mt-0.5 flex size-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 dark:bg-primary/15">
+                    <Briefcase className="size-5 text-primary" />
                 </div>
 
-                {/* Description */}
-                <div className="text-sm text-gray-500 dark:text-slate-400">{item.description || '-'}</div>
+                {/* Content */}
+                <div className="min-w-0 flex-1">
+                    {/* Name & Status */}
+                    <div className="flex items-center gap-2">
+                        <h3 className="truncate text-[15px] font-semibold text-slate-800 dark:text-white">{item.name}</h3>
+                        <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${item.is_active ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/25 dark:text-emerald-400' : 'bg-red-50 text-red-500 dark:bg-red-900/25 dark:text-red-400'}`}>
+                            {item.is_active ? 'Aktif' : 'Nonaktif'}
+                        </span>
+                    </div>
 
-                {/* Stats Row */}
-                <div className="mb-2 flex items-center gap-4 text-sm text-gray-500 dark:text-slate-400">
-                    <div className="flex items-center gap-1">
-                        <Users className="size-4" />
+                    {/* Description */}
+                    {item.description && (
+                        <p className="mt-1 line-clamp-1 text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">{item.description}</p>
+                    )}
+
+                    {/* Stats */}
+                    <div className="mt-2.5 flex items-center gap-1.5 text-[12px] text-slate-400 dark:text-slate-500">
+                        <Users className="size-3.5" />
                         <span>{item.users_count || 0} Pegawai</span>
                     </div>
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${item.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'}`}>
-                        {item.is_active ? 'Aktif' : 'Tidak Aktif'}
-                    </span>
-                </div>
 
-                {/* Footer: Actions */}
-                {hasManagePermission && (
-                    <div className="mt-2 flex items-center justify-end gap-2 pt-2">
-                        <Link
-                            href={`/position/${item.id}/edit`}
-                            className="flex items-center gap-1 rounded-lg bg-yellow-50 px-3 py-1.5 text-xs font-medium text-yellow-600 transition-colors hover:bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400 dark:hover:bg-yellow-900/30"
-                        >
-                            <Edit className="size-3.5" />
-                            Edit
-                        </Link>
-                        <button
-                            onClick={() => onDelete(item)}
-                            className="flex items-center gap-1 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
-                        >
-                            <Trash2 className="size-3.5" />
-                            Hapus
-                        </button>
-                    </div>
-                )}
+                    {/* Actions */}
+                    {hasManagePermission && (
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                            <Link
+                                href={`/position/${item.id}/edit`}
+                                className="flex items-center justify-center gap-1.5 rounded-lg border border-amber-200 px-4 py-2 text-sm font-medium text-amber-600 transition-colors hover:bg-amber-50 active:bg-amber-100 dark:border-amber-800/50 dark:text-amber-400 dark:hover:bg-amber-900/20"
+                            >
+                                <Edit className="size-4" />
+                                Edit
+                            </Link>
+                            <button
+                                onClick={() => onDelete(item)}
+                                className="flex items-center justify-center gap-1.5 rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-red-50 active:bg-red-100 dark:border-red-800/50 dark:text-red-400 dark:hover:bg-red-900/20"
+                            >
+                                <Trash2 className="size-4" />
+                                Hapus
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

@@ -17,9 +17,11 @@ class StockOpnameDTO
 
     public static function fromStoreRequest(Request $request): self
     {
+        $divisionId = $request->validated('division_id');
+        
         return new self(
             opname_date: $request->validated('opname_date'),
-            division_id: $request->validated('division_id'),
+            division_id: $divisionId === 'warehouse' ? null : (int) $divisionId,
             notes: $request->validated('notes'),
             status: StockOpnameStatus::Pending
         );

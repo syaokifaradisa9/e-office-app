@@ -66,4 +66,24 @@ class EloquentWarehouseOrderRepository implements WarehouseOrderRepository
         $order->update($data);
         return $order->refresh();
     }
+
+    public function generateOrderNumber(): string
+    {
+        $year = date('y');
+        $month = date('m');
+        
+        $latestOrder = WarehouseOrder::where('order_number', 'like', $year . '%')
+            ->orderBy('order_number', 'desc')
+            ->first();
+
+        if (!$latestOrder) {
+            $sequence = 1;
+        } else {
+            // Extract the last 4 digits from the order number
+            $lastSequence = substr($latestOrder->order_number, 4);
+            $sequence = intval($lastSequence) + 1;
+        }
+
+        return $year . $month . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+    }
 }

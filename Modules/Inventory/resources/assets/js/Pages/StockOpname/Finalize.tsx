@@ -1,3 +1,4 @@
+import React, { useEffect, useCallback, memo } from 'react';
 import ContentCard from '@/components/layouts/ContentCard';
 import RootLayout from '@/components/layouts/RootLayout';
 import Button from '@/components/buttons/Button';
@@ -36,32 +37,73 @@ interface Props {
 }
 
 export default function StockOpnameFinalize({ type = 'warehouse', opname }: Props) {
+    const storageKey = `so_finalize_${opname.id}`;
+
     const { data, setData, post, processing, errors } = useForm({
-        items: opname.items.map((item) => ({
-            item_id: item.item_id,
-            final_stock: item.physical_stock, // Default to physical stock
-            final_notes: '',
-        }))
+        items: (() => {
+            const savedData = localStorage.getItem(storageKey);
+            if (savedData) {
+                try {
+                    return JSON.parse(savedData);
+                } catch (e) {
+                    console.error("Error parsing local SO finalize data", e);
+                }
+            }
+
+            return opname.items.map((item) => ({
+                item_id: item.item_id,
+                final_stock: item.physical_stock, // Default to physical stock
+                final_notes: '',
+            }));
+        })()
     });
 
-    const handleItemChange = (index: number, field: string, value: string | number) => {
-        const newItems = [...data.items];
-        newItems[index] = { ...newItems[index], [field]: value };
-        setData('items', newItems);
-    };
+    // Performance Optimized Autosave (Debounced)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            localStorage.setItem(storageKey, JSON.stringify(data.items));
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, [data.items, storageKey]);
+
+    const handleItemChange = useCallback((index: number, field: string, value: string | number) => {
+        setData((prevData: any) => {
+            const newItems = [...prevData.items];
+            newItems[index] = { ...newItems[index], [field]: value };
+            return { ...prevData, items: newItems };
+        });
+    }, [setData]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(`/inventory/stock-opname/${type}/${opname.id}/finalize`);
+        post(`/inventory/stock-opname/${type}/${opname.id}/finalize`, {
+            onSuccess: () => localStorage.removeItem(storageKey)
+        });
+    };
+
+    const formatDate = (dateString: string) => {
+        if (!dateString) return '-';
+
+        const datePart = dateString.includes('T') ? dateString.split('T')[0] : dateString;
+        const date = new Date(datePart.replace(/-/g, '/'));
+
+        if (isNaN(date.getTime())) return dateString;
+
+        return date.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
     };
 
     const title = 'Finalisasi Stok Opname';
-    const subtitle = `${opname.division?.name || 'Gudang Utama'} | ${opname.opname_date}`;
+    const subtitle = `Penyesuaian akhir stok gudang setelah melakukan stock opname (${opname.division?.name || 'Gudang Utama'} | ${formatDate(opname.opname_date)})`;
     const backPath = `/inventory/stock-opname/${type}`;
 
     return (
         <RootLayout title={title} backPath={backPath}>
-            <ContentCard title={title} subtitle={subtitle} backPath={backPath}>
+            <ContentCard title={title} subtitle={subtitle} backPath={backPath} mobileFullWidth bodyClassName="p-1 md:p-6">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
                         <p className="flex items-center gap-2 font-medium">
@@ -112,25 +154,21 @@ export default function StockOpnameFinalize({ type = 'warehouse', opname }: Prop
                                 },
                                 {
                                     render: (item: OpnameItem, index: number) => (
-                                        <FormInput
-                                            type="number"
-                                            name={`final_stock_${index}`}
-                                            value={data.items[index]?.final_stock?.toString() || '0'}
-                                            onChange={(e) => handleItemChange(index, 'final_stock', parseInt(e.target.value) || 0)}
-                                            className="w-24 font-bold border-primary"
-                                            error={errors[`items.${index}.final_stock`]}
+                                        <FinalizeStockInput
+                                            index={index}
+                                            value={data.items[index]?.final_stock}
+                                            onChange={handleItemChange}
+                                            error={(errors as any)[`items.${index}.final_stock`]}
                                         />
                                     ),
                                 },
                                 {
                                     render: (item: OpnameItem, index: number) => (
-                                        <FormInput
-                                            type="text"
-                                            name={`final_notes_${index}`}
-                                            value={data.items[index]?.final_notes || ''}
-                                            onChange={(e) => handleItemChange(index, 'final_notes', e.target.value)}
-                                            placeholder="Alasan penyesuaian..."
-                                            error={errors[`items.${index}.final_notes`]}
+                                        <FinalizeNotesInput
+                                            index={index}
+                                            value={data.items[index]?.final_notes}
+                                            onChange={handleItemChange}
+                                            error={(errors as any)[`items.${index}.final_notes`]}
                                         />
                                     ),
                                 },
@@ -179,24 +217,10 @@ export default function StockOpnameFinalize({ type = 'warehouse', opname }: Prop
 
                                 <div>
                                     <label className="mb-1 block text-sm font-bold text-primary">STOK FINAL (BARU)</label>
-                                    <FormInput
-                                        type="number"
-                                        name={`final_stock_mobile_${index}`}
-                                        value={data.items[index]?.final_stock?.toString() || '0'}
-                                        onChange={(e) => handleItemChange(index, 'final_stock', parseInt(e.target.value) || 0)}
-                                        className="w-full border-primary font-bold"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Catatan Penyesuaian</label>
-                                    <FormInput
-                                        type="text"
-                                        name={`final_notes_mobile_${index}`}
-                                        value={data.items[index]?.final_notes || ''}
-                                        onChange={(e) => handleItemChange(index, 'final_notes', e.target.value)}
-                                        placeholder="Alasan penyesuaian..."
-                                        className="w-full"
+                                    <FinalizeMobileInput
+                                        index={index}
+                                        value={data.items[index]}
+                                        onChange={handleItemChange}
                                     />
                                 </div>
                             </div>
@@ -217,3 +241,56 @@ export default function StockOpnameFinalize({ type = 'warehouse', opname }: Prop
         </RootLayout>
     );
 }
+
+// Optimized Desktop Components
+const FinalizeStockInput = memo(({ index, value, onChange, error }: any) => {
+    return (
+        <FormInput
+            type="number"
+            name={`final_stock_${index}`}
+            value={value?.toString() || '0'}
+            onChange={(e) => onChange(index, 'final_stock', parseInt(e.target.value) || 0)}
+            className="w-24 font-bold border-primary"
+            error={error}
+        />
+    );
+});
+
+const FinalizeNotesInput = memo(({ index, value, onChange, error }: any) => {
+    return (
+        <FormInput
+            type="text"
+            name={`final_notes_${index}`}
+            value={value || ''}
+            onChange={(e) => onChange(index, 'final_notes', e.target.value)}
+            placeholder="Alasan penyesuaian..."
+            error={error}
+        />
+    );
+});
+
+// Optimized Mobile Component
+const FinalizeMobileInput = memo(({ index, value, onChange }: any) => {
+    return (
+        <div className="space-y-4">
+            <FormInput
+                type="number"
+                name={`final_stock_mobile_${index}`}
+                value={value?.final_stock?.toString() || '0'}
+                onChange={(e) => onChange(index, 'final_stock', parseInt(e.target.value) || 0)}
+                className="w-full border-primary font-bold"
+            />
+            <div>
+                <label className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Catatan Penyesuaian</label>
+                <FormInput
+                    type="text"
+                    name={`final_notes_mobile_${index}`}
+                    value={value?.final_notes || ''}
+                    onChange={(e) => onChange(index, 'final_notes', e.target.value)}
+                    placeholder="Alasan penyesuaian..."
+                    className="w-full"
+                />
+            </div>
+        </div>
+    );
+});

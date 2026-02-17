@@ -242,13 +242,14 @@ export default function DocumentCreate({ document, contexts, classifications, di
         }
     };
     return (
-        <RootLayout title={isEdit ? 'Edit Dokumen' : 'Upload Dokumen'}>
+        <RootLayout title={isEdit ? 'Edit Dokumen' : 'Upload Dokumen'} backPath="/archieve/documents">
             <form onSubmit={handleSubmit}>
                 <ContentCard
                     title={isEdit ? 'Edit Dokumen Arsip' : 'Upload Dokumen Baru'}
                     subtitle={isEdit ? 'Perbarui informasi detail dan file dokumen yang sudah ada' : 'Lengkapi formulir di bawah ini untuk mengunggah dokumen baru ke sistem'}
                     backPath="/archieve/documents"
                     mobileFullWidth
+                    bodyClassName="p-1 md:p-6"
                 >
                     <div className="divide-y divide-slate-100 dark:divide-slate-700/50 -mx-6 -mb-6">
                         {/* Section 1: Basic Info */}
@@ -354,15 +355,19 @@ export default function DocumentCreate({ document, contexts, classifications, di
                                 <span className="flex size-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">3</span>
                                 <h3 className="font-semibold text-slate-800 dark:text-white">Kategori</h3>
                             </div>
-                            <div className="space-y-4">
+                            <div className="space-y-5">
                                 {contexts.map((context) => (
                                     <div key={context.id}>
-                                        <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                                            {context.name}
+                                        <div className="mb-2.5">
+                                            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                                {context.name}
+                                            </p>
                                             {context.description && (
-                                                <span className="text-xs font-normal text-slate-400">— {context.description}</span>
+                                                <p className="mt-0.5 text-xs text-slate-400">
+                                                    {context.description}
+                                                </p>
                                             )}
-                                        </label>
+                                        </div>
                                         <div className="flex flex-wrap gap-2">
                                             {context.categories.map((category) => (
                                                 <button
@@ -394,9 +399,14 @@ export default function DocumentCreate({ document, contexts, classifications, di
 
                             {canManageAll && (
                                 <div className="mb-5">
-                                    <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                        Divisi <span className="text-xs font-normal text-slate-400">— Pilih divisi yang dapat mengakses</span>
-                                    </label>
+                                    <div className="mb-2.5">
+                                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                            Divisi
+                                        </p>
+                                        <p className="mt-0.5 text-xs text-slate-400">
+                                            Pilih divisi yang dapat mengakses
+                                        </p>
+                                    </div>
                                     <div className="flex flex-wrap gap-2">
                                         {divisions.map((division) => (
                                             <button
@@ -418,9 +428,14 @@ export default function DocumentCreate({ document, contexts, classifications, di
 
                             {filteredUsers.length > 0 && (
                                 <div>
-                                    <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                        Arsip Pribadi <span className="text-xs font-normal text-slate-400">— Pilih pengguna (opsional)</span>
-                                    </label>
+                                    <div className="mb-2.5">
+                                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                            Arsip Pribadi
+                                        </p>
+                                        <p className="mt-0.5 text-xs text-slate-400">
+                                            Pilih pengguna (opsional)
+                                        </p>
+                                    </div>
                                     <div className="space-y-3">
                                         {divisions.filter(d => data.division_ids.includes(d.id.toString())).map((division) => {
                                             const divisionUsers = filteredUsers.filter(u => u.division_id === division.id);
@@ -453,20 +468,13 @@ export default function DocumentCreate({ document, contexts, classifications, di
                     </div>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between bg-slate-50 px-6 py-4 dark:bg-slate-800/80">
-                        <p className="text-xs text-slate-400">
-                            <span className="text-red-500">*</span> Wajib diisi
-                        </p>
-                        <div className="flex gap-3">
-                            <Button href="/archieve/documents" label="Batal" variant="secondary" />
-                            <Button
-                                type="submit"
-                                label={isEdit ? 'Simpan Perubahan' : 'Upload Dokumen'}
-                                icon={<Save className="size-4" />}
-                                isLoading={processing}
-                            />
-                        </div>
-                    </div>
+                    <Button
+                        type="submit"
+                        className="w-full"
+                        label={isEdit ? 'Simpan Perubahan' : 'Upload Dokumen'}
+                        icon={<Save className="size-4" />}
+                        isLoading={processing}
+                    />
                 </ContentCard>
             </form>
         </RootLayout>

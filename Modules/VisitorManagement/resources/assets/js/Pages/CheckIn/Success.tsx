@@ -37,36 +37,36 @@ export default function Success({ visitor }: SuccessProps) {
                 <div className="relative z-10 flex min-h-screen items-start justify-center px-4 py-6 sm:items-center sm:px-6 sm:py-8 lg:px-8">
                     <div className="w-full max-w-5xl animate-in fade-in zoom-in duration-500">
                         {/* Step Indicator - Completed */}
-                        <div className="mb-6 flex items-center justify-center">
-                            <div className="flex items-center rounded-full bg-white/80 px-4 py-2 shadow-lg ring-1 ring-slate-200/50 backdrop-blur-sm dark:bg-slate-800/80 dark:ring-slate-700">
+                        <div className="mb-4 sm:mb-6 flex items-center justify-center">
+                            <div className="flex items-center rounded-full bg-white/80 px-3 py-1.5 sm:px-4 sm:py-2 shadow-lg ring-1 ring-slate-200/50 backdrop-blur-sm dark:bg-slate-800/80 dark:ring-slate-700">
                                 {/* Step 1 - Completed */}
-                                <div className="flex items-center gap-2">
-                                    <div className="flex size-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-md shadow-emerald-500/30">
-                                        <Check className="size-4" />
+                                <div className="flex items-center gap-1.5 sm:gap-2">
+                                    <div className="flex size-6 sm:size-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-md shadow-emerald-500/30">
+                                        <Check className="size-3.5 sm:size-4" />
                                     </div>
-                                    <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">Isi Data</span>
+                                    <span className="text-[10px] sm:text-sm font-semibold text-emerald-600 dark:text-emerald-400">Isi Data</span>
                                 </div>
 
                                 {/* Connector - Filled */}
-                                <div className="mx-3 h-0.5 w-8 rounded-full bg-emerald-500" />
+                                <div className="mx-1.5 sm:mx-3 h-0.5 w-4 sm:w-8 rounded-full bg-emerald-500" />
 
                                 {/* Step 2 - Completed */}
-                                <div className="flex items-center gap-2">
-                                    <div className="flex size-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-md shadow-emerald-500/30">
-                                        <Check className="size-4" />
+                                <div className="flex items-center gap-1.5 sm:gap-2">
+                                    <div className="flex size-6 sm:size-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-md shadow-emerald-500/30">
+                                        <Check className="size-3.5 sm:size-4" />
                                     </div>
-                                    <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">Ambil Foto</span>
+                                    <span className="text-[10px] sm:text-sm font-semibold text-emerald-600 dark:text-emerald-400">Ambil Foto</span>
                                 </div>
 
                                 {/* Connector - Filled */}
-                                <div className="mx-3 h-0.5 w-8 rounded-full bg-emerald-500" />
+                                <div className="mx-1.5 sm:mx-3 h-0.5 w-4 sm:w-8 rounded-full bg-emerald-500" />
 
                                 {/* Step 3 - Current */}
-                                <div className="flex items-center gap-2">
-                                    <div className="flex size-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-md shadow-emerald-500/30">
-                                        <Sparkles className="size-4" />
+                                <div className="flex items-center gap-1.5 sm:gap-2">
+                                    <div className="flex size-6 sm:size-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-md shadow-emerald-500/30">
+                                        <Sparkles className="size-3.5 sm:size-4" />
                                     </div>
-                                    <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">Selesai</span>
+                                    <span className="text-[10px] sm:text-sm font-semibold text-emerald-600 dark:text-emerald-400">Selesai</span>
                                 </div>
                             </div>
                         </div>

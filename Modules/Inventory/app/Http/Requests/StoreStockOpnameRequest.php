@@ -15,7 +15,7 @@ class StoreStockOpnameRequest extends FormRequest
     {
         return [
             'opname_date' => 'required|date',
-            'division_id' => 'nullable|integer|exists:divisions,id',
+            'division_id' => 'required', // Can be 'warehouse' or integer ID
             'notes' => 'nullable|string|max:500',
         ];
     }

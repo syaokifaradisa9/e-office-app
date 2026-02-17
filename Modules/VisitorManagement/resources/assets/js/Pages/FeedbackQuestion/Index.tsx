@@ -12,6 +12,8 @@ import MobileSearchBar from '@/components/forms/MobileSearchBar';
 import FloatingActionButton from '@/components/buttons/FloatingActionButton';
 import { DivisionCardSkeleton } from '@/components/skeletons/CardSkeleton';
 import Tooltip from '@/components/commons/Tooltip';
+import { FileSpreadsheet } from 'lucide-react';
+import FeedbackQuestionCardItem from './FeedbackQuestionCardItem';
 
 interface FeedbackQuestion {
     id: number;
@@ -60,7 +62,7 @@ export default function FeedbackQuestionIndex() {
     });
     const [params, setParams] = useState<Params>({
         search: '',
-        limit: 20,
+        limit: 10,
         page: 1,
         sort_by: 'id',
         sort_direction: 'desc',
@@ -113,6 +115,21 @@ export default function FeedbackQuestionIndex() {
         setParams({ ...params, [e.target.name]: e.target.value });
     }
 
+    function getPrintUrl() {
+        let url = `/visitor/feedback-questions/print/excel`;
+        const queryParams: string[] = [];
+        Object.keys(params).forEach((key) => {
+            const value = params[key as keyof Params];
+            if (value !== undefined && value !== null && value !== '') {
+                queryParams.push(`${key}=${value}`);
+            }
+        });
+        if (queryParams.length > 0) {
+            url += `?${queryParams.join('&')}`;
+        }
+        return url;
+    }
+
     function handleToggleStatus(item: FeedbackQuestion) {
         router.post(`/visitor/feedback-questions/${item.id}/toggle`, {}, {
             preserveState: true,
@@ -129,6 +146,13 @@ export default function FeedbackQuestionIndex() {
                         searchValue={params.search}
                         onSearchChange={onParamsChange}
                         placeholder="Cari pertanyaan..."
+                        actionButton={
+                            <div className="flex items-center gap-1">
+                                <a href={getPrintUrl()} target="_blank" className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" rel="noreferrer">
+                                    <FileSpreadsheet className="size-4" />
+                                </a>
+                            </div>
+                        }
                     />
                 ) : undefined
             }
@@ -154,6 +178,7 @@ export default function FeedbackQuestionIndex() {
                 title="Pertanyaan Feedback"
                 subtitle="Kelola pertanyaan yang ditampilkan kepada pengunjung saat memberikan umpan balik"
                 mobileFullWidth
+                bodyClassName="px-0 pb-24 pt-2 md:p-6"
                 additionalButton={
                     <CheckPermissions permissions={['kelola_pertanyaan_feedback']}>
                         <Button
@@ -184,6 +209,17 @@ export default function FeedbackQuestionIndex() {
                         SkeletonComponent={DivisionCardSkeleton}
                         sortBy={params.sort_by}
                         sortDirection={params.sort_direction}
+                        cardItem={(item: FeedbackQuestion) => (
+                            <FeedbackQuestionCardItem
+                                item={item}
+                                canManage={!!hasManagePermission}
+                                onToggleStatus={handleToggleStatus}
+                                onDelete={(item) => {
+                                    setSelectedItem(item);
+                                    setOpenConfirm(true);
+                                }}
+                            />
+                        )}
                         onHeaderClick={(columnName) => {
                             const newSortDirection = params.sort_by === columnName && params.sort_direction === 'asc' ? 'desc' : 'asc';
                             setParams((prevParams) => ({

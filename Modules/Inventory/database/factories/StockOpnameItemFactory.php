@@ -21,7 +21,6 @@ class StockOpnameItemFactory extends Factory
             'item_id' => Item::factory(),
             'system_stock' => $systemStock,
             'physical_stock' => $physicalStock,
-            'difference' => $physicalStock - $systemStock,
             'notes' => fake()->optional()->sentence(),
         ];
     }
@@ -34,7 +33,6 @@ class StockOpnameItemFactory extends Factory
             return [
                 'system_stock' => $systemStock,
                 'physical_stock' => $systemStock + $difference,
-                'difference' => $difference,
             ];
         });
     }
@@ -47,7 +45,6 @@ class StockOpnameItemFactory extends Factory
             return [
                 'system_stock' => $stock,
                 'physical_stock' => $stock,
-                'difference' => 0,
             ];
         });
     }

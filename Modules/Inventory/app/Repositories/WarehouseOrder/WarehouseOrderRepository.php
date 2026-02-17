@@ -18,4 +18,6 @@ interface WarehouseOrderRepository
     public function create(array $data): WarehouseOrder;
 
     public function update(WarehouseOrder $order, array $data): WarehouseOrder;
+    
+    public function generateOrderNumber(): string;
 }

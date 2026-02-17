@@ -12,4 +12,5 @@ interface VisitorFeedbackRepository
     public function getQuestionStats(): array;
     public function getTotalFeedbacksCount(): int;
     public function saveFeedback(\Modules\VisitorManagement\Models\Visitor $visitor, array $data, array $ratings): bool;
+    public function delete(int $id): bool;
 }

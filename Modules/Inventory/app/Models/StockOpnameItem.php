@@ -2,11 +2,13 @@
 
 namespace Modules\Inventory\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StockOpnameItem extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'stock_opname_id',
         'item_id',

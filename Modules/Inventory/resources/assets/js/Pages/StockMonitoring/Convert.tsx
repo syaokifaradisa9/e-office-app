@@ -46,8 +46,14 @@ export default function Convert() {
     }
 
     return (
-        <RootLayout title="Konversi Stok Barang">
-            <ContentCard title="Konversi Stok Barang" backPath="/inventory/stock-monitoring">
+        <RootLayout title="Konversi Stok Barang" backPath="/inventory/stock-monitoring">
+            <ContentCard
+                title="Konversi Stok Barang"
+                subtitle="Konversi stok barang ke satuan yang lebih kecil"
+                backPath="/inventory/stock-monitoring"
+                mobileFullWidth
+                bodyClassName="p-1 md:p-6"
+            >
                 <form onSubmit={handleSubmit} className="max-w-lg space-y-6">
                     {/* Item Info */}
                     <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">

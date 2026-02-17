@@ -49,10 +49,7 @@ export default function ItemConvert({ item, targetItems }: Props) {
 
     return (
         <RootLayout title="Konversi Barang Gudang" backPath="/inventory/items">
-            <ContentCard title="Konversi Barang Gudang" mobileFullWidth>
-                <p className="mb-6 text-sm text-gray-500 dark:text-slate-400">
-                    Konversi stok dari satuan besar ke satuan kecil
-                </p>
+            <ContentCard title="Konversi Barang Gudang" subtitle="Konversi stok dari satuan besar ke satuan kecil untuk pemecahan stok" backPath="/inventory/items" mobileFullWidth bodyClassName="p-1 md:p-6">
 
                 <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
                     <h3 className="mb-3 text-sm font-medium text-gray-700 dark:text-slate-300">Informasi Barang</h3>

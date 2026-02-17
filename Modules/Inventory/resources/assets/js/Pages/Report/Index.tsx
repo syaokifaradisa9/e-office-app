@@ -190,6 +190,7 @@ export default function ReportIndex() {
         <RootLayout title="Laporan Inventory">
             <ContentCard
                 title="Laporan Inventory & Statistik"
+                subtitle="Analisis pergerakan barang, status permintaan, dan tren stok khusus untuk divisi Anda."
                 mobileFullWidth={false}
                 bodyClassName="p-6 md:p-8"
                 additionalButton={
@@ -209,13 +210,13 @@ export default function ReportIndex() {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as typeof activeTab)}
                             className={`relative pb-3 text-sm font-medium transition-colors ${activeTab === tab.id
-                                ? 'text-white'
-                                : 'text-slate-400 hover:text-slate-300'
+                                ? 'text-slate-900 dark:text-white'
+                                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
                                 }`}
                         >
                             {tab.label}
                             {activeTab === tab.id && (
-                                <span className="absolute bottom-0 left-0 h-0.5 w-full bg-white" />
+                                <span className="absolute bottom-0 left-0 h-0.5 w-full bg-primary dark:bg-white" />
                             )}
                         </button>
                     ))}

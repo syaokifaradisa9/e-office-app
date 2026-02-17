@@ -70,6 +70,7 @@ export default function UserCreate({ user, divisions, positions, roles }: Props)
             <ContentCard
                 title={isEdit ? 'Edit Pengguna' : 'Tambah Pengguna Baru'}
                 mobileFullWidth
+                bodyClassName="p-1 md:p-6"
             >
                 <p className="mb-6 text-sm text-gray-500 dark:text-slate-400">Isi informasi pengguna di bawah ini</p>
 

@@ -69,7 +69,7 @@ class WarehouseOrderController extends Controller
         }
 
         return Inertia::render('Inventory/WarehouseOrder/Show', [
-            'order' => $warehouseOrder->load(['user', 'division', 'carts.item', 'deliveredBy', 'receivedBy', 'latestReject']),
+            'order' => $warehouseOrder->load(['user', 'division', 'carts.item.category', 'deliveredBy', 'receivedBy', 'latestReject']),
         ]);
     }
 
@@ -167,7 +167,7 @@ class WarehouseOrderController extends Controller
         }
 
         return Inertia::render('Inventory/WarehouseOrder/Delivery', [
-            'order' => $warehouseOrder->load(['user', 'division', 'carts.item']),
+            'order' => $warehouseOrder->load(['user', 'division', 'carts.item.category']),
         ]);
     }
 

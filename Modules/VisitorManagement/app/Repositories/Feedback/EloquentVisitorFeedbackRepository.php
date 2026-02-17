@@ -68,4 +68,10 @@ class EloquentVisitorFeedbackRepository implements VisitorFeedbackRepository
             return true;
         });
     }
+
+    public function delete(int $id): bool
+    {
+        $feedback = $this->find($id);
+        return $feedback->delete();
+    }
 }

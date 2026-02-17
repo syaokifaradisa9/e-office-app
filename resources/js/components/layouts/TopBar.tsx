@@ -11,10 +11,12 @@ interface TopBarProps {
     toggleSidebarCollapse: () => void;
     isSidebarOpen: boolean;
     backPath?: string;
+    onBackClick?: () => void;
     mobileSearchBar?: ReactNode;
+    desktopSearchBar?: ReactNode;
 }
 
-export default function TopBar({ title, toggleSidebar, toggleSidebarCollapse, backPath, mobileSearchBar }: TopBarProps) {
+export default function TopBar({ title, toggleSidebar, toggleSidebarCollapse, backPath, onBackClick, mobileSearchBar, desktopSearchBar }: TopBarProps) {
     const { component } = usePage();
 
     const getPageTitle = (): string => {
@@ -39,7 +41,7 @@ export default function TopBar({ title, toggleSidebar, toggleSidebarCollapse, ba
     };
 
     return (
-        <header className="fixed inset-x-0 top-0 z-30">
+        <header className="fixed inset-x-0 top-0 z-40">
             {/* Desktop Header */}
             <div className="hidden border-b border-gray-300/90 dark:border-slate-700/50 md:block">
                 <div className="bg-white/80 backdrop-blur-sm dark:bg-slate-800/80">
@@ -53,7 +55,14 @@ export default function TopBar({ title, toggleSidebar, toggleSidebarCollapse, ba
                             </button>
                         </div>
 
-                        <div className="ml-auto flex items-center gap-3">
+                        {/* Desktop Search Bar */}
+                        {desktopSearchBar && (
+                            <div className="flex flex-1 items-center px-4">
+                                <div className="w-full max-w-2xl">{desktopSearchBar}</div>
+                            </div>
+                        )}
+
+                        <div className={`${!desktopSearchBar ? 'ml-auto' : ''} flex items-center gap-3 pr-4`}>
                             <ProfileDropdown />
                         </div>
                     </div>
@@ -63,23 +72,33 @@ export default function TopBar({ title, toggleSidebar, toggleSidebarCollapse, ba
             {/* Mobile Header */}
             <div className="md:hidden">
                 <div className="bg-white shadow-sm dark:bg-slate-800">
-                    <div className="flex h-14 items-center justify-between px-2">
+                    <div className="flex h-13 items-center justify-between px-2">
                         {/* Left: Back Button or Hamburger Menu */}
-                        {backPath ? (
-                            <Link
-                                href={backPath}
-                                className="rounded-lg p-2 text-slate-600 transition-all duration-200 hover:bg-gray-100 active:scale-95 active:bg-gray-200 dark:text-white dark:hover:bg-slate-700"
-                                aria-label="Go back"
-                            >
-                                <ChevronLeft className="size-6" />
-                            </Link>
+                        {(backPath || onBackClick) ? (
+                            onBackClick ? (
+                                <button
+                                    onClick={onBackClick}
+                                    className="rounded-lg p-2 text-slate-600 transition-all duration-200 hover:bg-gray-100 active:scale-95 active:bg-gray-200 dark:text-white dark:hover:bg-slate-700"
+                                    aria-label="Go back"
+                                >
+                                    <ChevronLeft className="size-5" />
+                                </button>
+                            ) : (
+                                <Link
+                                    href={backPath!}
+                                    className="rounded-lg p-2 text-slate-600 transition-all duration-200 hover:bg-gray-100 active:scale-95 active:bg-gray-200 dark:text-white dark:hover:bg-slate-700"
+                                    aria-label="Go back"
+                                >
+                                    <ChevronLeft className="size-5" />
+                                </Link>
+                            )
                         ) : (
                             <button
                                 onClick={toggleSidebar}
                                 className="rounded-lg p-2 text-slate-600 transition-all duration-200 hover:bg-gray-100 active:scale-95 active:bg-gray-200 dark:text-white dark:hover:bg-slate-700"
                                 aria-label="Toggle menu"
                             >
-                                <Menu className="size-6" />
+                                <Menu className="size-5" />
                             </button>
                         )}
 
@@ -95,7 +114,7 @@ export default function TopBar({ title, toggleSidebar, toggleSidebarCollapse, ba
                     </div>
 
                     {/* Mobile Search Bar - Inside TopBar */}
-                    {mobileSearchBar && <div className="px-3 pb-3">{mobileSearchBar}</div>}
+                    {mobileSearchBar && <div className="px-4 pb-1 pt-0.5">{mobileSearchBar}</div>}
                 </div>
             </div>
         </header>

@@ -1,13 +1,12 @@
 import ContentCard from '@/components/layouts/ContentCard';
 import RootLayout from '@/components/layouts/RootLayout';
+import MobileSearchBar from '@/components/forms/MobileSearchBar';
 import { useState } from 'react';
 import { usePage, router } from '@inertiajs/react';
-import { HardDrive, Save, Shield, Building2, Search, TrendingUp, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { HardDrive, Save, Shield, Building2, Search } from 'lucide-react';
 import Button from '@/components/buttons/Button';
 import CheckPermissions from '@/components/utils/CheckPermissions';
 import FormInput from '@/components/forms/FormInput';
-import FormSearch from '@/components/forms/FormSearch';
-import Tooltip from '@/components/commons/Tooltip';
 import { ArchievePermission } from '@/enums/ArchievePermission';
 
 interface DivisionWithStorage {
@@ -85,7 +84,18 @@ export default function DivisionStorageIndex() {
     }
 
     return (
-        <RootLayout title="Penyimpanan Divisi">
+        <RootLayout
+            title="Penyimpanan Divisi"
+            mobileSearchBar={
+                hasViewPermission ? (
+                    <MobileSearchBar
+                        searchValue={searchQuery}
+                        onSearchChange={onSearchChange}
+                        placeholder="Cari divisi..."
+                    />
+                ) : undefined
+            }
+        >
             {!hasViewPermission ? (
                 <ContentCard title="Akses Ditolak" mobileFullWidth>
                     <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -101,23 +111,9 @@ export default function DivisionStorageIndex() {
                     title="Penyimpanan Divisi"
                     subtitle="Kelola dan pantau alokasi kuota penyimpanan untuk setiap divisi"
                     mobileFullWidth
+                    bodyClassName="px-4 pb-24 pt-4 md:p-6"
                 >
                     <div className="space-y-6">
-                        {/* Search bar */}
-                        <div className="flex items-center justify-end">
-                            <div className="relative w-full max-w-sm">
-                                <FormSearch
-                                    name="search"
-                                    placeholder="Cari divisi..."
-                                    value={searchQuery}
-                                    onChange={onSearchChange}
-                                    className="!rounded-xl !pl-10"
-                                />
-                                <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                                    <Search className="size-4 text-slate-400" />
-                                </div>
-                            </div>
-                        </div>
 
                         {/* Cards Grid */}
                         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -136,33 +132,18 @@ export default function DivisionStorageIndex() {
                                     >
                                         <div className="flex flex-col gap-5">
                                             {/* Header */}
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`flex size-10 items-center justify-center rounded-xl ${isEditing ? 'bg-primary text-white' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'}`}>
-                                                        <Building2 className="size-5" />
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="font-bold text-slate-900 dark:text-white line-clamp-1">
-                                                            {division.name}
-                                                        </h4>
-                                                        <span className={`text-[10px] font-bold uppercase tracking-wider ${status === 'critical' ? 'text-rose-500' : status === 'warning' ? 'text-amber-500' : 'text-emerald-500'}`}>
-                                                            {status === 'critical' ? 'Kapasitas Penuh' : status === 'warning' ? 'Hampir Penuh' : 'Penyimpanan Aman'}
-                                                        </span>
-                                                    </div>
+                                            <div className="flex items-center gap-3">
+                                                <div className={`flex size-10 items-center justify-center rounded-xl ${isEditing ? 'bg-primary text-white' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'}`}>
+                                                    <Building2 className="size-5" />
                                                 </div>
-
-                                                {!isEditing && (
-                                                    <CheckPermissions permissions={[ArchievePermission.MANAGE_DIVISION_STORAGE]}>
-                                                        <Tooltip text="Atur Kapasitas">
-                                                            <button
-                                                                onClick={() => startEdit(division)}
-                                                                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-primary transition-colors dark:hover:bg-slate-800"
-                                                            >
-                                                                <HardDrive className="size-4" />
-                                                            </button>
-                                                        </Tooltip>
-                                                    </CheckPermissions>
-                                                )}
+                                                <div>
+                                                    <h4 className="font-bold text-slate-900 dark:text-white line-clamp-1">
+                                                        {division.name}
+                                                    </h4>
+                                                    <span className={`text-[10px] font-bold uppercase tracking-wider ${status === 'critical' ? 'text-rose-500' : status === 'warning' ? 'text-amber-500' : 'text-emerald-500'}`}>
+                                                        {status === 'critical' ? 'Kapasitas Penuh' : status === 'warning' ? 'Hampir Penuh' : 'Penyimpanan Aman'}
+                                                    </span>
+                                                </div>
                                             </div>
 
                                             {/* Stats & Progress */}
@@ -188,8 +169,8 @@ export default function DivisionStorageIndex() {
                                             </div>
 
                                             {/* Edit Form */}
-                                            {isEditing && (
-                                                <div className="mt-2 space-y-3 animate-in fade-in zoom-in-95 duration-200">
+                                            {isEditing ? (
+                                                <div className="space-y-3 animate-in fade-in zoom-in-95 duration-200">
                                                     <div className="relative">
                                                         <FormInput
                                                             name="max_size_gb"
@@ -220,6 +201,16 @@ export default function DivisionStorageIndex() {
                                                         />
                                                     </div>
                                                 </div>
+                                            ) : (
+                                                <CheckPermissions permissions={[ArchievePermission.MANAGE_DIVISION_STORAGE]}>
+                                                    <button
+                                                        onClick={() => startEdit(division)}
+                                                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-primary dark:border-slate-700 dark:text-slate-400 dark:hover:border-primary/50 dark:hover:bg-primary/10 dark:hover:text-primary"
+                                                    >
+                                                        <HardDrive className="size-4" />
+                                                        Atur Kapasitas
+                                                    </button>
+                                                </CheckPermissions>
                                             )}
                                         </div>
                                     </div>

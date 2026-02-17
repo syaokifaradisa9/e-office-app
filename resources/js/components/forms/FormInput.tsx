@@ -9,6 +9,7 @@ interface FormInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'pr
     icon?: ReactNode;
     prefix?: ReactNode;
     suffix?: ReactNode;
+    capture?: 'user' | 'environment';
 }
 
 function FormInputComponent(
@@ -33,6 +34,7 @@ function FormInputComponent(
         min,
         max,
         step,
+        capture,
         ...props
     }: FormInputProps,
     forwardedRef: React.ForwardedRef<HTMLInputElement>,
@@ -212,6 +214,7 @@ function FormInputComponent(
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
                             className={getInputClassName()}
+                            capture={capture}
                             {...props}
                         />
                     )}

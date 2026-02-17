@@ -83,7 +83,9 @@ Route::middleware(['auth', 'verified'])->prefix('visitor')->name('visitor.')->gr
         Route::get('/', 'index')->name('index');
         Route::get('/datatable', 'datatable')->name('datatable');
         Route::get('/export', 'export')->name('export');
+        Route::get('/detail/{id}', 'show')->name('show');
         Route::post('/{id}/mark-as-read', 'markAsRead')->name('mark-as-read');
+        Route::delete('/{id}/delete', 'destroy')->name('destroy');
     });
 
     Route::controller(VisitorController::class)->group(function () {

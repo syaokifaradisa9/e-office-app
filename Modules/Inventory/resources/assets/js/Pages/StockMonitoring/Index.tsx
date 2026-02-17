@@ -7,7 +7,8 @@ import { Package, FileSpreadsheet, RefreshCw, LogOut } from 'lucide-react';
 import { InventoryPermission } from '../../types/permissions';
 import Button from '@/components/buttons/Button';
 import MobileSearchBar from '@/components/forms/MobileSearchBar';
-import { DivisionCardSkeleton } from '@/components/skeletons/CardSkeleton';
+import { CategoryItemCardSkeleton } from '@/components/skeletons/CardSkeleton';
+import StockMonitoringCardItem from './StockMonitoringCardItem';
 import Tooltip from '@/components/commons/Tooltip';
 import FormSearch from '@/components/forms/FormSearch';
 import FormSearchSelect from '@/components/forms/FormSearchSelect';
@@ -86,7 +87,7 @@ export default function StockMonitoringIndex() {
 
     const [params, setParams] = useState<Params>({
         search: '',
-        limit: 20,
+        limit: 10,
         page: 1,
         name: '',
         category_id: 'ALL',
@@ -167,19 +168,22 @@ export default function StockMonitoringIndex() {
                     onSearchChange={onParamsChange}
                     placeholder="Cari stok..."
                     actionButton={
-                        <a
-                            href={getPrintUrl()}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                        >
-                            <FileSpreadsheet className="size-4" />
-                        </a>
+                        <div className="flex items-center gap-1">
+                            <a
+                                href={getPrintUrl()}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                            >
+                                <FileSpreadsheet className="size-4" />
+                            </a>
+                        </div>
+
                     }
                 />
             }
         >
-            <ContentCard title="Monitoring Stok" mobileFullWidth>
+            <ContentCard title="Monitoring Stok" subtitle="Monitoring stok secara real-time di tiap divisi" mobileFullWidth bodyClassName="px-0 pt-2 pb-8 md:p-6">
                 <DataTable
                     onChangePage={onChangePage}
                     onParamsChange={onParamsChange}
@@ -187,16 +191,18 @@ export default function StockMonitoringIndex() {
                     searchValue={params.search}
                     dataTable={dataTable}
                     isLoading={isLoading}
-                    SkeletonComponent={DivisionCardSkeleton}
+                    SkeletonComponent={CategoryItemCardSkeleton}
                     sortBy={params.sort_by}
                     sortDirection={params.sort_direction}
                     additionalHeaderElements={
-                        <Button
-                            href={getPrintUrl()}
-                            className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white"
-                            icon={<FileSpreadsheet className="size-4" />}
-                            target="_blank"
-                        />
+                        <Tooltip text="Export Excel">
+                            <Button
+                                href={getPrintUrl()}
+                                className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white"
+                                icon={<FileSpreadsheet className="size-4" />}
+                                target="_blank"
+                            />
+                        </Tooltip>
                     }
                     onHeaderClick={(columnName: string) => {
                         const newSortDirection = params.sort_by === columnName && params.sort_direction === 'asc' ? 'desc' : 'asc';
@@ -206,6 +212,13 @@ export default function StockMonitoringIndex() {
                             sort_direction: newSortDirection,
                         }));
                     }}
+                    cardItem={(item: Item) => (
+                        <StockMonitoringCardItem
+                            item={item}
+                            canConvert={!!(canConvertPermission && item.multiplier > 1 && item.division_id === loggeduser?.division_id && item.stock > 0)}
+                            canIssue={!!(canIssue && item.stock > 0)}
+                        />
+                    )}
                     columns={[
                         // Only show Division column if user has lihat_semua_stok permission
                         ...(canMonitorAll ? [{

@@ -22,7 +22,7 @@ export default function ContentCard({ title, subtitle, children, className = '',
             className={`
                 flex flex-col
                 ${isMobileFullWidth
-                    ? 'flex-1 rounded-none border-x-0 border-b-0 bg-gray-100 md:flex-none md:rounded-xl md:border md:border-b md:bg-white dark:bg-slate-900 md:dark:bg-slate-800'
+                    ? 'flex-1 rounded-none border-x-0 border-b-0 bg-transparent md:flex-none md:rounded-xl md:border md:border-b md:bg-white dark:bg-transparent md:dark:bg-slate-800'
                     : 'rounded-lg border bg-white md:rounded-xl dark:bg-slate-800'
                 }
                 border-gray-300/90 shadow-sm shadow-primary/5 dark:border-slate-700/50 dark:shadow-slate-900/50
@@ -52,7 +52,8 @@ export default function ContentCard({ title, subtitle, children, className = '',
                     {additionalButton && <div className="hidden md:block">{additionalButton}</div>}
                 </div>
             )}
-            <div className={bodyClassName || `${!component?.endsWith('/Index') ? 'p-6 md:p-8' : isMobileFullWidth ? 'px-0 pb-5 pt-0 md:p-6' : 'p-4 pb-5'}`}>{children}</div>
+            {/* Body */}
+            <div className={bodyClassName ?? 'p-4 md:p-6'}>{children}</div>
         </div>
     );
 }

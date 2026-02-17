@@ -83,7 +83,7 @@ export default function UserIndex() {
     });
     const [params, setParams] = useState<Params>({
         search: '',
-        limit: 20,
+        limit: 10,
         page: 1,
         name: '',
         email: '',
@@ -99,24 +99,31 @@ export default function UserIndex() {
     const [isLoading, setIsLoading] = useState(true);
 
     async function loadDatatable() {
-        setIsLoading(true);
-        let url = `/user/datatable`;
-        const paramsKey = Object.keys(params) as (keyof Params)[];
-        const queryParams: string[] = [];
+        try {
+            setIsLoading(true);
+            const queryParams = new URLSearchParams();
 
-        for (let i = 0; i < paramsKey.length; i++) {
-            queryParams.push(`${paramsKey[i]}=${params[paramsKey[i]]}`);
+            // Map params to query string safely
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    queryParams.append(key, value.toString());
+                }
+            });
+
+            const url = `/user/datatable?${queryParams.toString()}`;
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            setDataTable(data);
+        } catch (error) {
+            console.error("Failed to load datatable:", error);
+        } finally {
+            setIsLoading(false);
         }
-
-        if (queryParams.length > 0) {
-            url += `?${queryParams.join('&')}`;
-        }
-
-        const response = await fetch(url);
-        const data = await response.json();
-
-        setDataTable(data);
-        setIsLoading(false);
     }
 
     useEffect(() => {
@@ -170,9 +177,11 @@ export default function UserIndex() {
                     onSearchChange={onParamsChange}
                     placeholder="Cari pengguna..."
                     actionButton={
-                        <a href={getPrintUrl('excel')} target="_blank" className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" rel="noreferrer">
-                            <FileSpreadsheet className="size-4" />
-                        </a>
+                        <div className="flex items-center gap-1">
+                            <a href={getPrintUrl('excel')} target="_blank" className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" rel="noreferrer">
+                                <FileSpreadsheet className="size-4" />
+                            </a>
+                        </div>
                     }
                 />
             }
@@ -197,6 +206,7 @@ export default function UserIndex() {
                 title="Pengguna"
                 subtitle="Kelola dan atur daftar pengguna sistem Anda"
                 mobileFullWidth
+                bodyClassName="px-0 pb-5 pt-0 md:p-6"
                 additionalButton={
                     <CheckPermissions permissions={['kelola_pengguna']}>
                         <Button className="hidden w-full md:flex" label="Tambah Pengguna" href="/user/create" icon={<Plus className="size-4" />} />
@@ -216,7 +226,9 @@ export default function UserIndex() {
                         sortDirection={params.sort_direction}
                         additionalHeaderElements={
                             <div className="flex gap-2">
-                                <Button href={getPrintUrl('excel')} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                                <Tooltip text="Export Excel">
+                                    <Button href={getPrintUrl('excel')} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                                </Tooltip>
                             </div>
                         }
                         onHeaderClick={(columnName) => {
@@ -255,6 +267,7 @@ export default function UserIndex() {
                                 footer: <FormSearch name="email" onChange={onParamsChange} placeholder="Filter Email" />,
                             },
                             {
+                                name: 'division_id',
                                 header: 'Divisi',
                                 render: (user: UserData) => <span className="text-gray-500 dark:text-slate-400">{user.division?.name || '-'}</span>,
                                 footer: (
@@ -273,6 +286,7 @@ export default function UserIndex() {
                                 ),
                             },
                             {
+                                name: 'position_id',
                                 header: 'Jabatan',
                                 render: (user: UserData) => <span className="text-gray-500 dark:text-slate-400">{user.position?.name || '-'}</span>,
                                 footer: (
@@ -327,18 +341,20 @@ export default function UserIndex() {
                                             <div className="flex justify-end gap-1">
                                                 <Tooltip text="Edit">
                                                     <Button
+                                                        variant="ghost"
                                                         href={`/user/${user.id}/edit`}
-                                                        className="!bg-transparent !p-1 text-yellow-600 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
+                                                        className="!p-1.5 !text-amber-500 hover:bg-amber-50 dark:!text-amber-400 dark:hover:bg-amber-900/20"
                                                         icon={<Edit className="size-4" />}
                                                     />
                                                 </Tooltip>
                                                 <Tooltip text="Hapus">
                                                     <Button
+                                                        variant="ghost"
                                                         onClick={() => {
                                                             setSelectedUser(user);
                                                             setOpenConfirm(true);
                                                         }}
-                                                        className="!bg-transparent !p-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                                                        className="!p-1.5 !text-red-500 hover:bg-red-50 dark:!text-red-400 dark:hover:bg-red-900/20"
                                                         icon={<Trash2 className="size-4" />}
                                                     />
                                                 </Tooltip>

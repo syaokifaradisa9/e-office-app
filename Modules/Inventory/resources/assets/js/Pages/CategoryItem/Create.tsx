@@ -39,9 +39,11 @@ export default function CategoryItemCreate({ categoryItem }: Props) {
         <RootLayout title={isEdit ? 'Edit Kategori Barang' : 'Tambah Kategori Barang'} backPath="/inventory/categories">
             <ContentCard
                 title={isEdit ? 'Edit Kategori Barang' : 'Tambah Kategori Barang Baru'}
+                subtitle={isEdit ? 'Ubah informasi kategori barang di bawah ini' : 'Isi informasi di bawah ini untuk menambahkan kategori baru'}
+                backPath="/inventory/categories"
                 mobileFullWidth
+                bodyClassName="p-1 md:p-6"
             >
-                <p className="mb-6 text-sm text-gray-500 dark:text-slate-400">Isi informasi kategori barang di bawah ini</p>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <FormInput name="name" label="Nama Kategori" placeholder="Masukkan nama kategori" value={data.name} onChange={(e) => setData('name', e.target.value)} error={errors.name} required />

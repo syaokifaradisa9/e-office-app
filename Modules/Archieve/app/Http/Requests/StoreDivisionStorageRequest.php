@@ -24,7 +24,7 @@ class StoreDivisionStorageRequest extends FormRequest
     {
         return [
             'division_id' => 'required|exists:divisions,id',
-            'max_size' => 'required|numeric|min:0', // In bytes
+            'max_size_gb' => 'required|numeric|min:0',
         ];
     }
 }

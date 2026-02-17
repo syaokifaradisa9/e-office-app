@@ -1,5 +1,6 @@
 import ContentCard from '@/components/layouts/ContentCard';
 import RootLayout from '@/components/layouts/RootLayout';
+import Tooltip from '@/components/commons/Tooltip';
 import DataTable from '@/components/tables/Datatable';
 import { useEffect, useState } from 'react';
 import Button from '@/components/buttons/Button';
@@ -18,7 +19,6 @@ import FormTextArea from '@/components/forms/FormTextArea';
 import MobileSearchBar from '@/components/forms/MobileSearchBar';
 import FloatingActionButton from '@/components/buttons/FloatingActionButton';
 import { WarehouseOrderCardSkeleton } from '@/components/skeletons/CardSkeleton';
-import Tooltip from '@/components/commons/Tooltip';
 
 interface User {
     id: number;
@@ -74,9 +74,11 @@ interface Params {
 }
 
 export default function WarehouseOrderIndex({ users = [], divisions = [] }: { users?: User[]; divisions?: Division[] }) {
-    const { permissions, loggeduser: currentUser } = usePage<PageProps>().props;
+    const { permissions, loggeduser: currentUser, name: appName } = usePage<PageProps>().props;
+    const userDivision = (usePage<PageProps>().props.loggeduser as any)?.division_name;
 
-    // Permission checks
+    const title = 'Permintaan Barang';
+    const subtitle = "Kelola dan pantau permintaan stok barang dari tiap unit kerja ke gudang utama";
     const hasCreatePermission = permissions?.includes(InventoryPermission.CreateWarehouseOrder);
     const hasConfirmPermission = permissions?.includes(InventoryPermission.ConfirmWarehouseOrder);
     const hasHandoverPermission = permissions?.includes(InventoryPermission.HandoverItem);
@@ -97,7 +99,7 @@ export default function WarehouseOrderIndex({ users = [], divisions = [] }: { us
     });
     const [params, setParams] = useState<Params>({
         search: '',
-        limit: 20,
+        limit: 10,
         page: 1,
         order_number: '',
         status: 'ALL',
@@ -398,8 +400,10 @@ export default function WarehouseOrderIndex({ users = [], divisions = [] }: { us
             </Modal>
 
             <ContentCard
-                title="Permintaan Barang"
+                title={title}
+                subtitle={subtitle}
                 mobileFullWidth
+                bodyClassName="px-0 pt-2 pb-8 md:p-6"
                 additionalButton={
                     hasCreatePermission ? (
                         <Button
@@ -416,12 +420,14 @@ export default function WarehouseOrderIndex({ users = [], divisions = [] }: { us
                         additionalHeaderElements={
                             <div className="flex gap-2">
                                 {canViewList && (
-                                    <Button
-                                        href={getPrintUrl()}
-                                        className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white"
-                                        icon={<FileSpreadsheet className="size-4" />}
-                                        target="_blank"
-                                    />
+                                    <Tooltip text="Export Excel">
+                                        <Button
+                                            href={getPrintUrl()}
+                                            className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white"
+                                            icon={<FileSpreadsheet className="size-4" />}
+                                            target="_blank"
+                                        />
+                                    </Tooltip>
                                 )}
                             </div>
                         }
@@ -527,8 +533,9 @@ export default function WarehouseOrderIndex({ users = [], divisions = [] }: { us
                                         {/* Detail - always show */}
                                         <Tooltip text="Detail">
                                             <Button
+                                                variant="ghost"
                                                 href={`/inventory/warehouse-orders/${item.id}`}
-                                                className="!bg-transparent !p-1 !text-blue-600 hover:bg-blue-50 dark:!text-blue-400 dark:hover:bg-blue-900/20"
+                                                className="!p-1.5 !text-blue-600 hover:bg-blue-50 dark:!text-blue-400 dark:hover:bg-blue-900/20"
                                                 icon={<Eye className="size-4" />}
                                             />
                                         </Tooltip>
@@ -538,22 +545,24 @@ export default function WarehouseOrderIndex({ users = [], divisions = [] }: { us
                                             <>
                                                 <Tooltip text="Konfirmasi">
                                                     <Button
+                                                        variant="ghost"
                                                         onClick={() => {
                                                             setSelectedItem(item);
                                                             setConfirmType('confirm');
                                                             setOpenConfirm(true);
                                                         }}
-                                                        className="!bg-transparent !p-1 !text-green-600 hover:bg-green-50 dark:!text-green-400 dark:hover:bg-green-900/20"
+                                                        className="!p-1.5 !text-green-600 hover:bg-green-50 dark:!text-green-400 dark:hover:bg-green-900/20"
                                                         icon={<Check className="size-4" />}
                                                     />
                                                 </Tooltip>
                                                 <Tooltip text="Tolak">
                                                     <Button
+                                                        variant="ghost"
                                                         onClick={() => {
                                                             setSelectedItem(item);
                                                             setOpenReject(true);
                                                         }}
-                                                        className="!bg-transparent !p-1 !text-red-600 hover:bg-red-50 dark:!text-red-400 dark:hover:bg-red-900/20"
+                                                        className="!p-1.5 !text-red-500 hover:bg-red-50 dark:!text-red-400 dark:hover:bg-red-900/20"
                                                         icon={<X className="size-4" />}
                                                     />
                                                 </Tooltip>
@@ -564,8 +573,9 @@ export default function WarehouseOrderIndex({ users = [], divisions = [] }: { us
                                         {hasHandoverPermission && item.status === 'Confirmed' && (
                                             <Tooltip text="Serahkan Barang">
                                                 <Button
+                                                    variant="ghost"
                                                     href={`/inventory/warehouse-orders/${item.id}/delivery`}
-                                                    className="!bg-transparent !p-1 !text-blue-600 hover:bg-blue-50 dark:!text-blue-400 dark:hover:bg-blue-900/20"
+                                                    className="!p-1.5 !text-blue-600 hover:bg-blue-50 dark:!text-blue-400 dark:hover:bg-blue-900/20"
                                                     icon={<PackageCheck className="size-4" />}
                                                 />
                                             </Tooltip>
@@ -577,8 +587,9 @@ export default function WarehouseOrderIndex({ users = [], divisions = [] }: { us
                                             (currentUser?.id === item.user_id || currentUser?.division_id === item.division_id) && (
                                                 <Tooltip text="Terima Barang">
                                                     <Button
+                                                        variant="ghost"
                                                         href={`/inventory/warehouse-orders/${item.id}/receive`}
-                                                        className="!bg-transparent !p-1 !text-green-600 hover:bg-green-50 dark:!text-green-400 dark:hover:bg-green-900/20"
+                                                        className="!p-1.5 !text-green-600 hover:bg-green-50 dark:!text-green-400 dark:hover:bg-green-900/20"
                                                         icon={<ClipboardCheck className="size-4" />}
                                                     />
                                                 </Tooltip>
@@ -591,19 +602,21 @@ export default function WarehouseOrderIndex({ users = [], divisions = [] }: { us
                                                 <>
                                                     <Tooltip text="Edit">
                                                         <Button
+                                                            variant="ghost"
                                                             href={`/inventory/warehouse-orders/${item.id}/edit`}
-                                                            className="!bg-transparent !p-1 !text-yellow-600 hover:bg-yellow-50 dark:!text-yellow-400 dark:hover:bg-yellow-900/20"
+                                                            className="!p-1.5 !text-amber-500 hover:bg-amber-50 dark:!text-amber-400 dark:hover:bg-amber-900/20"
                                                             icon={<Edit className="size-4" />}
                                                         />
                                                     </Tooltip>
                                                     <Tooltip text="Hapus">
                                                         <Button
+                                                            variant="ghost"
                                                             onClick={() => {
                                                                 setSelectedItem(item);
                                                                 setConfirmType('delete');
                                                                 setOpenConfirm(true);
                                                             }}
-                                                            className="!bg-transparent !p-1 !text-red-600 hover:bg-red-50 dark:!text-red-400 dark:hover:bg-red-900/20"
+                                                            className="!p-1.5 !text-red-500 hover:bg-red-50 dark:!text-red-400 dark:hover:bg-red-900/20"
                                                             icon={<Trash2 className="size-4" />}
                                                         />
                                                     </Tooltip>

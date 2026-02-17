@@ -1,5 +1,5 @@
-import { useState, useRef, ChangeEvent } from 'react';
-import { Upload, X, FileText, Image as ImageIcon, Plus, Trash2 } from 'lucide-react';
+import { useState, useRef, ChangeEvent, useEffect } from 'react';
+import { Upload, X, FileText, Image as ImageIcon, Plus, Trash2, Camera, RefreshCw } from 'lucide-react';
 
 interface FilePreview {
     name: string;
@@ -18,6 +18,7 @@ interface FormFileProps {
     required?: boolean;
     helpText?: string;
     className?: string;
+    capture?: 'user' | 'environment';
 }
 
 export default function FormFile({
@@ -31,11 +32,69 @@ export default function FormFile({
     required = false,
     helpText,
     className = '',
+    capture,
 }: FormFileProps) {
     const [files, setFiles] = useState<File[]>([]);
     const [previewUrls, setPreviewUrls] = useState<FilePreview[]>([]);
     const [isDragging, setIsDragging] = useState(false);
+    const [showCamera, setShowCamera] = useState(false);
+    const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+
+    useEffect(() => {
+        return () => {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+            }
+        };
+    }, [cameraStream]);
+
+    const startCamera = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: capture === 'user' ? 'user' : 'environment' },
+                audio: false
+            });
+            setCameraStream(stream);
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+            }
+            setShowCamera(true);
+        } catch (err) {
+            console.error("Error accessing camera:", err);
+            alert("Tidak dapat mengakses kamera. Pastikan browser diizinkan mengakses kamera.");
+        }
+    };
+
+    const stopCamera = () => {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            setCameraStream(null);
+        }
+        setShowCamera(false);
+    };
+
+    const takePhoto = () => {
+        if (videoRef.current && canvasRef.current) {
+            const video = videoRef.current;
+            const canvas = canvasRef.current;
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            if (context) {
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        const file = new File([blob], `camera-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+                        processFiles([file]);
+                        stopCamera();
+                    }
+                }, 'image/jpeg', 0.9);
+            }
+        }
+    };
 
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         const newlySelectedFiles = Array.from(e.target.files || []);
@@ -214,18 +273,64 @@ export default function FormFile({
                     accept={accept}
                     multiple={multiple}
                     disabled={disabled}
+                    capture={capture}
                 />
 
-                {files.length === 0 ? (
-                    <div className="cursor-pointer text-center" onClick={() => !disabled && fileInputRef.current?.click()}>
-                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm dark:bg-gray-700">
-                            <Upload className="h-6 w-6 text-blue-500" />
+                {showCamera ? (
+                    <div className="relative overflow-hidden rounded-lg bg-black">
+                        <video
+                            ref={videoRef}
+                            autoPlay
+                            playsInline
+                            className="aspect-video w-full object-cover"
+                        />
+                        <canvas ref={canvasRef} className="hidden" />
+                        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
+                            <button
+                                type="button"
+                                onClick={takePhoto}
+                                className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-blue-600 shadow-lg active:scale-95"
+                            >
+                                <div className="h-8 w-8 rounded-full border-4 border-blue-600 bg-white" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={stopCamera}
+                                className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500 text-white shadow-lg active:scale-95"
+                            >
+                                <X className="size-6" />
+                            </button>
                         </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                            <span className="font-semibold text-blue-600 hover:text-blue-500">Click to upload</span> or drag and
-                            drop
+                    </div>
+                ) : files.length === 0 ? (
+                    <div className="text-center">
+                        <div className="flex flex-col items-center justify-center sm:flex-row sm:gap-6">
+                            <div className="group cursor-pointer py-4" onClick={() => !disabled && fileInputRef.current?.click()}>
+                                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm transition-transform group-hover:scale-110 dark:bg-gray-700">
+                                    <Upload className="h-6 w-6 text-blue-500" />
+                                </div>
+                                <div className="text-sm text-gray-600 dark:text-gray-400">
+                                    <span className="font-semibold text-blue-600 hover:text-blue-500">Upload File</span>
+                                </div>
+                            </div>
+
+                            <div className="hidden h-12 w-px bg-gray-200 dark:bg-gray-700 sm:block" />
+                            <div className="my-2 h-px w-24 bg-gray-200 dark:bg-gray-700 sm:hidden" />
+
+                            <div className="group cursor-pointer py-4" onClick={() => !disabled && startCamera()}>
+                                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm transition-transform group-hover:scale-110 dark:bg-gray-700">
+                                    <Camera className="h-6 w-6 text-green-500" />
+                                </div>
+                                <div className="text-sm text-gray-600 dark:text-gray-400">
+                                    <span className="font-semibold text-green-600 hover:text-green-500">Ambil Foto</span>
+                                </div>
+                            </div>
                         </div>
-                        <p className="mt-1 text-xs text-gray-500">
+
+                        <div className="mt-4 text-xs text-gray-500">
+                            Or drag and drop files here
+                        </div>
+                        <p className="mt-2 text-xs text-gray-400">
                             {accept ? accept.split(',').join(', ') : 'Any file'}
                             {multiple ? ' (Multiple allowed)' : ''}
                         </p>
@@ -267,15 +372,24 @@ export default function FormFile({
                             ))}
                         </div>
 
-                        {/* Add More Button */}
+                        {/* Add More Controls */}
                         {multiple && (
-                            <button
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-blue-200 bg-blue-50 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30"
-                            >
-                                <Plus className="size-4" /> Add more files
-                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-dashed border-blue-200 bg-blue-50 py-2.5 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30"
+                                >
+                                    <Plus className="size-4" /> Add file
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={startCamera}
+                                    className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-dashed border-green-200 bg-green-50 py-2.5 text-sm font-medium text-green-600 transition-colors hover:bg-green-100 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30"
+                                >
+                                    <Camera className="size-4" /> Ambil foto
+                                </button>
+                            </div>
                         )}
                     </div>
                 )}

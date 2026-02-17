@@ -1,4 +1,4 @@
-import { RefreshCw, LogOut } from 'lucide-react';
+import { RefreshCw, LogOut, Package } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
 interface Item {
@@ -9,7 +9,7 @@ interface Item {
     multiplier: number;
     division?: { id: number; name: string } | null;
     category?: { id: number; name: string } | null;
-    reference_item?: { id: number; name: string; unit_of_measure: string } | null;
+    reference_item?: { unit_of_measure: string } | null;
 }
 
 interface Props {
@@ -22,59 +22,70 @@ export default function StockMonitoringCardItem({ item, canConvert, canIssue }: 
     const hasAnyAction = canConvert || canIssue;
 
     return (
-        <div className="transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/30">
-            <div className="flex flex-col gap-1 px-4 py-4">
-                {/* Header: Name */}
-                <div className="flex items-center gap-2">
-                    <span className="truncate text-base font-semibold text-gray-900 dark:text-white">{item.name}</span>
+        <div className="group transition-colors duration-150 hover:bg-slate-50/80 dark:hover:bg-slate-700/20">
+            <div className="flex items-start gap-3.5 px-4 py-4">
+                {/* Icon */}
+                <div className="mt-0.5 flex size-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 dark:bg-primary/15">
+                    <Package className="size-5 text-primary" />
                 </div>
 
-                {/* Subtitle: Division & Category */}
-                <div className="truncate text-sm text-gray-500 dark:text-slate-400">
-                    {item.division?.name || 'Gudang Utama'} • {item.category?.name || '-'}
-                </div>
+                {/* Content */}
+                <div className="min-w-0 flex-1">
+                    {/* Header: Name & Division */}
+                    <div className="min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                                <h3 className="truncate text-[15px] font-semibold text-slate-800 dark:text-white">{item.name}</h3>
+                                <p className="mt-0.5 text-[12px] font-medium text-slate-500 dark:text-slate-400">
+                                    {item.division?.name || 'Gudang Utama'} • {item.category?.name || '-'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
 
-                {/* Details: Quantity & Conversion */}
-                <div className="mb-2 flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-slate-300">
-                    <span className={`font-medium ${item.stock <= 0 ? 'text-red-500' : ''}`}>
-                        {item.stock} {item.unit_of_measure}
-                    </span>
+                    {/* Conversion Details */}
                     {item.multiplier > 1 && item.reference_item && (
-                        <>
-                            <span className="text-gray-300 dark:text-slate-600">•</span>
-                            <span className="text-gray-400 dark:text-gray-500">
-                                (1 {item.unit_of_measure} = {item.multiplier} {item.reference_item.unit_of_measure} {item.reference_item.name})
-                            </span>
-                        </>
+                        <p className="mt-1 text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
+                            1 {item.unit_of_measure} = {item.multiplier} {item.reference_item.unit_of_measure}
+                        </p>
+                    )}
+
+                    {/* Stock Indicator */}
+                    <div className="mt-3 flex items-center">
+                        <div className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold ${item.stock <= 0 ? 'bg-red-50 text-red-600 dark:bg-red-900/25 dark:text-red-400' : item.stock <= 10 ? 'bg-yellow-50 text-yellow-600 dark:bg-yellow-900/25 dark:text-yellow-400' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/25 dark:text-emerald-400'}`}>
+                            <div className="size-1.5 rounded-full bg-current opacity-50" />
+                            <span>Stok: {item.stock} {item.unit_of_measure}</span>
+                        </div>
+                    </div>
+
+                    {/* Actions */}
+                    {hasAnyAction && (
+                        <div className={`mt-4 grid gap-2 ${(() => {
+                                const count = [canConvert, canIssue].filter(Boolean).length;
+                                return `grid-cols-${count || 1}`;
+                            })()
+                            }`}>
+                            {canConvert && (
+                                <Link
+                                    href={`/inventory/stock-monitoring/${item.id}/convert`}
+                                    className="flex items-center justify-center gap-1.5 rounded-lg border border-emerald-200 px-3 py-2 text-[13px] font-medium text-emerald-600 transition-colors hover:bg-emerald-50 dark:border-emerald-800/50 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
+                                >
+                                    <RefreshCw className="size-3.5" />
+                                    Konversi
+                                </Link>
+                            )}
+                            {canIssue && (
+                                <Link
+                                    href={`/inventory/stock-monitoring/${item.id}/issue`}
+                                    className="flex items-center justify-center gap-1.5 rounded-lg border border-red-200 px-3 py-2 text-[13px] font-medium text-red-500 transition-colors hover:bg-red-50 dark:border-red-800/50 dark:text-red-400 dark:hover:bg-red-900/20"
+                                >
+                                    <LogOut className="size-3.5" />
+                                    Keluar
+                                </Link>
+                            )}
+                        </div>
                     )}
                 </div>
-
-                {/* Footer: Actions */}
-                {hasAnyAction && (
-                    <div className="mt-2 flex flex-wrap items-center justify-end gap-2 pt-2">
-                        {/* Konversi Stok */}
-                        {canConvert && (
-                            <Link
-                                href={`/inventory/stock-monitoring/${item.id}/convert`}
-                                className="flex items-center gap-1 rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-600 transition-colors hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30"
-                            >
-                                <RefreshCw className="size-3.5" />
-                                Konversi
-                            </Link>
-                        )}
-
-                        {/* Pengeluaran Barang */}
-                        {canIssue && (
-                            <Link
-                                href={`/inventory/stock-monitoring/${item.id}/issue`}
-                                className="flex items-center gap-1 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
-                            >
-                                <LogOut className="size-3.5" />
-                                Pengeluaran
-                            </Link>
-                        )}
-                    </div>
-                )}
             </div>
         </div>
     );

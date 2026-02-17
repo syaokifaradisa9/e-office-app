@@ -76,7 +76,7 @@ export default function ConfirmationAlert({
 
     return (
         <>
-            <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden bg-black/50 p-4 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto overflow-x-hidden bg-black/60 p-4">
                 <div className="relative w-full max-w-md">
                     <div className="relative rounded-xl bg-white shadow-lg dark:bg-gray-800">
                         <button

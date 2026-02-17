@@ -253,6 +253,7 @@ class WarehouseOrderSeeder extends Seeder
             ],
         ];
 
+        $sequence = 1;
         foreach ($orders as $orderData) {
             $user = $users->firstWhere('email', $orderData['user_email']);
             $division = $divisions->firstWhere('name', $orderData['division']);
@@ -269,12 +270,18 @@ class WarehouseOrderSeeder extends Seeder
                 ? $users->firstWhere('email', $orderData['received_by_email'])?->id
                 : null;
 
+            // Generate order number YYMM0001
+            $createdAt = $orderData['created_at'];
+            $createdAt->setTime(rand(8, 15), rand(0, 59), rand(0, 59));
+            
+            $orderNumber = $createdAt->format('y') . $createdAt->format('m') . str_pad($sequence++, 4, '0', STR_PAD_LEFT);
+
             $order = WarehouseOrder::firstOrCreate(
-                ['order_number' => $orderData['order_number']],
+                ['order_number' => $orderNumber],
                 [
                     'user_id' => $user->id,
                     'division_id' => $division->id,
-                    'order_number' => $orderData['order_number'],
+                    'order_number' => $orderNumber,
                     'description' => $orderData['description'],
                     'notes' => $orderData['notes'],
                     'status' => $orderData['status'],
@@ -283,8 +290,8 @@ class WarehouseOrderSeeder extends Seeder
                     'delivered_by' => $deliveredBy,
                     'receipt_date' => $orderData['receipt_date'],
                     'received_by' => $receivedBy,
-                    'created_at' => $orderData['created_at'],
-                    'updated_at' => $orderData['created_at'],
+                    'created_at' => $createdAt,
+                    'updated_at' => $createdAt,
                 ]
             );
 

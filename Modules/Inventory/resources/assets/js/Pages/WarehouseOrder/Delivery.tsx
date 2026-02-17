@@ -55,7 +55,7 @@ interface Props {
 export default function WarehouseOrderDelivery({ order }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         delivery_date: new Date().toISOString().split('T')[0],
-        delivery_images: null as FileList | null,
+        delivery_images: null as any,
     });
 
     function handleSubmit(e: React.FormEvent) {
@@ -110,50 +110,30 @@ export default function WarehouseOrderDelivery({ order }: Props) {
 
     return (
         <RootLayout title="Penyerahan Barang" backPath="/inventory/warehouse-orders">
-            <ContentCard title="Penyerahan Barang" backPath="/inventory/warehouse-orders">
+            <ContentCard title="Penyerahan Barang" subtitle="Proses penyerahan barang yang telah disetujui kepada divisi pemohon" backPath="/inventory/warehouse-orders" mobileFullWidth bodyClassName="p-1 md:p-6">
                 <div className="space-y-8">
-                    {/* Order Details */}
-                    <div className="space-y-2 border-b border-gray-100 pb-6 text-sm dark:border-gray-700">
-                        <div className="grid grid-cols-[140px_10px_1fr] items-start md:grid-cols-[200px_20px_1fr]">
-                            <div className="font-medium text-gray-700 dark:text-gray-300">Pemohon</div>
-                            <div className="text-gray-500 dark:text-gray-400">:</div>
-                            <div className="font-medium text-gray-900 dark:text-white">{order.user?.name || '-'}</div>
+                    {/* Order Details Header */}
+                    <div className="grid grid-cols-2 gap-4 rounded-xl bg-gray-50 p-4 dark:bg-slate-800/50 md:grid-cols-3 md:gap-6 md:p-6">
+                        <div className="space-y-1">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">Pemohon</p>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white">{order.user?.name || '-'}</p>
+                            <p className="text-xs text-gray-500 dark:text-slate-400">{order.division?.name || '-'}</p>
                         </div>
-                        <div className="grid grid-cols-[140px_10px_1fr] items-start md:grid-cols-[200px_20px_1fr]">
-                            <div className="font-medium text-gray-700 dark:text-gray-300">Divisi</div>
-                            <div className="text-gray-500 dark:text-gray-400">:</div>
-                            <div className="font-medium text-gray-900 dark:text-white">
-                                {order.division?.name || '-'}
-                            </div>
+                        <div className="space-y-1 text-right md:text-left">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">Nomor Order</p>
+                            <p className="text-sm font-mono font-bold text-blue-600 dark:text-blue-400">{order.order_number || '-'}</p>
+                            <p className="text-xs text-gray-500 dark:text-slate-400">{formatDate(order.created_at)}</p>
                         </div>
-                        <div className="grid grid-cols-[140px_10px_1fr] items-start md:grid-cols-[200px_20px_1fr]">
-                            <div className="font-medium text-gray-700 dark:text-gray-300">Nomor Order</div>
-                            <div className="text-gray-500 dark:text-gray-400">:</div>
-                            <div className="font-medium text-gray-900 dark:text-white">
-                                {order.order_number || '-'}
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-[140px_10px_1fr] items-start md:grid-cols-[200px_20px_1fr]">
-                            <div className="font-medium text-gray-700 dark:text-gray-300">Tanggal Permintaan</div>
-                            <div className="text-gray-500 dark:text-gray-400">:</div>
-                            <div className="font-medium text-gray-900 dark:text-white">
-                                {formatDate(order.created_at)}
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-[140px_10px_1fr] items-start md:grid-cols-[200px_20px_1fr]">
-                            <div className="font-medium text-gray-700 dark:text-gray-300">Keperluan</div>
-                            <div className="text-gray-500 dark:text-gray-400">:</div>
-                            <div className="font-medium leading-relaxed text-gray-900 dark:text-white">
-                                {order.description}
-                            </div>
+                        <div className="col-span-2 space-y-1 md:col-span-1">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">Keperluan</p>
+                            <p className="text-sm leading-relaxed text-gray-700 dark:text-slate-300 line-clamp-2 md:line-clamp-none">
+                                {order.description || '-'}
+                            </p>
                         </div>
                         {order.notes && (
-                            <div className="grid grid-cols-[140px_10px_1fr] items-start md:grid-cols-[200px_20px_1fr]">
-                                <div className="font-medium text-gray-700 dark:text-gray-300">Catatan</div>
-                                <div className="text-gray-500 dark:text-gray-400">:</div>
-                                <div className="font-medium leading-relaxed text-gray-900 dark:text-white">
-                                    {order.notes}
-                                </div>
+                            <div className="col-span-2 space-y-1 border-t border-gray-200 pt-3 dark:border-slate-700 md:col-span-3">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">Catatan</p>
+                                <p className="text-xs italic text-gray-600 dark:text-slate-400">{order.notes}</p>
                             </div>
                         )}
                     </div>
@@ -168,32 +148,32 @@ export default function WarehouseOrderDelivery({ order }: Props) {
                             <GeneralTable headers={headers} columns={columns} items={order.carts || []} />
                         </div>
                         {/* Mobile Card List */}
-                        <div className="divide-y divide-gray-200 overflow-hidden rounded-lg border border-gray-200 dark:divide-slate-700 dark:border-slate-700 md:hidden">
+                        <div className="space-y-3 md:hidden">
                             {order.carts && order.carts.length > 0 ? (
                                 order.carts.map((cart, index) => (
-                                    <div key={index} className="bg-white p-4 dark:bg-slate-800">
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div className="min-w-0 flex-1">
-                                                <div className="truncate font-medium text-gray-900 dark:text-white">
-                                                    {cart.item?.name || 'Unknown Item'}
-                                                </div>
-                                                <div className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                                                    {cart.item?.category?.name || '-'}
-                                                </div>
+                                    <div key={index} className="relative flex items-center justify-between overflow-hidden rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-800/80">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="font-bold text-gray-900 dark:text-white">
+                                                {cart.item?.name || 'Unknown Item'}
                                             </div>
-                                            <div className="flex-shrink-0 text-right">
-                                                <div className="font-bold text-gray-900 dark:text-white">
-                                                    {cart.quantity}
-                                                </div>
-                                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                    {cart.item?.unit_of_measure || '-'}
-                                                </div>
+                                            <div className="mt-0.5 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                                <span className="rounded bg-gray-100 px-1.5 py-0.5 dark:bg-slate-700">
+                                                    {cart.item?.category?.name || '-'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="flex-shrink-0 pl-4 text-right">
+                                            <div className="text-lg font-black text-blue-600 dark:text-blue-400">
+                                                {cart.quantity}
+                                            </div>
+                                            <div className="text-[10px] font-bold uppercase text-gray-400 dark:text-slate-500">
+                                                {cart.item?.unit_of_measure || '-'}
                                             </div>
                                         </div>
                                     </div>
                                 ))
                             ) : (
-                                <div className="p-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                                <div className="rounded-xl border border-dashed border-gray-200 p-8 text-center text-sm text-gray-500 dark:border-slate-700 dark:text-gray-400">
                                     Tidak ada barang
                                 </div>
                             )}
@@ -207,6 +187,7 @@ export default function WarehouseOrderDelivery({ order }: Props) {
                         </h3>
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <FormInput
+                                name="delivery_date"
                                 label="Tanggal Penyerahan"
                                 type="date"
                                 value={data.delivery_date}
@@ -220,7 +201,8 @@ export default function WarehouseOrderDelivery({ order }: Props) {
                                 name="delivery_images"
                                 multiple={true}
                                 accept="image/*"
-                                onChange={(e) => setData('delivery_images', e.target.files)}
+                                capture="environment"
+                                onChange={(e) => setData('delivery_images', e.target.files as any)}
                                 error={errors.delivery_images}
                                 required
                             />

@@ -104,4 +104,29 @@ class VisitorFeedbackManagementService
             $writer->close();
         }, 'Kritik_Saran_Pengunjung_' . date('Ymd_His') . '.xlsx');
     }
+
+    public function delete(int $id)
+    {
+        return $this->repository->delete($id);
+    }
+
+    public function findById(int $id)
+    {
+        $feedback = $this->repository->datatable()->with(['visitor', 'ratings.question'])->findOrFail($id);
+        
+        return [
+            'id' => $feedback->id,
+            'visitor_name' => $feedback->visitor->visitor_name,
+            'visit_date' => $feedback->visitor->check_in_at->locale('id')->translatedFormat('d F Y'),
+            'avg_rating' => round($feedback->ratings->avg('rating'), 1),
+            'feedback_note' => $feedback->feedback_note,
+            'is_read' => $feedback->is_read,
+            'ratings' => $feedback->ratings->map(function($rating) {
+                return [
+                    'question' => $rating->question->question,
+                    'rating' => $rating->rating
+                ];
+            })
+        ];
+    }
 }

@@ -1,5 +1,5 @@
 import { usePage, Link } from '@inertiajs/react';
-import { Edit, Trash2, Eye, Check, PackageCheck, ClipboardCheck } from 'lucide-react';
+import { Edit, Trash2, Eye, Check, PackageCheck, ClipboardCheck, ClipboardList, Calendar, X } from 'lucide-react';
 import { InventoryPermission } from '../../types/permissions';
 
 interface WarehouseOrderItem {
@@ -34,27 +34,16 @@ export default function WarehouseOrderCardItem({ item, onConfirm, onDelete, onRe
     const hasHandoverPermission = permissions?.includes(InventoryPermission.HandoverItem);
     const hasReceivePermission = permissions?.includes(InventoryPermission.ReceiveItem);
 
-    // Status badge colors
-    const statusColors: Record<string, string> = {
-        Pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-        Confirmed: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-        Delivered: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-        Finished: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-        Rejected: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-        Revision: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+    // Status config
+    const statusConfig: Record<string, { label: string; className: string }> = {
+        Pending: { label: 'Menunggu', className: 'bg-amber-50 text-amber-600 dark:bg-amber-900/25 dark:text-amber-400' },
+        Confirmed: { label: 'Dikonfirmasi', className: 'bg-blue-50 text-blue-600 dark:bg-blue-900/25 dark:text-blue-400' },
+        Delivered: { label: 'Diserahkan', className: 'bg-purple-50 text-purple-600 dark:bg-purple-900/25 dark:text-purple-400' },
+        Finished: { label: 'Selesai', className: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/25 dark:text-emerald-400' },
+        Rejected: { label: 'Ditolak', className: 'bg-red-50 text-red-600 dark:bg-red-900/25 dark:text-red-400' },
+        Revision: { label: 'Revisi', className: 'bg-orange-50 text-orange-600 dark:bg-orange-900/25 dark:text-orange-400' },
     };
 
-    // Status translations (English in DB, Indonesian for display)
-    const statusLabels: Record<string, string> = {
-        Pending: 'Menunggu',
-        Confirmed: 'Dikonfirmasi',
-        Delivered: 'Diserahkan',
-        Finished: 'Selesai',
-        Rejected: 'Ditolak',
-        Revision: 'Revisi',
-    };
-
-    // Check if any actions are available
     const showConfirm = hasConfirmPermission && (item.status === 'Pending' || item.status === 'Revision');
     const showHandover = hasHandoverPermission && item.status === 'Confirmed';
     const showReceive =
@@ -62,80 +51,114 @@ export default function WarehouseOrderCardItem({ item, onConfirm, onDelete, onRe
         item.status === 'Delivered' &&
         (currentUser?.id === item.user_id || currentUser?.division_id === item.division_id);
     const showEditDelete =
-        (item.status === 'Pending' || item.status === 'Revision' || item.status === 'Rejected') && currentUser?.id === item.user_id && hasCreatePermission;
-    const hasAnyAction = showConfirm || showHandover || showReceive || showEditDelete;
+        (item.status === 'Pending' || item.status === 'Revision' || item.status === 'Rejected') &&
+        currentUser?.id === item.user_id &&
+        hasCreatePermission;
+
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+        });
+    };
+
+    const status = statusConfig[item.status] || { label: item.status, className: 'bg-slate-100 text-slate-600' };
+
+    const buttonCount = (() => {
+        let count = 1; // Detail always
+        if (showConfirm) count += 2;
+        if (showHandover) count += 1;
+        if (showReceive) count += 1;
+        if (showEditDelete) count += 2;
+        return count;
+    })();
 
     return (
-        <div className="transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/30">
-            <div className="flex flex-col gap-1 px-4 py-4">
-                {/* Header: Order Number + Status */}
-                <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-base font-semibold text-gray-900 dark:text-white">{item.order_number || '-'}</span>
-                    <span
-                        className={`flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${statusColors[item.status] || 'bg-gray-100 text-gray-600'}`}
-                    >
-                        {statusLabels[item.status] || item.status}
-                    </span>
+        <div className="group transition-colors duration-150 hover:bg-slate-50/80 dark:hover:bg-slate-700/20">
+            <div className="flex items-start gap-3.5 px-4 py-4">
+                {/* Icon */}
+                <div className="mt-0.5 flex size-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 dark:bg-primary/15">
+                    <ClipboardList className="size-5 text-primary" />
                 </div>
 
-                {/* Subtitle: User & Division */}
-                <div className="mb-2 flex items-center gap-2 text-sm text-gray-500 dark:text-slate-400">
-                    <span className="truncate">
-                        {item.user?.name ?? '-'} • {item.division?.name ?? '-'}
-                    </span>
-                </div>
+                {/* Content */}
+                <div className="min-w-0 flex-1">
+                    {/* Row 1: Order Number & Status */}
+                    <div className="flex items-center justify-between gap-2">
+                        <h3 className="truncate text-[15px] font-semibold text-slate-800 dark:text-white">
+                            {item.order_number || '-'}
+                        </h3>
+                        <div className={`flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${status.className}`}>
+                            <div className="size-1.5 rounded-full bg-current opacity-50" />
+                            <span>{status.label}</span>
+                        </div>
+                    </div>
 
-                {/* Footer: Actions */}
-                {hasAnyAction && (
-                    <div className="mt-2 flex flex-wrap items-center justify-end gap-2 pt-2">
+                    {/* Row 2: User & Division */}
+                    <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">
+                        <span className="font-medium text-slate-700 dark:text-slate-300">{item.user?.name ?? '-'}</span> &nbsp;Divisi <span className="font-medium text-slate-700 dark:text-slate-300">{item.division?.name ?? '-'}</span>
+                    </p>
+
+                    {/* Date */}
+                    <div className="mt-2 flex items-center gap-1 text-[12px] text-slate-400 dark:text-slate-500">
+                        <Calendar className="size-3" />
+                        <span>{formatDate(item.created_at)}</span>
+                    </div>
+
+                    {/* Actions */}
+                    <div className={`mt-4 grid gap-2 ${buttonCount === 1 ? 'grid-cols-1' :
+                        buttonCount === 2 ? 'grid-cols-2' :
+                            buttonCount === 3 ? 'grid-cols-3' : 'grid-cols-2'
+                        }`}>
                         {/* Detail */}
                         <Link
                             href={`/inventory/warehouse-orders/${item.id}`}
-                            className="flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30"
+                            className="flex items-center justify-center gap-1.5 rounded-lg border border-blue-200 px-3 py-2 text-[13px] font-medium text-blue-600 transition-colors hover:bg-blue-50 dark:border-blue-800/50 dark:text-blue-400 dark:hover:bg-blue-900/20"
                         >
                             <Eye className="size-3.5" />
                             Detail
                         </Link>
 
-                        {/* Konfirmasi */}
+                        {/* Konfirmasi & Tolak */}
                         {showConfirm && (
                             <>
                                 <button
                                     onClick={() => onConfirm(item)}
-                                    className="flex items-center gap-1 rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-600 transition-colors hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30"
+                                    className="flex items-center justify-center gap-1.5 rounded-lg border border-emerald-200 px-3 py-2 text-[13px] font-medium text-emerald-600 transition-colors hover:bg-emerald-50 dark:border-emerald-800/50 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
                                 >
                                     <Check className="size-3.5" />
-                                    Konfirmasi
+                                    Terima
                                 </button>
                                 <button
                                     onClick={() => onReject(item)}
-                                    className="flex items-center gap-1 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
+                                    className="flex items-center justify-center gap-1.5 rounded-lg border border-red-200 px-3 py-2 text-[13px] font-medium text-red-500 transition-colors hover:bg-red-50 dark:border-red-800/50 dark:text-red-400 dark:hover:bg-red-900/20"
                                 >
-                                    <Trash2 className="size-3.5" />
+                                    <X className="size-3.5" />
                                     Tolak
                                 </button>
                             </>
                         )}
 
-                        {/* Serahkan Barang */}
+                        {/* Serahkan */}
                         {showHandover && (
                             <Link
                                 href={`/inventory/warehouse-orders/${item.id}/delivery`}
-                                className="flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30"
+                                className="flex items-center justify-center gap-1.5 rounded-lg border border-purple-200 px-3 py-2 text-[13px] font-medium text-purple-600 transition-colors hover:bg-purple-50 dark:border-purple-800/50 dark:text-purple-400 dark:hover:bg-purple-900/20"
                             >
                                 <PackageCheck className="size-3.5" />
                                 Serahkan
                             </Link>
                         )}
 
-                        {/* Terima Barang */}
+                        {/* Terima */}
                         {showReceive && (
                             <Link
                                 href={`/inventory/warehouse-orders/${item.id}/receive`}
-                                className="flex items-center gap-1 rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-600 transition-colors hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30"
+                                className="flex items-center justify-center gap-1.5 rounded-lg border border-emerald-200 px-3 py-2 text-[13px] font-medium text-emerald-600 transition-colors hover:bg-emerald-50 dark:border-emerald-800/50 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
                             >
                                 <ClipboardCheck className="size-3.5" />
-                                Terima
+                                Selesai
                             </Link>
                         )}
 
@@ -144,14 +167,14 @@ export default function WarehouseOrderCardItem({ item, onConfirm, onDelete, onRe
                             <>
                                 <Link
                                     href={`/inventory/warehouse-orders/${item.id}/edit`}
-                                    className="flex items-center gap-1 rounded-lg bg-yellow-50 px-3 py-1.5 text-xs font-medium text-yellow-600 transition-colors hover:bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400 dark:hover:bg-yellow-900/30"
+                                    className="flex items-center justify-center gap-1.5 rounded-lg border border-amber-200 px-3 py-2 text-[13px] font-medium text-amber-600 transition-colors hover:bg-amber-50 dark:border-amber-800/50 dark:text-amber-400 dark:hover:bg-amber-900/20"
                                 >
                                     <Edit className="size-3.5" />
                                     Edit
                                 </Link>
                                 <button
                                     onClick={() => onDelete(item)}
-                                    className="flex items-center gap-1 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
+                                    className="flex items-center justify-center gap-1.5 rounded-lg border border-red-200 px-3 py-2 text-[13px] font-medium text-red-500 transition-colors hover:bg-red-50 dark:border-red-800/50 dark:text-red-400 dark:hover:bg-red-900/20"
                                 >
                                     <Trash2 className="size-3.5" />
                                     Hapus
@@ -159,7 +182,7 @@ export default function WarehouseOrderCardItem({ item, onConfirm, onDelete, onRe
                             </>
                         )}
                     </div>
-                )}
+                </div>
             </div>
         </div>
     );

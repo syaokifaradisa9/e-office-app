@@ -52,12 +52,13 @@ export default function ClassificationCreate({ classification, classifications }
         }));
 
     return (
-        <RootLayout title={isEdit ? 'Edit Klasifikasi Dokumen' : 'Tambah Klasifikasi Dokumen'}>
+        <RootLayout title={isEdit ? 'Edit Klasifikasi Dokumen' : 'Tambah Klasifikasi Dokumen'} backPath="/archieve/classifications">
             <ContentCard
                 title={isEdit ? 'Edit Klasifikasi Dokumen' : 'Tambah Klasifikasi Dokumen Baru'}
                 subtitle={isEdit ? 'Perbarui informasi detail untuk klasifikasi dokumen ini' : 'Buat klasifikasi dokumen baru untuk mengatur tata kelola dokumen di sistem'}
                 backPath="/archieve/classifications"
                 mobileFullWidth
+                bodyClassName="p-1 md:p-6"
             >
                 <p className="mb-6 text-sm text-gray-500 dark:text-slate-400">Isi informasi klasifikasi dokumen di bawah ini. Anda dapat membuat sub-klasifikasi dengan memilih Induk.</p>
 

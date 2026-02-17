@@ -17,7 +17,7 @@ class WarehouseOrderFactory extends Factory
         return [
             'user_id' => User::factory(),
             'division_id' => Division::factory(),
-            'order_number' => 'WO-'.date('YmdHis').'-'.fake()->randomNumber(3),
+            'order_number' => date('ym').str_pad(fake()->unique()->numberBetween(1, 9999), 4, '0', STR_PAD_LEFT),
             'description' => fake()->sentence(),
             'notes' => fake()->optional()->sentence(),
             'status' => WarehouseOrderStatus::Pending,

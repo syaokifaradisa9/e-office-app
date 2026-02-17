@@ -11,10 +11,11 @@ import Button from '@/components/buttons/Button';
 import CheckPermissions from '@/components/utils/CheckPermissions';
 import MobileSearchBar from '@/components/forms/MobileSearchBar';
 import FloatingActionButton from '@/components/buttons/FloatingActionButton';
-import { DivisionCardSkeleton } from '@/components/skeletons/CardSkeleton';
+import { CategoryItemCardSkeleton } from '@/components/skeletons/CardSkeleton';
 import Tooltip from '@/components/commons/Tooltip';
 import FormSelect from '@/components/forms/FormSelect';
 import { ArchievePermission } from '@/enums/ArchievePermission';
+import ClassificationCardItem from './ClassificationCardItem';
 
 interface Classification {
     id: number;
@@ -74,7 +75,7 @@ export default function ClassificationIndex() {
         search: '',
         code: '',
         parent_id: '',
-        limit: 20,
+        limit: 10,
         description: '',
         page: 1,
         sort_by: 'code',
@@ -156,9 +157,16 @@ export default function ClassificationIndex() {
                         onSearchChange={onParamsChange}
                         placeholder="Cari klasifikasi..."
                         actionButton={
-                            <a href={getPrintUrl()} target="_blank" className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" rel="noreferrer">
-                                <FileSpreadsheet className="size-4" />
-                            </a>
+                            <div className="flex items-center gap-1">
+                                <a
+                                    href={getPrintUrl()}
+                                    target="_blank"
+                                    className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                                    rel="noreferrer"
+                                >
+                                    <FileSpreadsheet className="size-4" />
+                                </a>
+                            </div>
                         }
                     />
                 ) : undefined
@@ -184,6 +192,7 @@ export default function ClassificationIndex() {
                 title="Klasifikasi Dokumen"
                 subtitle="Atur tata kelola dan klasifikasi dokumen arsip Anda"
                 mobileFullWidth
+                bodyClassName="px-0 pb-24 pt-2 md:p-6"
                 additionalButton={
                     <CheckPermissions permissions={[ArchievePermission.MANAGE_CLASSIFICATION]}>
                         <Button className="hidden w-full md:flex" label="Tambah Klasifikasi" href="/archieve/classifications/create" icon={<Plus className="size-4" />} />
@@ -206,12 +215,23 @@ export default function ClassificationIndex() {
                         searchValue={params.search}
                         dataTable={dataTable}
                         isLoading={isLoading}
-                        SkeletonComponent={DivisionCardSkeleton}
+                        SkeletonComponent={CategoryItemCardSkeleton}
                         sortBy={params.sort_by}
                         sortDirection={params.sort_direction}
+                        cardItem={(item: Classification) => (
+                            <ClassificationCardItem
+                                item={item}
+                                onDelete={(item) => {
+                                    setSelectedItem(item);
+                                    setOpenConfirm(true);
+                                }}
+                            />
+                        )}
                         additionalHeaderElements={
                             <div className="flex gap-2">
-                                <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                                <Tooltip text="Export Excel">
+                                    <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                                </Tooltip>
                             </div>
                         }
                         onHeaderClick={(columnName) => {
@@ -278,25 +298,28 @@ export default function ClassificationIndex() {
                                             <div className="flex justify-end gap-1">
                                                 <Tooltip text="Tambah Sub">
                                                     <Button
+                                                        variant="ghost"
                                                         href={`/archieve/classifications/create?parent_id=${item.id}`}
-                                                        className="!bg-transparent !p-1 text-primary hover:bg-primary/10"
+                                                        className="!p-1 !text-primary hover:bg-primary/10"
                                                         icon={<Plus className="size-4" />}
                                                     />
                                                 </Tooltip>
                                                 <Tooltip text="Edit">
                                                     <Button
+                                                        variant="ghost"
                                                         href={`/archieve/classifications/${item.id}/edit`}
-                                                        className="!bg-transparent !p-1 text-yellow-600 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
+                                                        className="!p-1 !text-yellow-600 hover:bg-yellow-50 dark:!text-yellow-400 dark:hover:bg-yellow-900/20"
                                                         icon={<Edit className="size-4" />}
                                                     />
                                                 </Tooltip>
                                                 <Tooltip text="Hapus">
                                                     <Button
+                                                        variant="ghost"
                                                         onClick={() => {
                                                             setSelectedItem(item);
                                                             setOpenConfirm(true);
                                                         }}
-                                                        className="!bg-transparent !p-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                                                        className="!p-1 !text-red-600 hover:bg-red-50 dark:!text-red-400 dark:hover:bg-red-900/20"
                                                         icon={<Trash2 className="size-4" />}
                                                     />
                                                 </Tooltip>

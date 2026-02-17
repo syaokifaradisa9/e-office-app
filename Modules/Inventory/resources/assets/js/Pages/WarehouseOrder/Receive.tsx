@@ -55,7 +55,7 @@ interface Props {
 export default function WarehouseOrderReceive({ order }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         receipt_date: new Date().toISOString().split('T')[0],
-        receipt_images: null as FileList | null,
+        receipt_images: null as any,
     });
 
     function handleSubmit(e: React.FormEvent) {
@@ -112,7 +112,7 @@ export default function WarehouseOrderReceive({ order }: Props) {
 
     return (
         <RootLayout title="Penerimaan Barang" backPath="/inventory/warehouse-orders">
-            <ContentCard title="Penerimaan Barang" backPath="/inventory/warehouse-orders">
+            <ContentCard title="Penerimaan Barang" subtitle="Konfirmasi penerimaan stok barang yang telah dikirim oleh gudang" backPath="/inventory/warehouse-orders" mobileFullWidth bodyClassName="p-1 md:p-6">
                 <div className="space-y-8">
                     {/* Order Details */}
                     <div className="space-y-2 border-b border-gray-100 pb-6 text-sm dark:border-gray-700">
@@ -223,7 +223,8 @@ export default function WarehouseOrderReceive({ order }: Props) {
                                 name="receipt_images"
                                 multiple={true}
                                 accept="image/*"
-                                onChange={(e) => setData('receipt_images', e.target.files)}
+                                capture="environment"
+                                onChange={(e) => setData('receipt_images', e.target.files as any)}
                                 error={errors.receipt_images}
                                 required
                             />

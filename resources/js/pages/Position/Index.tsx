@@ -74,7 +74,7 @@ export default function PositionIndex() {
     });
     const [params, setParams] = useState<Params>({
         search: '',
-        limit: 20,
+        limit: 10,
         page: 1,
         name: '',
         description: '',
@@ -160,9 +160,11 @@ export default function PositionIndex() {
                     onSearchChange={onParamsChange}
                     placeholder="Cari jabatan..."
                     actionButton={
-                        <a href={getPrintUrl('excel')} target="_blank" className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" rel="noreferrer">
-                            <FileSpreadsheet className="size-4" />
-                        </a>
+                        <div className="flex items-center gap-1">
+                            <a href={getPrintUrl('excel')} target="_blank" className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" rel="noreferrer">
+                                <FileSpreadsheet className="size-4" />
+                            </a>
+                        </div>
                     }
                 />
             }
@@ -206,7 +208,9 @@ export default function PositionIndex() {
                         sortDirection={params.sort_direction}
                         additionalHeaderElements={
                             <div className="flex gap-2">
-                                <Button href={getPrintUrl('excel')} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                                <Tooltip text="Export Excel">
+                                    <Button href={getPrintUrl('excel')} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                                </Tooltip>
                             </div>
                         }
                         onHeaderClick={(columnName) => {
@@ -284,18 +288,20 @@ export default function PositionIndex() {
                                             <div className="flex justify-end gap-1">
                                                 <Tooltip text="Edit">
                                                     <Button
+                                                        variant="ghost"
                                                         href={`/position/${position.id}/edit`}
-                                                        className="!bg-transparent !p-1 text-yellow-600 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
+                                                        className="!p-1.5 !text-amber-500 hover:bg-amber-50 dark:!text-amber-400 dark:hover:bg-amber-900/20"
                                                         icon={<Edit className="size-4" />}
                                                     />
                                                 </Tooltip>
                                                 <Tooltip text="Hapus">
                                                     <Button
+                                                        variant="ghost"
                                                         onClick={() => {
                                                             setSelectedPosition(position);
                                                             setOpenConfirm(true);
                                                         }}
-                                                        className="!bg-transparent !p-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                                                        className="!p-1.5 !text-red-500 hover:bg-red-50 dark:!text-red-400 dark:hover:bg-red-900/20"
                                                         icon={<Trash2 className="size-4" />}
                                                     />
                                                 </Tooltip>

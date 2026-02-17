@@ -12,13 +12,14 @@ import Button from '@/components/buttons/Button';
 import CheckPermissions from '@/components/utils/CheckPermissions';
 import MobileSearchBar from '@/components/forms/MobileSearchBar';
 import FloatingActionButton from '@/components/buttons/FloatingActionButton';
-import { DivisionCardSkeleton } from '@/components/skeletons/CardSkeleton';
+import { CategoryItemCardSkeleton } from '@/components/skeletons/CardSkeleton';
+import CategoryItemCardItem from './CategoryItemCardItem';
 import Tooltip from '@/components/commons/Tooltip';
 
 interface CategoryItem {
     id: number;
     name: string;
-    description: string | null;
+    description?: string | null;
     is_active: boolean;
     created_at?: string;
 }
@@ -66,7 +67,7 @@ export default function CategoryItemIndex() {
     });
     const [params, setParams] = useState<Params>({
         search: '',
-        limit: 20,
+        limit: 10,
         page: 1,
         sort_by: 'created_at',
         sort_direction: 'desc',
@@ -141,9 +142,16 @@ export default function CategoryItemIndex() {
                         onSearchChange={onParamsChange}
                         placeholder="Cari kategori..."
                         actionButton={
-                            <a href={getPrintUrl()} target="_blank" className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" rel="noreferrer">
-                                <FileSpreadsheet className="size-4" />
-                            </a>
+                            <div className="flex items-center gap-1">
+                                <a
+                                    href={getPrintUrl()}
+                                    target="_blank"
+                                    className="p-3 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                                    rel="noreferrer"
+                                >
+                                    <FileSpreadsheet className="size-5" />
+                                </a>
+                            </div>
                         }
                     />
                 ) : undefined
@@ -167,7 +175,9 @@ export default function CategoryItemIndex() {
             />
             <ContentCard
                 title="Kategori Barang"
+                subtitle="Daftar seluruh kategori barang yang tersedia dalam sistem pengelolaan barang habis pakai (BHP)"
                 mobileFullWidth
+                bodyClassName="px-0 pb-24 pt-2 md:p-6"
                 additionalButton={
                     <CheckPermissions permissions={[InventoryPermission.ManageCategory]}>
                         <Button className="hidden w-full md:flex" label="Tambah Kategori" href="/inventory/categories/create" icon={<Plus className="size-4" />} />
@@ -190,12 +200,14 @@ export default function CategoryItemIndex() {
                         searchValue={params.search}
                         dataTable={dataTable}
                         isLoading={isLoading}
-                        SkeletonComponent={DivisionCardSkeleton}
+                        SkeletonComponent={CategoryItemCardSkeleton}
                         sortBy={params.sort_by}
                         sortDirection={params.sort_direction}
                         additionalHeaderElements={
                             <div className="flex gap-2">
-                                <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                                <Tooltip text="Cetak Excel">
+                                    <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                                </Tooltip>
                             </div>
                         }
                         onHeaderClick={(columnName) => {
@@ -206,6 +218,15 @@ export default function CategoryItemIndex() {
                                 sort_direction: newSortDirection,
                             }));
                         }}
+                        cardItem={(item: CategoryItem) => (
+                            <CategoryItemCardItem
+                                item={item}
+                                onDelete={(item) => {
+                                    setSelectedItem(item);
+                                    setOpenConfirm(true);
+                                }}
+                            />
+                        )}
                         columns={[
                             {
                                 name: 'name',
@@ -253,18 +274,20 @@ export default function CategoryItemIndex() {
                                             <div className="flex justify-end gap-1">
                                                 <Tooltip text="Edit">
                                                     <Button
+                                                        variant="ghost"
                                                         href={`/inventory/categories/${item.id}/edit`}
-                                                        className="!bg-transparent !p-1 text-yellow-600 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
+                                                        className="!p-1.5 !text-amber-500 hover:bg-amber-50 dark:!text-amber-400 dark:hover:bg-amber-900/20"
                                                         icon={<Edit className="size-4" />}
                                                     />
                                                 </Tooltip>
                                                 <Tooltip text="Hapus">
                                                     <Button
+                                                        variant="ghost"
                                                         onClick={() => {
                                                             setSelectedItem(item);
                                                             setOpenConfirm(true);
                                                         }}
-                                                        className="!bg-transparent !p-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                                                        className="!p-1.5 !text-red-500 hover:bg-red-50 dark:!text-red-400 dark:hover:bg-red-900/20"
                                                         icon={<Trash2 className="size-4" />}
                                                     />
                                                 </Tooltip>
