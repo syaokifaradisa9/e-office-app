@@ -7,8 +7,6 @@ use App\Models\Division;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Modules\Inventory\Enums\InventoryPermission;
-use Modules\VisitorManagement\Enums\VisitorUserPermission;
-use Modules\Archieve\Enums\ArchieveUserPermission;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -26,15 +24,11 @@ class InventoryModuleSeeder extends Seeder
 
         // 2. Fetch Module Permissions from Enums
         $inventoryPermissions = InventoryPermission::values();
-        $visitorPermissions = VisitorUserPermission::values();
-        $archievePermissions = ArchieveUserPermission::values();
 
         // 3. Merge and Create All Permissions
         $allPermissionNames = array_merge(
             $basePermissions, 
-            $inventoryPermissions, 
-            $visitorPermissions, 
-            $archievePermissions
+            $inventoryPermissions
         );
 
         foreach ($allPermissionNames as $name) {
@@ -44,8 +38,47 @@ class InventoryModuleSeeder extends Seeder
         // 4. Create Superadmin Role
         $superAdminRole = Role::firstOrCreate(['name' => 'Superadmin', 'guard_name' => 'web']);
         
-        // Filter permissions for Superadmin (Core + Inventory only)
-        $superAdminPermissions = array_merge($basePermissions, $inventoryPermissions);
+        // Specific permissions for Superadmin & Pimpinan based on the images
+        $superAdminPermissions = [
+            // Core System
+            'lihat_divisi', 'kelola_divisi', 
+            'lihat_jabatan', 'kelola_jabatan',
+            'lihat_pengguna', 'kelola_pengguna', 
+            'lihat_role', 'kelola_role',
+            
+            // Dashboard
+            InventoryPermission::ViewAllWarehouseDashboard->value,
+            
+            // Kategori
+            InventoryPermission::ViewCategory->value,
+            InventoryPermission::ManageCategory->value,
+            
+            // Barang
+            InventoryPermission::ViewItem->value,
+            InventoryPermission::ManageItem->value,
+            InventoryPermission::IssueItemGudang->value,
+            InventoryPermission::ConvertItemGudang->value,
+            InventoryPermission::MonitorItemTransaction->value,
+            InventoryPermission::MonitorAllItemTransaction->value,
+            
+            // Data Stok
+            InventoryPermission::MonitorAllStock->value,
+            InventoryPermission::ConvertStock->value,
+            InventoryPermission::IssueStock->value,
+            
+            // Permintaan
+            InventoryPermission::ViewAllWarehouseOrder->value,
+            InventoryPermission::ConfirmWarehouseOrder->value,
+            InventoryPermission::HandoverItem->value,
+            
+            // Stok Opname
+            InventoryPermission::ViewAllStockOpname->value,
+            InventoryPermission::CreateStockOpname->value,
+            
+            // Laporan
+            InventoryPermission::ViewAllReport->value,
+        ];
+        
         $superAdminRole->syncPermissions($superAdminPermissions);
 
         // 5. Create Superadmin User
@@ -154,5 +187,8 @@ class InventoryModuleSeeder extends Seeder
             ]
         );
         $pimpinanUser->assignRole($pimpinanRole);
+
+        // 12. Create default User role for generic tests
+        Role::firstOrCreate(['name' => 'User', 'guard_name' => 'web']);
     }
 }

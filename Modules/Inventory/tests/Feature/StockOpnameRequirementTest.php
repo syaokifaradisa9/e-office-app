@@ -109,6 +109,7 @@ it('mengizinkan Tambah Stock Opname Divisi mengakses create dan menyimpan dengan
     $this->actingAs($this->user)->get('/inventory/stock-opname/division/create')->assertOk();
     
     $response = $this->actingAs($this->user)->post('/inventory/stock-opname/division/store', [
+        'division_id' => $this->division->id,
         'opname_date' => now()->format('Y-m-d'),
         'notes' => 'Test Divisi'
     ]);
@@ -125,6 +126,7 @@ it('mengizinkan Tambah Stock Opname Gudang menyimpan dengan division_id null', f
     $this->user->givePermissionTo(InventoryPermission::CreateStockOpname->value);
     
     $response = $this->actingAs($this->user)->post('/inventory/stock-opname/warehouse/store', [
+        'division_id' => 'warehouse',
         'opname_date' => now()->format('Y-m-d'),
         'notes' => 'Test Gudang'
     ]);
@@ -150,7 +152,10 @@ describe('Logika Konkurensi Store (Req 12-16)', function () {
         StockOpname::create(['user_id' => $this->user->id, 'division_id' => null, 'opname_date' => now(), 'status' => StockOpnameStatus::Pending]);
         $this->user->givePermissionTo(InventoryPermission::CreateStockOpname->value);
 
-        $response = $this->actingAs($this->user)->post('/inventory/stock-opname/warehouse/store', ['opname_date' => now()->format('Y-m-d')]);
+        $response = $this->actingAs($this->user)->post('/inventory/stock-opname/warehouse/store', [
+            'division_id' => 'warehouse',
+            'opname_date' => now()->format('Y-m-d')
+        ]);
         $response->assertSessionHas('error', 'Masih ada Stock Opname yang belum selesai.');
     });
 
@@ -158,7 +163,10 @@ describe('Logika Konkurensi Store (Req 12-16)', function () {
         StockOpname::create(['user_id' => $this->user->id, 'division_id' => $this->division->id, 'opname_date' => now(), 'status' => StockOpnameStatus::Proses]);
         $this->user->givePermissionTo(InventoryPermission::CreateStockOpname->value);
 
-        $response = $this->actingAs($this->user)->post('/inventory/stock-opname/division/store', ['opname_date' => now()->format('Y-m-d')]);
+        $response = $this->actingAs($this->user)->post('/inventory/stock-opname/division/store', [
+            'division_id' => $this->division->id,
+            'opname_date' => now()->format('Y-m-d')
+        ]);
         $response->assertSessionHas('error', 'Masih ada Stock Opname yang belum selesai.');
     });
 
@@ -168,7 +176,10 @@ describe('Logika Konkurensi Store (Req 12-16)', function () {
         $userB = User::factory()->create(['division_id' => $this->otherDivision->id]);
         $userB->givePermissionTo(InventoryPermission::CreateStockOpname->value);
 
-        $response = $this->actingAs($userB)->post('/inventory/stock-opname/division/store', ['opname_date' => now()->format('Y-m-d')]);
+        $response = $this->actingAs($userB)->post('/inventory/stock-opname/division/store', [
+            'division_id' => $this->otherDivision->id,
+            'opname_date' => now()->format('Y-m-d')
+        ]);
         $response->assertRedirect();
         $this->assertDatabaseHas('stock_opnames', ['division_id' => $this->otherDivision->id]);
     });

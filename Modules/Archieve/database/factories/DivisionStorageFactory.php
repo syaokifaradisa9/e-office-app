@@ -13,7 +13,7 @@ class DivisionStorageFactory extends Factory
     public function definition(): array
     {
         return [
-            'division_id' => Division::factory(),
+            'division_id' => fn() => Division::inRandomOrder()->first()?->id ?? Division::factory(),
             'max_size' => 1073741824, // 1GB
             'used_size' => 0,
         ];

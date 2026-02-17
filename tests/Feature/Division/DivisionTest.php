@@ -3,13 +3,11 @@
 use App\Models\Division;
 use App\Models\User;
 use App\Enums\DivisionRolePermission;
-use Database\Seeders\PermissionSeeder;
-use Database\Seeders\RoleSeeder;
+use Database\Seeders\InventoryModuleSeeder;
 use Illuminate\Support\Facades\DB;
 
 beforeEach(function () {
-    $this->seed(PermissionSeeder::class);
-    $this->seed(RoleSeeder::class);
+    $this->seed(InventoryModuleSeeder::class);
 });
 
 describe('Division Access Control', function () {

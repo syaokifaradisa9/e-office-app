@@ -15,16 +15,7 @@ class VisitorManagementDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Seed Permissions
-        $permissions = VisitorUserPermission::values();
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate([
-                'name' => $permission,
-                'guard_name' => 'web',
-            ]);
-        }
-
-        // 2. Seed Purpose Categories
+        // 1. Seed Purpose Categories
         $purposes = [
             ['name' => 'Kunjungan Dinas', 'description' => 'Tamu dari instansi pemerintah/swasta untuk urusan kedinasan.'],
             ['name' => 'Pengantaran Barang', 'description' => 'Kurir atau ekspedisi yang mengantar paket/barang.'],

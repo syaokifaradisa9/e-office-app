@@ -63,7 +63,7 @@ class UserFactory extends Factory
     public function withDivision(?Division $division = null): static
     {
         return $this->state(fn (array $attributes) => [
-            'division_id' => $division?->id ?? Division::factory(),
+            'division_id' => $division?->id ?? Division::inRandomOrder()->first()?->id ?? Division::factory(),
         ]);
     }
 

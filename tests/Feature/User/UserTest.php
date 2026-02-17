@@ -4,13 +4,11 @@ use App\Models\Division;
 use App\Models\Position;
 use App\Models\User;
 use App\Enums\UserRolePermission;
-use Database\Seeders\PermissionSeeder;
-use Database\Seeders\RoleSeeder;
+use Database\Seeders\InventoryModuleSeeder;
 use Illuminate\Support\Facades\DB;
 
 beforeEach(function () {
-    $this->seed(PermissionSeeder::class);
-    $this->seed(RoleSeeder::class);
+    $this->seed(InventoryModuleSeeder::class);
 });
 
 describe('User Management Access Control', function () {
@@ -100,7 +98,7 @@ describe('User Datatable Features', function () {
         $response->assertStatus(200);
         $json = $response->json();
         expect($json['data'])->toHaveCount(5);
-        expect($json['total'])->toBe(16); // 15 + 1 logged user
+        expect($json['total'])->toBe(20); // 15 + 1 logged user + 4 seeded
         expect($json['current_page'])->toBe(2);
     });
 

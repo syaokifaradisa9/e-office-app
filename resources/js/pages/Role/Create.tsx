@@ -167,8 +167,6 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                 return <Database className="size-5" />;
             case 'Sistem Manajemen Gudang':
                 return <Warehouse className="size-5" />;
-            case 'Sistem Arsip Dokumen':
-                return <Shield className="size-5 text-indigo-500" />;
             default:
                 return <Shield className="size-5" />;
         }
@@ -188,8 +186,6 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                 return 'from-blue-500 to-blue-600';
             case 'Sistem Manajemen Gudang':
                 return 'from-emerald-500 to-emerald-600';
-            case 'Sistem Arsip Dokumen':
-                return 'from-indigo-500 to-indigo-600';
             default:
                 return 'from-slate-500 to-slate-600';
         }
@@ -376,8 +372,6 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                                     const displayLabels: Record<string, string> = {
                                         'Data Master': 'Data Master',
                                         'Sistem Manajemen Gudang': 'Gudang',
-                                        'Sistem Arsip Dokumen': 'Arsip',
-                                        'Pengunjung': 'Pengunjung',
                                     };
                                     const label = displayLabels[module] || module;
                                     const isActive = activeTab === module;

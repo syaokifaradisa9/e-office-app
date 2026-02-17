@@ -68,6 +68,7 @@ describe('CRUD Operations', function () {
     it('stores warehouse opname with null division_id and Pending status', function () {
         // 1. Aksi inisiasi opname gudang (tanpa divisi)
         $response = $this->actingAs($this->testUser)->post('/inventory/stock-opname/warehouse/store', [
+            'division_id' => 'warehouse',
             'opname_date' => now()->format('Y-m-d'),
             'notes' => 'Test opname gudang',
         ]);

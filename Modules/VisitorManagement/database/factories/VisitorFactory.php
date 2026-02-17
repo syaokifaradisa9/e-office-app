@@ -19,7 +19,7 @@ class VisitorFactory extends Factory
             'phone_number' => $this->faker->phoneNumber(),
             'organization' => $this->faker->company(),
             'photo_url' => null,
-            'division_id' => Division::factory(),
+            'division_id' => fn() => Division::inRandomOrder()->first()?->id ?? Division::factory(),
             'purpose_id' => VisitorPurpose::factory(),
             'purpose_detail' => $this->faker->randomElement([
                 'Koordinasi terkait proyek sistem informasi e-office.',

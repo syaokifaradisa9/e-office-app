@@ -33,7 +33,7 @@ class StockOpnameFactory extends Factory
     public function division(?int $divisionId = null): static
     {
         return $this->state(fn (array $attributes) => [
-            'division_id' => $divisionId ?? Division::factory(),
+            'division_id' => $divisionId ?? Division::inRandomOrder()->first()?->id ?? Division::factory(),
         ]);
     }
 

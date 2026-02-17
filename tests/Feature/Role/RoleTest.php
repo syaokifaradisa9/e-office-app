@@ -2,13 +2,11 @@
 
 use App\Models\User;
 use App\Enums\RoleRolePermission;
-use Database\Seeders\PermissionSeeder;
-use Database\Seeders\RoleSeeder;
+use Database\Seeders\InventoryModuleSeeder;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
-    $this->seed(PermissionSeeder::class);
-    $this->seed(RoleSeeder::class);
+    $this->seed(InventoryModuleSeeder::class);
 });
 
 describe('Role & Permission Access Control', function () {

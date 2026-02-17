@@ -7,6 +7,8 @@ import toast, { Toaster } from 'react-hot-toast';
 import Button from '../../components/buttons/Button';
 import ThemeToggle from '../../components/commons/ThemeToggle';
 import FormInput from '../../components/forms/FormInput';
+import FormSelect from '../../components/forms/FormSelect';
+import { UserCircle } from 'lucide-react';
 
 
 interface FlashMessage {
@@ -37,10 +39,28 @@ const heroSlides = [
 ];
 
 export default function Login() {
-    const { setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
     });
+
+    const loginOptions = [
+        { label: 'Superadmin', value: 'superadmin@gmail.com', password: 'password' },
+        { label: 'Admin Gudang Utama', value: 'admin.gudang@example.com', password: 'password' },
+        { label: 'Admin Gudang IT (Divisi)', value: 'admin.it@example.com', password: 'password' },
+        { label: 'Pimpinan', value: 'pimpinan@example.com', password: 'password' },
+    ];
+
+    const handleLoginAsChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const selected = loginOptions.find(opt => opt.value === e.target.value);
+        if (selected) {
+            setData({
+                ...data,
+                email: selected.value,
+                password: selected.password
+            });
+        }
+    };
 
     const { flash } = usePage<LoginPageProps>().props;
     const [activeSlide, setActiveSlide] = useState(0);
@@ -202,6 +222,7 @@ export default function Login() {
                             autoComplete="username"
                             onChange={(e) => setData('email', e.target.value)}
                             error={errors?.email}
+                            value={data.email}
                         />
 
                         <FormInput
@@ -212,6 +233,16 @@ export default function Login() {
                             autoComplete="current-password"
                             onChange={(e) => setData('password', e.target.value)}
                             error={errors?.password}
+                            value={data.password}
+                        />
+
+                        <FormSelect
+                            name="login_as"
+                            label="Login Sebagai (Cepat)"
+                            placeholder="Pilih Role untuk Auto-fill"
+                            options={loginOptions}
+                            onChange={handleLoginAsChange}
+                            icon={<UserCircle className="size-4" />}
                         />
 
                         <div className="pt-2"></div>
