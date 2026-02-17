@@ -68,7 +68,7 @@ class StockOpnameSeeder extends Seeder
         foreach ($divisions as $division) {
             // 1. Create 1 Pending for current month
             $opnamePending = StockOpname::create([
-                'user_id' => $users->where('division_id', $division->id)->random()->id ?? $users->random()->id,
+                'user_id' => ($users->where('division_id', $division->id)->isEmpty() ? $users->random()->id : $users->where('division_id', $division->id)->random()->id),
                 'division_id' => $division->id,
                 'opname_date' => now(),
                 'notes' => 'Opname Divisi ' . $division->name . ' - Pending Bulan Ini',
@@ -81,7 +81,7 @@ class StockOpnameSeeder extends Seeder
             for ($i = 1; $i <= 4; $i++) {
                 $date = now()->subMonths($i)->startOfMonth()->addDays(fake()->numberBetween(0, 25));
                 $opnameFinish = StockOpname::create([
-                    'user_id' => $users->where('division_id', $division->id)->random()->id ?? $users->random()->id,
+                    'user_id' => ($users->where('division_id', $division->id)->isEmpty() ? $users->random()->id : $users->where('division_id', $division->id)->random()->id),
                     'division_id' => $division->id,
                     'opname_date' => $date,
                     'notes' => 'Opname Divisi ' . $division->name . ' - Finish (Bulan T-' . $i . ')',

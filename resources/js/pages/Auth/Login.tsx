@@ -89,7 +89,7 @@ export default function Login() {
 
     return (
         <div className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-[#E8EDF2] p-4 dark:bg-slate-900 sm:p-6 lg:p-8">
-            <Head title="Login | e-Office" />
+            <Head title="Login" />
             <Toaster position="bottom-right" />
 
             {/* Abstract Animated Background */}

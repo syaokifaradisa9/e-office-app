@@ -91,9 +91,7 @@ export default function RootLayout({ title, children, noPadding = false, forceCo
             <div className="fixed inset-0 bg-[#F5FAFA] dark:bg-slate-900" aria-hidden="true" />
             <div className="relative flex min-h-screen flex-col">
                 <Toaster position="bottom-right" />
-                <Head>
-                    <title>{title ?? ''}</title>
-                </Head>
+                <Head title={title} />
 
                 <TopBar
                     title={title}

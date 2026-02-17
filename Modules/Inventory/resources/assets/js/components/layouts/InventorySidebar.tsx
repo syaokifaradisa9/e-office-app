@@ -38,13 +38,8 @@ export default function InventorySidebar() {
     const showTransaksi = permissions?.includes(InventoryPermission.MonitorItemTransaction) ||
         permissions?.includes(InventoryPermission.MonitorAllItemTransaction);
 
-    const showStockOpnameDivisi = permissions?.includes(InventoryPermission.ViewDivisionStockOpname) ||
-        permissions?.includes(InventoryPermission.CreateStockOpname) ||
-        permissions?.includes(InventoryPermission.ProcessStockOpname);
-
-    const showStockOpnameGudang = permissions?.includes(InventoryPermission.ViewWarehouseStockOpname) ||
-        permissions?.includes(InventoryPermission.CreateStockOpname) ||
-        permissions?.includes(InventoryPermission.ProcessStockOpname);
+    const showStockOpnameDivisi = permissions?.includes(InventoryPermission.ViewDivisionStockOpname);
+    const showStockOpnameGudang = permissions?.includes(InventoryPermission.ViewWarehouseStockOpname);
 
     const showStockOpnameAll = permissions?.includes(InventoryPermission.ViewAllStockOpname);
 
