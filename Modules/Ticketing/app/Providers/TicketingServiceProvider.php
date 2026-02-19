@@ -2,11 +2,13 @@
 
 namespace Modules\Ticketing\Providers;
 
+use RecursiveIteratorIterator;
+use RecursiveDirectoryIterator;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Nwidart\Modules\Traits\PathNamespace;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
+use Modules\Ticketing\Repositories\AssetModel\AssetModelRepository;
+use Modules\Ticketing\Repositories\AssetModel\EloquentAssetModelRepository;
 
 class TicketingServiceProvider extends ServiceProvider
 {
@@ -36,6 +38,11 @@ class TicketingServiceProvider extends ServiceProvider
     {
         $this->app->register(EventServiceProvider::class);
         $this->app->register(RouteServiceProvider::class);
+
+        $this->app->singleton(
+            AssetModelRepository::class,
+            EloquentAssetModelRepository::class
+        );
     }
 
     /**

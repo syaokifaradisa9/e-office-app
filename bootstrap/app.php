@@ -22,8 +22,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
-            'inventory_item_permission' => \Modules\Inventory\Http\Middleware\InventoryItemRoutePermissionCheck::class,
-            'check_active_opname' => \Modules\Inventory\Http\Middleware\CheckActiveStockOpname::class,
             'division_permission' => \App\Http\Middleware\DivisionPermissionCheck::class,
             'position_permission' => \App\Http\Middleware\PositionPermissionCheck::class,
             'user_permission' => \App\Http\Middleware\UserPermissionCheck::class,
