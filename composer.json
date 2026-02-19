@@ -41,7 +41,10 @@
             "Modules\\Archieve\\": "Modules/Archieve/app/",
             "Modules\\VisitorManagement\\Database\\Seeders\\": "Modules/VisitorManagement/database/seeders/",
             "Modules\\VisitorManagement\\Database\\Factories\\": "Modules/VisitorManagement/database/factories/",
-            "Modules\\VisitorManagement\\": "Modules/VisitorManagement/app/"
+            "Modules\\VisitorManagement\\": "Modules/VisitorManagement/app/",
+            "Modules\\Ticketing\\Database\\Seeders\\": "Modules/Ticketing/database/seeders/",
+            "Modules\\Ticketing\\Database\\Factories\\": "Modules/Ticketing/database/factories/",
+            "Modules\\Ticketing\\": "Modules/Ticketing/app/"
         }
     },
     "autoload-dev": {

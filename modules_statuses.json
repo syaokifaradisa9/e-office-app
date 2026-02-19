@@ -1,5 +1,6 @@
 {
     "Inventory": true,
     "Archieve": true,
-    "VisitorManagement": true
+    "VisitorManagement": true,
+    "Ticketing": true
 }

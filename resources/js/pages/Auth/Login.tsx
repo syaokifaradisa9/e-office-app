@@ -7,8 +7,6 @@ import toast, { Toaster } from 'react-hot-toast';
 import Button from '../../components/buttons/Button';
 import ThemeToggle from '../../components/commons/ThemeToggle';
 import FormInput from '../../components/forms/FormInput';
-import FormSelect from '../../components/forms/FormSelect';
-import { UserCircle } from 'lucide-react';
 
 
 interface FlashMessage {
@@ -44,24 +42,6 @@ export default function Login() {
         password: '',
     });
 
-    const loginOptions = [
-        { label: 'Superadmin', value: 'superadmin@gmail.com', password: 'password' },
-        { label: 'Pimpinan', value: 'pimpinan@gmail.com', password: 'password' },
-        { label: 'Pegawai', value: 'pegawai@gmail.com', password: 'password' },
-        { label: 'Admin Arsip', value: 'adminarsip@gmail.com', password: 'password' },
-        { label: 'Admin Arsip Divisi', value: 'admindivisi@gmail.com', password: 'password' },
-    ];
-
-    const handleLoginAsChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const selected = loginOptions.find(opt => opt.value === e.target.value);
-        if (selected) {
-            setData({
-                ...data,
-                email: selected.value,
-                password: selected.password
-            });
-        }
-    };
 
     const { flash } = usePage<LoginPageProps>().props;
     const [activeSlide, setActiveSlide] = useState(0);
@@ -237,14 +217,6 @@ export default function Login() {
                             value={data.password}
                         />
 
-                        <FormSelect
-                            name="login_as"
-                            label="Login Sebagai (Cepat)"
-                            placeholder="Pilih Role untuk Auto-fill"
-                            options={loginOptions}
-                            onChange={handleLoginAsChange}
-                            icon={<UserCircle className="size-4" />}
-                        />
 
                         <div className="pt-2"></div>
 
