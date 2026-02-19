@@ -25,5 +25,9 @@ class AppPermissionSeeder extends Seeder
                 'guard_name' => 'web',
             ]);
         }
+
+        // Sync with Superadmin Role
+        $superAdminRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Superadmin', 'guard_name' => 'web']);
+        $superAdminRole->givePermissionTo($permissions);
     }
 }

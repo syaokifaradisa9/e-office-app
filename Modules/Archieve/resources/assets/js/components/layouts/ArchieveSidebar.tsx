@@ -6,8 +6,14 @@ import { ArchievePermission } from '@/enums/ArchievePermission';
 import CheckPermissions from '@/components/utils/CheckPermissions';
 
 export default function ArchieveSidebar() {
-    const { url } = usePage();
+    const { url, permissions } = usePage<{ url: string, permissions: string[] }>().props;
     const isCollapsed = useSidebarCollapse();
+
+    const hasAnyArchievePermission = permissions?.some(p => 
+        Object.values(ArchievePermission).includes(p as any)
+    );
+
+    if (!hasAnyArchievePermission) return null;
 
     return (
         <div className="mb-6 space-y-4">

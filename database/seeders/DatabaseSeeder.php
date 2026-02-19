@@ -20,11 +20,8 @@ class DatabaseSeeder extends Seeder
             DivisionSeeder::class,
             PositionSeeder::class,
             AppPermissionSeeder::class,
-            \Modules\Archieve\Database\Seeders\ArchievePermissionSeeder::class,
             UserSeeder::class,
-            \Modules\Archieve\Database\Seeders\ArchieveCategorySeeder::class,
-            \Modules\Archieve\Database\Seeders\DocumentClassificationSeeder::class,
-            \Modules\Archieve\Database\Seeders\DocumentSeeder::class,
+            VisitorManagementDatabaseSeeder::class,
         ]);
     }
 }

@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import { useState, useMemo, useEffect } from 'react';
-import { Save, Shield, Search, CheckSquare, Square, ChevronDown, ChevronRight, Database, FileArchive, Check, X, Filter } from 'lucide-react';
+import { Save, Shield, Search, CheckSquare, Square, ChevronDown, ChevronRight, Database, FileArchive, Check, X, Filter, Users } from 'lucide-react';
 
 import Button from '../../components/buttons/Button';
 import FormInput from '../../components/forms/FormInput';
@@ -167,6 +167,8 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                 return <Database className="size-5" />;
             case 'Arsiparis':
                 return <FileArchive className="size-5" />;
+            case 'Kunjungan':
+                return <Users className="size-5" />;
             default:
                 return <Shield className="size-5" />;
         }
@@ -186,6 +188,8 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                 return 'from-blue-500 to-blue-600';
             case 'Arsiparis':
                 return 'from-amber-500 to-amber-600';
+            case 'Kunjungan':
+                return 'from-emerald-500 to-emerald-600';
             default:
                 return 'from-slate-500 to-slate-600';
         }
@@ -372,6 +376,7 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                                     const displayLabels: Record<string, string> = {
                                         'Data Master': 'Data Master',
                                         'Arsiparis': 'Arsiparis',
+                                        'Kunjungan': 'Kunjungan',
                                     };
                                     const label = displayLabels[module] || module;
                                     const isActive = activeTab === module;

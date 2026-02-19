@@ -92,6 +92,38 @@ class RoleService
                 'label' => 'Pencarian Dokumen',
                 'keywords' => ['pencarian_dokumen'],
             ],
+
+            // Visitor Management (Kunjungan)
+            'visitor_dashboard' => [
+                'module' => 'Kunjungan',
+                'label' => 'Dashboard Pengunjung',
+                'keywords' => ['dashboard_pengunjung'],
+            ],
+            'visitor_purpose' => [
+                'module' => 'Kunjungan',
+                'label' => 'Master Keperluan Kunjungan',
+                'keywords' => ['master_manajemen_pengunjung'],
+            ],
+            'visitor_question' => [
+                'module' => 'Kunjungan',
+                'label' => 'Master Pertanyaan Feedback',
+                'keywords' => ['pertanyaan_feedback'],
+            ],
+            'visitor_data' => [
+                'module' => 'Kunjungan',
+                'label' => 'Data Pengunjung',
+                'keywords' => ['data_pengunjung', 'konfirmasi_kunjungan', 'buat_undangan_tamu'],
+            ],
+            'visitor_feedback' => [
+                'module' => 'Kunjungan',
+                'label' => 'Kritik & Saran',
+                'keywords' => ['kritik_saran_pengunjung'],
+            ],
+            'visitor_report' => [
+                'module' => 'Kunjungan',
+                'label' => 'Laporan Pengunjung',
+                'keywords' => ['laporan_pengunjung'],
+            ],
         ];
 
         foreach ($permissions as $permission) {
@@ -166,7 +198,7 @@ class RoleService
 
         // Sort groups by module then by custom priority or label
         uasort($grouped, function ($a, $b) {
-            $moduleOrder = ['Data Master' => 1, 'Arsiparis' => 2, 'Lainnya' => 99];
+            $moduleOrder = ['Data Master' => 1, 'Arsiparis' => 2, 'Kunjungan' => 3, 'Lainnya' => 99];
             $aModuleOrder = $moduleOrder[$a['module']] ?? 50;
             $bModuleOrder = $moduleOrder[$b['module']] ?? 50;
 

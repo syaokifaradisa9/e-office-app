@@ -41,10 +41,20 @@ class VisitorManagementDatabaseSeeder extends Seeder
             VisitorFeedbackQuestion::firstOrCreate(['question' => $question]);
         }
 
-        // 4. Seed Mock Visitors
+        // 4. Seed Permissions
+        $permissions = VisitorUserPermission::values();
+        foreach ($permissions as $name) {
+            Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
+        }
+
+        // Sync with Superadmin Role
+        $superAdminRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Superadmin', 'guard_name' => 'web']);
+        $superAdminRole->givePermissionTo($permissions);
+
+        // 5. Seed Mock Visitors
         $this->call(VisitorSeeder::class);
 
-        // 5. Seed Feedback & Ratings
+        // 6. Seed Feedback & Ratings
         $this->call(VisitorFeedbackSeeder::class);
     }
 }
