@@ -6,6 +6,7 @@ use App\Models\Division;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Ticketing\Enums\AssetModelType;
 
 class AssetModel extends Model
@@ -28,4 +29,10 @@ class AssetModel extends Model
     {
         return $this->belongsTo(Division::class);
     }
+
+    public function checklists(): HasMany
+    {
+        return $this->hasMany(Checklist::class);
+    }
 }
+

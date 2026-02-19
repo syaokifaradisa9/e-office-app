@@ -3,7 +3,7 @@ import RootLayout from '@/components/layouts/RootLayout';
 import DataTable from '@/components/tables/Datatable';
 import { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
-import { Box, Edit, Plus, Trash2, FileSpreadsheet } from 'lucide-react';
+import { Box, Edit, Plus, Trash2, FileSpreadsheet, ListChecks } from 'lucide-react';
 import { TicketingPermission } from '../../types/permissions';
 import { router } from '@inertiajs/react';
 import ConfirmationAlert from '@/components/alerts/ConfirmationAlert';
@@ -20,7 +20,6 @@ interface AssetModel {
     name: string;
     type: string;
     division: string | null;
-    created_at: string;
 }
 
 interface PaginationData {
@@ -131,6 +130,7 @@ export default function AssetModelIndex() {
     const pageProps = usePage<PageProps>().props;
     const canManage = pageProps.permissions?.includes(TicketingPermission.ManageAssetModel);
     const canDelete = pageProps.permissions?.includes(TicketingPermission.DeleteAssetModel);
+    const canViewChecklist = pageProps.permissions?.includes(TicketingPermission.ViewChecklist) || pageProps.permissions?.includes(TicketingPermission.ManageChecklist);
 
     const viewPermissions = [
         TicketingPermission.ViewAssetModelDivisi,
@@ -210,6 +210,9 @@ export default function AssetModelIndex() {
                             cardItem={(item: AssetModel) => (
                                 <AssetModelCardItem
                                     item={item}
+                                    canManage={canManage}
+                                    canDelete={canDelete}
+                                    canViewChecklist={canViewChecklist}
                                     onDelete={(item) => {
                                         setSelectedItem(item);
                                         setOpenConfirm(true);
@@ -262,17 +265,23 @@ export default function AssetModelIndex() {
                                     render: (item: AssetModel) => <span className="text-gray-500 dark:text-slate-400">{item.division || '-'}</span>,
                                     footer: <FormSearch name="division" onChange={onParamsChange} placeholder="Filter Divisi" />,
                                 },
-                                {
-                                    name: 'created_at',
-                                    header: 'Dibuat',
-                                    render: (item: AssetModel) => <span className="text-slate-500 dark:text-slate-500">{item.created_at}</span>,
-                                },
-                                ...((canManage || canDelete)
+
+                                ...((canManage || canDelete || canViewChecklist)
                                     ? [
                                         {
                                             header: 'Aksi',
                                             render: (item: AssetModel) => (
                                                 <div className="flex justify-end gap-1">
+                                                    {canViewChecklist && (
+                                                        <Tooltip text="Checklist">
+                                                            <Button
+                                                                variant="ghost"
+                                                                href={`/ticketing/asset-models/${item.id}/checklists`}
+                                                                className="!p-1.5 !text-primary hover:bg-primary/10 dark:!text-primary dark:hover:bg-primary/10"
+                                                                icon={<ListChecks className="size-4" />}
+                                                            />
+                                                        </Tooltip>
+                                                    )}
                                                     {canManage && (
                                                         <Tooltip text="Edit">
                                                             <Button

@@ -23,9 +23,8 @@ class AssetModelDatatableService
             ->through(fn ($item) => [
                 'id' => $item->id,
                 'name' => $item->name,
-                'type' => $item->type instanceof UnitEnum ? $item->type->value : $item->type,
+                'type' => $item->type?->value,
                 'division' => $item->division?->name,
-                'created_at' => $item->created_at->format('Y-m-d H:i:s'),
             ]);
 
         return [
@@ -55,7 +54,6 @@ class AssetModelDatatableService
                 'Nama Asset Model',
                 'Tipe',
                 'Divisi',
-                'Tanggal Dibuat',
             ]));
 
             // Data
@@ -63,9 +61,8 @@ class AssetModelDatatableService
                 $writer->addRow(Row::fromValues([
                     $index + 1,
                     $item->name,
-                    $item->type instanceof \UnitEnum ? $item->type->value : $item->type,
+                    $item->type?->value ?? '-',
                     $item->division?->name ?? '-',
-                    $item->created_at->format('Y-m-d H:i:s'),
                 ]));
             }
 
@@ -117,7 +114,7 @@ class AssetModelDatatableService
         $sortBy = $request->input('sort_by', 'name');
         $sortDirection = $request->input('sort_direction', 'asc');
 
-        if (in_array($sortBy, ['name', 'type', 'created_at'])) {
+        if (in_array($sortBy, ['name', 'type'])) {
             $query->orderBy($sortBy, $sortDirection);
         } else {
             $query->orderBy('name', 'asc');

@@ -1,3 +1,4 @@
+// Trigger Vite HMR update
 import '../css/app.css';
 
 import { createInertiaApp } from '@inertiajs/react';
@@ -57,6 +58,8 @@ pageKeys.forEach((key) => {
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     resolve: (name) => {
+        // Log to browser console to help debug page resolution
+        console.log('Resolving Inertia Page:', name);
         const normalizedName = name.toLowerCase();
 
         // 1. Search in local pages map

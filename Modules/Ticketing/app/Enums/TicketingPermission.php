@@ -9,6 +9,9 @@ enum TicketingPermission: string
     case ManageAssetModel = 'Kelola Data Asset Model';
     case DeleteAssetModel = 'Hapus Data Asset Model';
 
+    case ViewChecklist = 'Lihat Data Checklist';
+    case ManageChecklist = 'Kelola Data Checklist';
+
     public static function values(): array
     {
         return array_map(fn ($case) => $case->value, self::cases());

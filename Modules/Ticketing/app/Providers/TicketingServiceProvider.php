@@ -9,6 +9,8 @@ use Illuminate\Support\ServiceProvider;
 use Nwidart\Modules\Traits\PathNamespace;
 use Modules\Ticketing\Repositories\AssetModel\AssetModelRepository;
 use Modules\Ticketing\Repositories\AssetModel\EloquentAssetModelRepository;
+use Modules\Ticketing\Repositories\Checklist\ChecklistRepository;
+use Modules\Ticketing\Repositories\Checklist\EloquentChecklistRepository;
 
 class TicketingServiceProvider extends ServiceProvider
 {
@@ -42,6 +44,11 @@ class TicketingServiceProvider extends ServiceProvider
         $this->app->singleton(
             AssetModelRepository::class,
             EloquentAssetModelRepository::class
+        );
+
+        $this->app->singleton(
+            ChecklistRepository::class,
+            EloquentChecklistRepository::class
         );
     }
 
