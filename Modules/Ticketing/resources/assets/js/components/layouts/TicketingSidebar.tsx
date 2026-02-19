@@ -20,8 +20,21 @@ export default function TicketingSidebar() {
                     <div className="py-2">
                         <h3 className={`text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Ticketing System</h3>
                     </div>
-                    <CheckPermissions permissions={assetPermissions}>
+                    <CheckPermissions permissions={[
+                        TicketingPermission.ViewAssetModelDivisi,
+                        TicketingPermission.ViewAllAssetModel,
+                        TicketingPermission.ManageAssetModel,
+                    ]}>
                         <SidebarLink name="Asset Model" href="/ticketing/asset-models" icon={Box} />
+                    </CheckPermissions>
+
+                    <CheckPermissions permissions={[
+                        TicketingPermission.ViewPersonalAsset,
+                        TicketingPermission.ViewDivisionAsset,
+                        TicketingPermission.ViewAllAsset,
+                        TicketingPermission.ManageAsset,
+                    ]}>
+                        <SidebarLink name="Asset" href="/ticketing/assets" icon={Box} />
                     </CheckPermissions>
                 </div>
             </div>

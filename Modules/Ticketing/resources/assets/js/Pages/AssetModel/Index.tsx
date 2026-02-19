@@ -20,6 +20,7 @@ interface AssetModel {
     name: string;
     type: string;
     division: string | null;
+    checklists_count?: number;
 }
 
 interface PaginationData {
@@ -264,6 +265,15 @@ export default function AssetModelIndex() {
                                     header: 'Divisi',
                                     render: (item: AssetModel) => <span className="text-gray-500 dark:text-slate-400">{item.division || '-'}</span>,
                                     footer: <FormSearch name="division" onChange={onParamsChange} placeholder="Filter Divisi" />,
+                                },
+                                {
+                                    header: 'Jumlah Checklist',
+                                    render: (item: AssetModel) => (
+                                        <div className="flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-200">
+                                            <ListChecks className="size-4 text-emerald-500" />
+                                            <span>{item.checklists_count || 0}</span>
+                                        </div>
+                                    ),
                                 },
 
                                 ...((canManage || canDelete || canViewChecklist)

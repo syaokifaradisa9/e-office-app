@@ -11,6 +11,8 @@ use Modules\Ticketing\Repositories\AssetModel\AssetModelRepository;
 use Modules\Ticketing\Repositories\AssetModel\EloquentAssetModelRepository;
 use Modules\Ticketing\Repositories\Checklist\ChecklistRepository;
 use Modules\Ticketing\Repositories\Checklist\EloquentChecklistRepository;
+use Modules\Ticketing\Repositories\AssetItem\AssetItemRepository;
+use Modules\Ticketing\Repositories\AssetItem\EloquentAssetItemRepository;
 
 class TicketingServiceProvider extends ServiceProvider
 {
@@ -49,6 +51,11 @@ class TicketingServiceProvider extends ServiceProvider
         $this->app->singleton(
             ChecklistRepository::class,
             EloquentChecklistRepository::class
+        );
+
+        $this->app->singleton(
+            AssetItemRepository::class,
+            EloquentAssetItemRepository::class
         );
     }
 

@@ -1,5 +1,6 @@
 import { Briefcase, Edit, Trash2, Users } from 'lucide-react';
-import { Link, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
+import Button from '@/components/buttons/Button';
 
 interface Position {
     id: number;
@@ -55,20 +56,20 @@ export default function PositionCardItem({ item, onDelete }: PositionCardItemPro
                     {/* Actions */}
                     {hasManagePermission && (
                         <div className="mt-3 grid grid-cols-2 gap-2">
-                            <Link
+                            <Button
                                 href={`/position/${item.id}/edit`}
-                                className="flex items-center justify-center gap-1.5 rounded-lg border border-amber-200 px-4 py-2 text-sm font-medium text-amber-600 transition-colors hover:bg-amber-50 active:bg-amber-100 dark:border-amber-800/50 dark:text-amber-400 dark:hover:bg-amber-900/20"
-                            >
-                                <Edit className="size-4" />
-                                Edit
-                            </Link>
-                            <button
+                                variant="outline"
+                                className="!py-2 !bg-transparent !text-amber-600 !border-amber-200 hover:!bg-amber-50 dark:!text-amber-400 dark:!border-amber-800/50 dark:hover:!bg-amber-900/20"
+                                icon={<Edit className="size-4" />}
+                                label="Edit"
+                            />
+                            <Button
+                                variant="outline"
+                                className="!py-2 !bg-transparent !text-red-500 !border-red-200 hover:!bg-red-50 dark:!text-red-400 dark:!border-red-800/50 dark:hover:!bg-red-900/20"
+                                icon={<Trash2 className="size-4" />}
+                                label="Hapus"
                                 onClick={() => onDelete(item)}
-                                className="flex items-center justify-center gap-1.5 rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-red-50 active:bg-red-100 dark:border-red-800/50 dark:text-red-400 dark:hover:bg-red-900/20"
-                            >
-                                <Trash2 className="size-4" />
-                                Hapus
-                            </button>
+                            />
                         </div>
                     )}
                 </div>

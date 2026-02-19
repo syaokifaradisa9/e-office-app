@@ -142,6 +142,11 @@ class RoleService
                 'label' => 'Checklist',
                 'keywords' => ['Checklist'],
             ],
+            'ticketing_asset_item' => [
+                'module' => 'Ticketing',
+                'label' => 'Asset',
+                'keywords' => ['Asset'],
+            ],
 
             // Data Master (Generic - Checked last)
             'divisi' => [

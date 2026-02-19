@@ -12,6 +12,12 @@ enum TicketingPermission: string
     case ViewChecklist = 'Lihat Data Checklist';
     case ManageChecklist = 'Kelola Data Checklist';
 
+    case ViewPersonalAsset = 'Lihat Data Asset Pribadi';
+    case ViewDivisionAsset = 'Lihat Data Asset Divisi';
+    case ViewAllAsset = 'Lihat Data Asset Keseluruhan';
+    case ManageAsset = 'Kelola Data Asset';
+    case DeleteAsset = 'Hapus Data Asset';
+
     public static function values(): array
     {
         return array_map(fn ($case) => $case->value, self::cases());

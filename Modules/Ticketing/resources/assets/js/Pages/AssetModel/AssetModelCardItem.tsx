@@ -6,6 +6,7 @@ interface AssetModel {
     name: string;
     type: string; // Returns 'Physic' or 'Digital' from ->value
     division: string | null;
+    checklists_count?: number;
 }
 
 interface Props {
@@ -37,6 +38,10 @@ export default function AssetModelCardItem({ item, canManage, canDelete, canView
                                 }`}>
                                 {item.type === 'Physic' ? 'Fisik' : 'Digital'}
                             </span>
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400">
+                                <ListChecks className="size-3" />
+                                {item.checklists_count || 0} CHECKLIST
+                            </span>
                         </div>
                     </div>
 
@@ -55,7 +60,7 @@ export default function AssetModelCardItem({ item, canManage, canDelete, canView
                             <Button
                                 href={`/ticketing/asset-models/${item.id}/checklists`}
                                 variant="outline"
-                                className="w-full !py-2.5 !text-primary !border-primary/30 hover:!bg-primary/5 dark:!border-primary/20 dark:hover:!bg-primary/10"
+                                className="w-full !py-2.5 !bg-transparent !text-primary !border-primary/30 hover:!bg-primary/5 dark:!border-primary/20 dark:hover:!bg-primary/10"
                                 icon={<ListChecks className="size-4" />}
                                 label="Kelola Checklist"
                             />
@@ -68,7 +73,7 @@ export default function AssetModelCardItem({ item, canManage, canDelete, canView
                                     <Button
                                         href={`/ticketing/asset-models/${item.id}/edit`}
                                         variant="outline"
-                                        className="!py-2 !text-amber-600 !border-amber-200 hover:!bg-amber-50 dark:!text-amber-400 dark:!border-amber-800/50 dark:hover:!bg-amber-900/20"
+                                        className="!py-2 !bg-transparent !text-amber-600 !border-amber-200 hover:!bg-amber-50 dark:!text-amber-400 dark:!border-amber-800/50 dark:hover:!bg-amber-900/20"
                                         icon={<Edit className="size-4" />}
                                         label="Edit"
                                     />
@@ -76,7 +81,7 @@ export default function AssetModelCardItem({ item, canManage, canDelete, canView
                                 {canDelete ? (
                                     <Button
                                         variant="outline"
-                                        className="!py-2 !text-red-500 !border-red-200 hover:!bg-red-50 dark:!text-red-400 dark:!border-red-800/50 dark:hover:!bg-red-900/20"
+                                        className="!py-2 !bg-transparent !text-red-500 !border-red-200 hover:!bg-red-50 dark:!text-red-400 dark:!border-red-800/50 dark:hover:!bg-red-900/20"
                                         icon={<Trash2 className="size-4" />}
                                         label="Hapus"
                                         onClick={() => onDelete(item)}

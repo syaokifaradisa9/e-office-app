@@ -11,6 +11,9 @@ class TicketingDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
+        $this->call([
+            TicketingPermissionSeeder::class,
+            AssetModelSeeder::class,
+        ]);
     }
 }

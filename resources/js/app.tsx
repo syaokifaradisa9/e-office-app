@@ -80,6 +80,20 @@ createInertiaApp({
             return resolvePageComponent(foundModule, pages);
         }
 
+        // Manual mapping for AssetItem pages
+        if (normalizedName === 'ticketing/assetitem/index') {
+            const manualKey = '../../Modules/Ticketing/resources/assets/js/Pages/AssetItem/Index.tsx';
+            if (pages[manualKey]) return resolvePageComponent(manualKey, pages);
+        }
+        if (normalizedName === 'ticketing/assetitem/create') {
+            const manualKey = '../../Modules/Ticketing/resources/assets/js/Pages/AssetItem/Create.tsx';
+            if (pages[manualKey]) return resolvePageComponent(manualKey, pages);
+        }
+        if (normalizedName === 'ticketing/assetitem/edit') {
+            const manualKey = '../../Modules/Ticketing/resources/assets/js/Pages/AssetItem/Edit.tsx';
+            if (pages[manualKey]) return resolvePageComponent(manualKey, pages);
+        }
+
         // 3. Fallback for direct matches or complex cases
         const directMatch = pageMap.get(normalizePath(`./pages/${name}.tsx`)) ||
             pageMap.get(normalizePath(`./pages/${name}.jsx`));

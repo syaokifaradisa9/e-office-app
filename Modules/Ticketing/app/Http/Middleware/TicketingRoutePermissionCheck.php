@@ -66,6 +66,26 @@ class TicketingRoutePermissionCheck
             str_contains($routeName, 'ticketing.asset-models.checklists.delete') =>
                 $user->can(TicketingPermission::ManageChecklist),
 
+            // Asset Management - View
+            str_contains($routeName, 'ticketing.assets.index'),
+            str_contains($routeName, 'ticketing.assets.datatable'),
+            str_contains($routeName, 'ticketing.assets.print-excel') =>
+                $user->can(TicketingPermission::ViewPersonalAsset) ||
+                $user->can(TicketingPermission::ViewDivisionAsset) ||
+                $user->can(TicketingPermission::ViewAllAsset) ||
+                $user->can(TicketingPermission::ManageAsset),
+
+            // Asset Management - Manage
+            str_contains($routeName, 'ticketing.assets.create'),
+            str_contains($routeName, 'ticketing.assets.store'),
+            str_contains($routeName, 'ticketing.assets.edit'),
+            str_contains($routeName, 'ticketing.assets.update') =>
+                $user->can(TicketingPermission::ManageAsset),
+
+            // Asset Management - Delete
+            str_contains($routeName, 'ticketing.assets.delete') =>
+                $user->can(TicketingPermission::DeleteAsset),
+
             default => true,
         };
 

@@ -25,6 +25,7 @@ class AssetModelDatatableService
                 'name' => $item->name,
                 'type' => $item->type?->value,
                 'division' => $item->division?->name,
+                'checklists_count' => $item->checklists_count,
             ]);
 
         return [
@@ -54,6 +55,7 @@ class AssetModelDatatableService
                 'Nama Asset Model',
                 'Tipe',
                 'Divisi',
+                'Jumlah Checklist',
             ]));
 
             // Data
@@ -63,6 +65,7 @@ class AssetModelDatatableService
                     $item->name,
                     $item->type?->value ?? '-',
                     $item->division?->name ?? '-',
+                    $item->checklists_count ?? 0,
                 ]));
             }
 
@@ -74,7 +77,7 @@ class AssetModelDatatableService
 
     private function getStartedQuery(DatatableRequest $request, User $loggedUser): Builder
     {
-        $query = AssetModel::with('division');
+        $query = AssetModel::with('division')->withCount('checklists');
 
         // Permission Filtering
         $canViewAll = $loggedUser->hasPermissionTo(TicketingPermission::ViewAllAssetModel) || 
