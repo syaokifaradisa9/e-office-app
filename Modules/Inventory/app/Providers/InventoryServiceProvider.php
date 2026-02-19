@@ -27,6 +27,15 @@ class InventoryServiceProvider extends ServiceProvider
         $this->registerConfig();
         $this->registerViews();
         $this->loadMigrationsFrom(module_path($this->name, 'database/migrations'));
+
+        // Register global middleware for this module
+        $this->registerMiddleware();
+    }
+
+    protected function registerMiddleware(): void
+    {
+        $router = $this->app['router'];
+        $router->pushMiddlewareToGroup('web', \Modules\Inventory\Http\Middleware\CheckActiveStockOpname::class);
     }
 
     /**
