@@ -16,7 +16,8 @@ return new class extends Migration
             $blueprint->id();
             $blueprint->string('name');
             $blueprint->enum('type', AssetModelType::values());
-            $blueprint->foreignId('division_id')->constrained('divisions')->cascadeOnDelete();
+            $blueprint->foreignId('division_id')->nullable()->constrained('divisions')->nullOnDelete();
+            $blueprint->integer('maintenance_count')->default(0);
             $blueprint->timestamps();
         });
     }

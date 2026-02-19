@@ -13,13 +13,14 @@ class AssetModelDTO
     public function __construct(
         public readonly string $name,
         public readonly AssetModelType $type,
-        public readonly int $division_id,
+        public readonly ?int $division_id,
+        public readonly int $maintenance_count,
     ) {}
 
     public static function fromRequest(StoreAssetModelRequest|UpdateAssetModelRequest $request): self
     {
         $user = Auth::user();
-        $divisionId = (int) $request->validated('division_id');
+        $divisionId = $request->validated('division_id') ? (int) $request->validated('division_id') : null;
 
         if ($user && !$user->hasPermissionTo(TicketingPermission::ViewAllAssetModel)) {
             if ($user->hasPermissionTo(TicketingPermission::ViewAssetModelDivisi)) {
@@ -31,6 +32,7 @@ class AssetModelDTO
             name: $request->validated('name'),
             type: AssetModelType::from($request->validated('type')),
             division_id: $divisionId,
+            maintenance_count: (int) $request->validated('maintenance_count'),
         );
     }
 
@@ -40,6 +42,7 @@ class AssetModelDTO
             'name' => $this->name,
             'type' => $this->type->value,
             'division_id' => $this->division_id,
+            'maintenance_count' => $this->maintenance_count,
         ];
     }
 }

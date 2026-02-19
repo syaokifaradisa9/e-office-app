@@ -15,7 +15,8 @@ interface AssetModel {
     id: number;
     name: string;
     type: string;
-    division_id: number;
+    division_id: number | null;
+    maintenance_count: number;
 }
 
 interface Props {
@@ -30,6 +31,7 @@ export default function AssetModelCreate({ assetModel, divisions }: Props) {
         name: assetModel?.name || '',
         type: assetModel?.type || '',
         division_id: assetModel?.division_id?.toString() || '',
+        maintenance_count: assetModel?.maintenance_count?.toString() || '0',
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -61,17 +63,17 @@ export default function AssetModelCreate({ assetModel, divisions }: Props) {
                 bodyClassName="p-4 md:p-6"
             >
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <FormInput
-                        name="name"
-                        label="Nama Asset Model"
-                        placeholder="Masukkan nama asset model"
-                        value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
-                        error={errors.name}
-                        required
-                    />
-
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <FormInput
+                            name="name"
+                            label="Nama Asset Model"
+                            placeholder="Masukkan nama asset model"
+                            value={data.name}
+                            onChange={(e) => setData('name', e.target.value)}
+                            error={errors.name}
+                            required
+                        />
+
                         <FormSelect
                             name="type"
                             label="Tipe Asset"
@@ -85,12 +87,23 @@ export default function AssetModelCreate({ assetModel, divisions }: Props) {
 
                         <FormSelect
                             name="division_id"
-                            label="Divisi"
-                            placeholder="Pilih divisi"
+                            label="Divisi Penanggungjawab Maintenance"
+                            placeholder="Pilih divisi penanggungjawab (Opsional)"
                             options={divisionOptions}
                             value={data.division_id}
                             onChange={(e) => setData('division_id', e.target.value)}
                             error={errors.division_id}
+                        />
+
+                        <FormInput
+                            name="maintenance_count"
+                            type="number"
+                            label="Jumlah Maintenance (Per Tahun)"
+                            placeholder="Contoh: 4"
+                            helpText="Tentukan berapa kali maintenance rutin yang dilakukan untuk model aset ini dalam satu tahun."
+                            value={data.maintenance_count}
+                            onChange={(e) => setData('maintenance_count', e.target.value)}
+                            error={errors.maintenance_count}
                             required
                         />
                     </div>

@@ -13,7 +13,8 @@ class UpdateAssetModelRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'type' => ['required', new Enum(AssetModelType::class)],
-            'division_id' => 'required|exists:divisions,id',
+            'division_id' => 'nullable|exists:divisions,id',
+            'maintenance_count' => 'required|integer|min:0',
         ];
     }
 
@@ -25,8 +26,10 @@ class UpdateAssetModelRequest extends FormRequest
             'name.max' => 'Nama asset model tidak boleh lebih dari 255 karakter.',
             'type.required' => 'Tipe asset wajib dipilih.',
             'type.Illuminate\Validation\Rules\Enum' => 'Tipe asset yang dipilih tidak valid.',
-            'division_id.required' => 'Divisi wajib dipilih.',
             'division_id.exists' => 'Divisi yang dipilih tidak terdaftar di sistem.',
+            'maintenance_count.required' => 'Jumlah maintenance wajib diisi.',
+            'maintenance_count.integer' => 'Jumlah maintenance harus berupa angka.',
+            'maintenance_count.min' => 'Jumlah maintenance minimal 0.',
         ];
     }
 

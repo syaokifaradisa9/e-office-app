@@ -19,10 +19,12 @@ class AssetModel extends Model
         'name',
         'type',
         'division_id',
+        'maintenance_count',
     ];
 
     protected $casts = [
         'type' => AssetModelType::class,
+        'maintenance_count' => 'integer',
     ];
 
     public function division(): BelongsTo

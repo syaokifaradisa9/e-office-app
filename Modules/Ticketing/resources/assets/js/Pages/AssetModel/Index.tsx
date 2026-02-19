@@ -21,6 +21,7 @@ interface AssetModel {
     type: string;
     division: string | null;
     checklists_count?: number;
+    maintenance_count?: number;
 }
 
 interface PaginationData {
@@ -267,11 +268,13 @@ export default function AssetModelIndex() {
                                     footer: <FormSearch name="division" onChange={onParamsChange} placeholder="Filter Divisi" />,
                                 },
                                 {
-                                    header: 'Jumlah Checklist',
+                                    header: 'Maintenance (Tahun)',
                                     render: (item: AssetModel) => (
                                         <div className="flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-200">
-                                            <ListChecks className="size-4 text-emerald-500" />
-                                            <span>{item.checklists_count || 0}</span>
+                                            <span>
+                                                {item.maintenance_count || 0} Kali
+                                                {(item.maintenance_count || 0) > 0 && ` (${item.checklists_count || 0} Checklist)`}
+                                            </span>
                                         </div>
                                     ),
                                 },
@@ -282,7 +285,7 @@ export default function AssetModelIndex() {
                                             header: 'Aksi',
                                             render: (item: AssetModel) => (
                                                 <div className="flex justify-end gap-1">
-                                                    {canViewChecklist && (
+                                                    {canViewChecklist && (item.maintenance_count || 0) > 0 && (
                                                         <Tooltip text="Checklist">
                                                             <Button
                                                                 variant="ghost"

@@ -7,6 +7,7 @@ interface AssetModel {
     type: string; // Returns 'Physic' or 'Digital' from ->value
     division: string | null;
     checklists_count?: number;
+    maintenance_count?: number;
 }
 
 interface Props {
@@ -38,9 +39,9 @@ export default function AssetModelCardItem({ item, canManage, canDelete, canView
                                 }`}>
                                 {item.type === 'Physic' ? 'Fisik' : 'Digital'}
                             </span>
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400">
-                                <ListChecks className="size-3" />
-                                {item.checklists_count || 0} CHECKLIST
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+                                {item.maintenance_count || 0} X MAINTENANCE / TAHUN
+                                {(item.maintenance_count || 0) > 0 && ` (${item.checklists_count || 0} CHECKLIST)`}
                             </span>
                         </div>
                     </div>
@@ -56,7 +57,7 @@ export default function AssetModelCardItem({ item, canManage, canDelete, canView
                     {/* Actions Stack */}
                     <div className="mt-4 space-y-2">
                         {/* Primary Action: Checklist (Full Width) */}
-                        {canViewChecklist && (
+                        {canViewChecklist && (item.maintenance_count || 0) > 0 && (
                             <Button
                                 href={`/ticketing/asset-models/${item.id}/checklists`}
                                 variant="outline"

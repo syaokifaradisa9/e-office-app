@@ -26,6 +26,7 @@ class AssetModelDatatableService
                 'type' => $item->type?->value,
                 'division' => $item->division?->name,
                 'checklists_count' => $item->checklists_count,
+                'maintenance_count' => $item->maintenance_count,
             ]);
 
         return [
@@ -55,7 +56,7 @@ class AssetModelDatatableService
                 'Nama Asset Model',
                 'Tipe',
                 'Divisi',
-                'Jumlah Checklist',
+                'Maintenance (Tahun)',
             ]));
 
             // Data
@@ -65,7 +66,7 @@ class AssetModelDatatableService
                     $item->name,
                     $item->type?->value ?? '-',
                     $item->division?->name ?? '-',
-                    $item->checklists_count ?? 0,
+                    ($item->maintenance_count ?? 0) . ' Kali' . (($item->maintenance_count ?? 0) > 0 ? ' (' . ($item->checklists_count ?? 0) . ' Checklist)' : ''),
                 ]));
             }
 
