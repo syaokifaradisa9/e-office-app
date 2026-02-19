@@ -7,6 +7,10 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Modules\Archieve\Enums\ArchieveUserPermission;
+use Modules\Inventory\Enums\InventoryPermission;
+use Modules\Ticketing\Enums\TicketingPermission;
+use Modules\VisitorManagement\Enums\VisitorUserPermission;
 
 class UserSeeder extends Seeder
 {
@@ -15,27 +19,23 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Define shared permissions for Superadmin and Pimpinan based on screenshots
-        $sharedPermissions = [
-            // Data Master
-            'lihat_divisi', 'kelola_divisi',
-            'lihat_jabatan', 'kelola_jabatan',
-            'lihat_pengguna', 'kelola_pengguna',
-            'lihat_role', 'kelola_role',
-            
-            // Arsiparis (Archieve)
-            'lihat_dashboard_arsip_keseluruhan',
-            'lihat_semua_arsip', 'kelola_semua_arsip',
-            'lihat_kategori_arsip', 'kelola_kategori_arsip',
-            'lihat_klasifikasi_arsip', 'kelola_klasifikasi_arsip',
-            'lihat_laporan_arsip_keseluruhan',
-            'pencarian_dokumen_keseluruhan',
-            'lihat_penyimpanan_divisi', 'kelola_penyimpanan_divisi',
-        ];
+        // 1. Get all module permissions
+        $allPermissions = array_merge(
+            [
+                'lihat_divisi', 'kelola_divisi',
+                'lihat_jabatan', 'kelola_jabatan',
+                'lihat_pengguna', 'kelola_pengguna',
+                'lihat_role', 'kelola_role',
+            ],
+            ArchieveUserPermission::values(),
+            InventoryPermission::values(),
+            TicketingPermission::values(),
+            VisitorUserPermission::values()
+        );
 
-        // 1. Create Superadmin Role & User
+        // 2. Create Superadmin Role & User
         $superadminRole = Role::firstOrCreate(['name' => 'Superadmin', 'guard_name' => 'web']);
-        $superadminRole->syncPermissions($sharedPermissions);
+        $superadminRole->syncPermissions($allPermissions);
 
         $superadmin = User::updateOrCreate(
             ['email' => 'superadmin@gmail.com'],
@@ -48,9 +48,10 @@ class UserSeeder extends Seeder
         );
         $superadmin->assignRole($superadminRole);
 
-        // 2. Create Pimpinan Role & User
+        // 3. Create Pimpinan Role & User (Has View All Access normally)
         $pimpinanRole = Role::firstOrCreate(['name' => 'Pimpinan', 'guard_name' => 'web']);
-        $pimpinanRole->syncPermissions($sharedPermissions);
+        // For Pimpinan, we might want only specific permissions or all "View" permissions
+        $pimpinanRole->syncPermissions($allPermissions);
 
         $pimpinan = User::updateOrCreate(
             ['email' => 'pimpinan@gmail.com'],
@@ -62,17 +63,15 @@ class UserSeeder extends Seeder
             ]
         );
         $pimpinan->assignRole($pimpinanRole);
-        // 3. Create Pegawai Role & User
+
+        // 4. Create Pegawai Role & User
         $pegawaiRole = Role::firstOrCreate(['name' => 'Pegawai', 'guard_name' => 'web']);
-        
-        // Pegawai permissions: Limited view access
         $pegawaiPermissions = [
             'lihat_arsip_pribadi', 
             'lihat_kategori_arsip', 
             'lihat_klasifikasi_arsip', 
             'pencarian_dokumen_pribadi'
         ];
-        
         $pegawaiRole->syncPermissions($pegawaiPermissions);
 
         $pegawai = User::updateOrCreate(
@@ -85,19 +84,10 @@ class UserSeeder extends Seeder
             ]
         );
         $pegawai->assignRole($pegawaiRole);
-        // 4. Create Admin Arsip Role & User
+
+        // 5. Create Admin Arsip Role & User
         $adminArsipRole = Role::firstOrCreate(['name' => 'Admin Arsip', 'guard_name' => 'web']);
-        
-        // Admin Arsip permissions: Manage everything related to Archieve but not Data Master
-        $adminArsipPermissions = [
-            'lihat_kategori_arsip', 'kelola_kategori_arsip',
-            'lihat_klasifikasi_arsip', 'kelola_klasifikasi_arsip',
-            'lihat_penyimpanan_divisi', 'kelola_penyimpanan_divisi',
-            'lihat_dashboard_arsip_keseluruhan', 'lihat_laporan_arsip_keseluruhan',
-            'lihat_semua_arsip', 'kelola_semua_arsip',
-            'pencarian_dokumen_keseluruhan'
-        ];
-        
+        $adminArsipPermissions = ArchieveUserPermission::values();
         $adminArsipRole->syncPermissions($adminArsipPermissions);
 
         $adminArsip = User::updateOrCreate(
@@ -111,33 +101,30 @@ class UserSeeder extends Seeder
         );
         $adminArsip->assignRole($adminArsipRole);
 
-        // 5. Create Admin Arsip Divisi Role & User
-        $adminArsipDivisiRole = Role::firstOrCreate(['name' => 'Admin Arsip Divisi', 'guard_name' => 'web']);
-        
-        $adminArsipDivisiPermissions = [
-            'lihat_dashboard_arsip_divisi',
-            'lihat_arsip_divisi', 'kelola_arsip_divisi',
-            'lihat_kategori_arsip',
-            'lihat_klasifikasi_arsip',
-            'lihat_laporan_arsip_divisi',
-            'pencarian_dokumen_divisi'
-        ];
-        
-        $adminArsipDivisiRole->syncPermissions($adminArsipDivisiPermissions);
-
-        // Assign to first division (Tata Usaha)
+        // 6. Create Division Specific Admin (e.g. Tata Usaha)
         $divisionId = \App\Models\Division::where('name', 'Tata Usaha')->first()?->id ?? 1;
 
-        $adminArsipDivisi = User::updateOrCreate(
+        $adminDivisi = User::updateOrCreate(
             ['email' => 'admindivisi@gmail.com'],
             [
-                'name' => 'Admin Arsip Divisi (Tata Usaha)',
+                'name' => 'Admin Divisi (Tata Usaha)',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
                 'is_active' => true,
                 'division_id' => $divisionId,
             ]
         );
-        $adminArsipDivisi->assignRole($adminArsipDivisiRole);
+        // We can use a generic "Admin Divisi" role or specific module roles
+        $adminDivisiRole = Role::firstOrCreate(['name' => 'Admin Divisi', 'guard_name' => 'web']);
+        // Assign some basic division permissions
+        $adminDivisiRole->syncPermissions([
+            'lihat_dashboard_arsip_divisi',
+            'lihat_arsip_divisi',
+            'kelola_arsip_divisi',
+            'pencarian_dokumen_divisi',
+            InventoryPermission::ViewDivisionReport->value,
+            InventoryPermission::MonitorStock->value,
+        ]);
+        $adminDivisi->assignRole($adminDivisiRole);
     }
 }

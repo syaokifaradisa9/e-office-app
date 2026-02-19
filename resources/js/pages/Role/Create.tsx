@@ -371,9 +371,13 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                                 {availableModules.map((module) => {
                                     const displayLabels: Record<string, string> = {
                                         'Data Master': 'Data Master',
+                                        'Gudang BHP': 'Gudang BHP',
                                         'Arsiparis': 'Arsiparis',
+                                        'Kunjungan': 'Kunjungan',
+                                        'Ticketing': 'Ticketing',
                                     };
                                     const label = displayLabels[module] || module;
+                                    const count = groupedByModule[module]?.reduce((acc, { group }) => acc + group.permissions.length, 0) || 0;
                                     const isActive = activeTab === module;
 
                                     return (
@@ -389,7 +393,7 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                                             <div className="flex items-center gap-2">
                                                 {label}
                                                 <span className={`text-[10px] ${isActive ? 'text-primary' : 'text-slate-400'}`}>
-                                                    ({groupedByModule[module]?.length || 0})
+                                                    ({count})
                                                 </span>
                                             </div>
 
