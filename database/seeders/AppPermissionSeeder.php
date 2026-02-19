@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class AppPermissionSeeder extends Seeder
 {
@@ -26,8 +27,16 @@ class AppPermissionSeeder extends Seeder
             ]);
         }
 
-        // Sync with Superadmin Role
-        $superAdminRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Superadmin', 'guard_name' => 'web']);
-        $superAdminRole->givePermissionTo($permissions);
+        // 1. Superadmin & Pimpinan (Full Master Access)
+        $fullMasterRoles = ['Superadmin', 'Pimpinan'];
+        foreach ($fullMasterRoles as $roleName) {
+            $role = Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
+            $role->givePermissionTo($permissions);
+        }
+
+        // 2. Admin Sistem Pengunjung
+        // Diinstruksikan untuk tidak diberikan akses ke Divisi, Jabatan, Pegawai, dan Role.
+        // Maka kita pastikan Role ini ada, tapi tidak diberi permission dari list $permissions di atas.
+        Role::firstOrCreate(['name' => 'Admin Sistem Pengunjung', 'guard_name' => 'web']);
     }
 }

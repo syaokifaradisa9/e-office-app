@@ -52,5 +52,21 @@ class UserSeeder extends Seeder
             ]
         );
         $pimpinan->assignRole($pimpinanRole);
+
+        // 3. Create Admin Sistem Pengunjung Role & User
+        $adminPengunjungRole = Role::firstOrCreate(['name' => 'Admin Sistem Pengunjung', 'guard_name' => 'web']);
+        // Tidak diberikan master data permissions sama sekali
+        $adminPengunjungRole->syncPermissions([]); 
+
+        $adminPengunjung = User::updateOrCreate(
+            ['email' => 'adminpengunjung@gmail.com'],
+            [
+                'name' => 'Admin Pengunjung e-Office',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+                'is_active' => true,
+            ]
+        );
+        $adminPengunjung->assignRole($adminPengunjungRole);
     }
 }

@@ -47,9 +47,7 @@ export default function Login() {
     const loginOptions = [
         { label: 'Superadmin', value: 'superadmin@gmail.com', password: 'password' },
         { label: 'Pimpinan', value: 'pimpinan@gmail.com', password: 'password' },
-        { label: 'Pegawai', value: 'pegawai@gmail.com', password: 'password' },
-        { label: 'Admin Arsip', value: 'adminarsip@gmail.com', password: 'password' },
-        { label: 'Admin Arsip Divisi', value: 'admindivisi@gmail.com', password: 'password' },
+        { label: 'Admin Sistem Pengunjung', value: 'adminpengunjung@gmail.com', password: 'password' },
     ];
 
     const handleLoginAsChange = (e: React.ChangeEvent<HTMLSelectElement>) => {

@@ -47,9 +47,12 @@ class VisitorManagementDatabaseSeeder extends Seeder
             Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
         }
 
-        // Sync with Superadmin Role
-        $superAdminRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Superadmin', 'guard_name' => 'web']);
-        $superAdminRole->givePermissionTo($permissions);
+        // Sync with Roles
+        $roles = ['Superadmin', 'Pimpinan', 'Admin Sistem Pengunjung'];
+        foreach ($roles as $roleName) {
+            $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
+            $role->givePermissionTo($permissions);
+        }
 
         // 5. Seed Mock Visitors
         $this->call(VisitorSeeder::class);
