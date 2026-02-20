@@ -147,6 +147,11 @@ class RoleService
                 'label' => 'Asset',
                 'keywords' => ['Asset'],
             ],
+            'maintenance' => [
+                'module' => 'Ticketing',
+                'label' => 'Maintenance',
+                'keywords' => ['Maintenance'],
+            ],
 
             // Data Master (Generic - Checked last)
             'divisi' => [

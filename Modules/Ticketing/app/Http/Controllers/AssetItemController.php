@@ -31,7 +31,7 @@ class AssetItemController extends Controller
     public function create()
     {
         return Inertia::render('Ticketing/AssetItem/Create', [
-            'assetModels' => AssetModel::all(['id', 'name']),
+            'assetModels' => AssetModel::all(['id', 'name', 'maintenance_count']),
             'divisions' => Division::all(['id', 'name']),
             // Initially empty users, or all users if you prefer
             'users' => User::all(['id', 'name', 'division_id']),
@@ -50,7 +50,7 @@ class AssetItemController extends Controller
     {
         return Inertia::render('Ticketing/AssetItem/Edit', [
             'asset' => $asset->load(['assetModel', 'division', 'users']),
-            'assetModels' => AssetModel::all(['id', 'name']),
+            'assetModels' => AssetModel::all(['id', 'name', 'maintenance_count']),
             'divisions' => Division::all(['id', 'name']),
             'users' => User::all(['id', 'name', 'division_id']),
         ]);

@@ -16,14 +16,14 @@ interface SidebarLinkProps {
 export default function SidebarLink({ name, href, icon: Icon, exactMatch = false, active, children }: SidebarLinkProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [isTooltipVisible, setIsTooltipVisible] = useState(false);
-    const { url } = usePage();
+    const { url = '' } = usePage();
     const isCollapsed = useSidebarCollapse();
 
     const hasChildren = children && children.length > 0;
-    const isActive = active !== undefined ? active : (exactMatch ? url === href : url === href || url.startsWith(href + '/'));
+    const isActive = active !== undefined ? active : (exactMatch ? url === href : url === href || (url && url.startsWith(href + '/')));
     // If exactMatch is true, we probably don't want child activation to trigger parent active state unless logic dictates.
     // But usually for valid sidebar, if child is active, parent is active (expanded).
-    const isChildActive = hasChildren && children.some((child) => url === child.href || url.startsWith(child.href + '/'));
+    const isChildActive = hasChildren && children.some((child) => url === child.href || (url && url.startsWith(child.href + '/')));
 
     useEffect(() => {
         if (!isCollapsed) {
@@ -113,7 +113,7 @@ export default function SidebarLink({ name, href, icon: Icon, exactMatch = false
                             key={index}
                             href={child.href}
                             className={`flex items-center w-full rounded-lg transition-all duration-200 ${isCollapsed ? "px-3 py-2 text-sm font-medium" : "px-3 py-2"
-                                } ${url === child.href || url.startsWith(child.href + '/')
+                                } ${url === child.href || (url && url.startsWith(child.href + '/'))
                                     ? "text-primary bg-primary/10"
                                     : "text-slate-600 hover:bg-primary/5 dark:text-slate-300 dark:hover:bg-slate-700/30"
                                 }`}

@@ -56,5 +56,17 @@ Route::middleware(['auth', TicketingRoutePermissionCheck::class])->group(functio
                 Route::delete('/delete', 'delete')->name('delete');
             });
         });
+
+        // Maintenance Management
+        Route::prefix('maintenances')->name('maintenances.')->controller(\Modules\Ticketing\Http\Controllers\MaintenanceController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/datatable', 'datatable')->name('datatable');
+            Route::get('/print/excel', 'printExcel')->name('print-excel');
+            Route::get('/{maintenance}/detail', 'detail')->name('detail');
+            Route::get('/{maintenance}/complete', 'complete')->name('complete');
+            Route::post('/{maintenance}/store-checklist', 'storeChecklist')->name('store-checklist');
+            Route::post('/{maintenance}/cancel', 'cancel')->name('cancel');
+            Route::post('/{maintenance}/confirm', 'confirm')->name('confirm');
+        });
     });
 });

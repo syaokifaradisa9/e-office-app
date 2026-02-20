@@ -23,6 +23,7 @@ class StoreAssetItemRequest extends FormRequest
             ],
             'division_id' => 'required|exists:divisions,id',
             'another_attributes' => 'nullable|array',
+            'last_maintenance_date' => 'nullable|date',
             'user_ids' => 'nullable|array',
             'user_ids.*' => 'exists:users,id',
         ];

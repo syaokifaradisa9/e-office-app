@@ -36,5 +36,10 @@ class AssetModel extends Model
     {
         return $this->hasMany(Checklist::class);
     }
+
+    public function assetItems(): HasMany
+    {
+        return $this->hasMany(AssetItem::class);
+    }
 }
 

@@ -10,6 +10,7 @@ interface ConfirmationAlertProps {
     confirmText?: string;
     cancelText?: string;
     type?: 'danger' | 'warning' | 'info' | 'success';
+    children?: React.ReactNode;
 }
 
 export default function ConfirmationAlert({
@@ -21,6 +22,7 @@ export default function ConfirmationAlert({
     confirmText = 'Ya',
     cancelText = 'Batal',
     type = 'danger',
+    children,
 }: ConfirmationAlertProps) {
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
@@ -95,6 +97,8 @@ export default function ConfirmationAlert({
                                 <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">{message}</p>
                             </div>
+
+                            {children}
 
                             <div className="mt-6 flex justify-center gap-3">
                                 <button

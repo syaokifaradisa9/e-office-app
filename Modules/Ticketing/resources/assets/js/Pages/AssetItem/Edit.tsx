@@ -6,8 +6,8 @@ import FormCheckboxGroup from '@/components/forms/FormCheckboxGroup';
 import FormDynamicAttributes from '@/components/forms/FormDynamicAttributes';
 import Button from '@/components/buttons/Button';
 import { useForm } from '@inertiajs/react';
-import { Save, X, Users } from 'lucide-react';
-import { useEffect, useState, useRef } from 'react';
+import { Save, X, Users, Calendar, History } from 'lucide-react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 
 interface AnotherAttributes {
     specs?: Record<string, string>;
@@ -16,6 +16,7 @@ interface AnotherAttributes {
 interface AssetModel {
     id: number;
     name: string;
+    maintenance_count: number;
 }
 
 interface Division {
@@ -38,6 +39,7 @@ interface AssetItem {
     division_id: number;
     users: User[];
     another_attributes: AnotherAttributes;
+    last_maintenance_date: string | null;
 }
 
 interface Props {
@@ -79,6 +81,8 @@ export default function AssetItemEdit({ asset, assetModels, divisions, users }: 
         }
         isFirstRender.current = false;
     }, [data.division_id]);
+
+
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -182,6 +186,8 @@ export default function AssetItemEdit({ asset, assetModels, divisions, users }: 
                             columns={3}
                         />
                     </div>
+
+
 
                     <div className="flex justify-end gap-3 border-t border-slate-100 pt-6 dark:border-slate-800">
                         <Button

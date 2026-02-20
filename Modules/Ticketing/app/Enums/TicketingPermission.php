@@ -18,6 +18,11 @@ enum TicketingPermission: string
     case ManageAsset = 'Kelola Data Asset';
     case DeleteAsset = 'Hapus Data Asset';
 
+    case ViewDivisionMaintenance = 'Lihat Jadwal Maintenance Divisi';
+    case ViewAllMaintenance = 'Lihat Jadwal Maintenance Keseluruhan';
+    case ProsesMaintenance = 'Proses Maintenance';
+    case ConfirmMaintenance = 'Konfirmasi Proses Maintenance';
+
     public static function values(): array
     {
         return array_map(fn ($case) => $case->value, self::cases());

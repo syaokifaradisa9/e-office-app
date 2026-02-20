@@ -19,6 +19,8 @@ use Modules\VisitorManagement\Repositories\Visitor\EloquentVisitorRepository;
 use Modules\VisitorManagement\Repositories\Visitor\VisitorRepository;
 use Modules\VisitorManagement\Repositories\Feedback\EloquentVisitorFeedbackRepository;
 use Modules\VisitorManagement\Repositories\Feedback\VisitorFeedbackRepository;
+use Modules\Ticketing\Repositories\Maintenance\MaintenanceRepository;
+use Modules\Ticketing\Repositories\Maintenance\EloquentMaintenanceRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -38,6 +40,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(FeedbackQuestionRepository::class, EloquentFeedbackQuestionRepository::class);
         $this->app->singleton(VisitorRepository::class, EloquentVisitorRepository::class);
         $this->app->singleton(VisitorFeedbackRepository::class, EloquentVisitorFeedbackRepository::class);
+        $this->app->singleton(MaintenanceRepository::class, EloquentMaintenanceRepository::class);
     }
 
     /**

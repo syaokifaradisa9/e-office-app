@@ -14,6 +14,7 @@ class AssetItemDTO
         public readonly int $division_id,
         public readonly ?array $another_attributes,
         public readonly array $user_ids = [],
+        public readonly ?string $last_maintenance_date = null,
     ) {}
 
     public static function fromRequest(Request $request): self
@@ -26,6 +27,7 @@ class AssetItemDTO
             division_id: (int) $request->validated('division_id'),
             another_attributes: $request->validated('another_attributes') ?? [],
             user_ids: $request->validated('user_ids') ?? [],
+            last_maintenance_date: $request->validated('last_maintenance_date'),
         );
     }
 
@@ -38,6 +40,7 @@ class AssetItemDTO
             'serial_number' => $this->serial_number,
             'division_id' => $this->division_id,
             'another_attributes' => $this->another_attributes,
+            'last_maintenance_date' => $this->last_maintenance_date,
         ];
     }
 }

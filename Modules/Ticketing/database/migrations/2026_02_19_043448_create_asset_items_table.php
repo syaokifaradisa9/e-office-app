@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('serial_number')->unique()->nullable();
             $table->foreignId('division_id')->constrained('divisions')->onDelete('cascade');
             $table->json('another_attributes')->nullable();
+            $table->date('last_maintenance_date')->nullable();
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
         });

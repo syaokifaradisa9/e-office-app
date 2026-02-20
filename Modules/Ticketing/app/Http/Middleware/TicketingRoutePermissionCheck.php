@@ -86,6 +86,27 @@ class TicketingRoutePermissionCheck
             str_contains($routeName, 'ticketing.assets.delete') =>
                 $user->can(TicketingPermission::DeleteAsset),
 
+            // Maintenance Management - View
+            str_contains($routeName, 'ticketing.maintenances.index'),
+            str_contains($routeName, 'ticketing.maintenances.datatable'),
+            str_contains($routeName, 'ticketing.maintenances.print-excel'),
+            str_contains($routeName, 'ticketing.maintenances.detail') =>
+                $user->can(TicketingPermission::ViewDivisionMaintenance) ||
+                $user->can(TicketingPermission::ViewAllMaintenance) ||
+                $user->can(TicketingPermission::ViewPersonalAsset) ||
+                $user->can(TicketingPermission::ManageAsset),
+
+            // Maintenance Management - Manage
+            str_contains($routeName, 'ticketing.maintenances.complete') ||
+            str_contains($routeName, 'ticketing.maintenances.store-checklist') =>
+                $user->can(TicketingPermission::ProsesMaintenance->value),
+
+            str_contains($routeName, 'ticketing.maintenances.confirm') =>
+                $user->can(TicketingPermission::ConfirmMaintenance->value),
+
+            str_contains($routeName, 'ticketing.maintenances.cancel') =>
+                $user->can(TicketingPermission::ManageAsset->value),
+
             default => true,
         };
 

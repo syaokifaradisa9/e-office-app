@@ -66,7 +66,7 @@ export default function Button({
         ${className}
     `.trim();
 
-    if (href) {
+    if (href && !disabled && !isLoading) {
         if (href.startsWith('http') || target === '_blank') {
             return (
                 <a href={href} target={target} rel={target === '_blank' ? 'noopener noreferrer' : undefined} className={baseClasses} {...props}>

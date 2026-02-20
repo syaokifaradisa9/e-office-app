@@ -12,4 +12,7 @@ export enum TicketingPermission {
     ViewAllAsset = 'Lihat Data Asset Keseluruhan',
     ManageAsset = 'Kelola Data Asset',
     DeleteAsset = 'Hapus Data Asset',
+
+    ViewDivisionMaintenance = 'Lihat Jadwal Maintenance Divisi',
+    ViewAllMaintenance = 'Lihat Jadwal Maintenance Keseluruhan',
 }

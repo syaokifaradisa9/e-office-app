@@ -21,10 +21,12 @@ class AssetItem extends Model
         'serial_number',
         'division_id',
         'another_attributes',
+        'last_maintenance_date',
     ];
 
     protected $casts = [
         'another_attributes' => 'array',
+        'last_maintenance_date' => 'date',
     ];
 
     public function assetModel(): BelongsTo
@@ -40,5 +42,10 @@ class AssetItem extends Model
     public function users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(User::class, 'asset_item_user');
+    }
+
+    public function maintenances(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Maintenance::class);
     }
 }
