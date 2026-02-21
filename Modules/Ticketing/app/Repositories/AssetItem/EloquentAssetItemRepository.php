@@ -32,6 +32,6 @@ class EloquentAssetItemRepository implements AssetItemRepository
 
     public function findById(int $id): ?AssetItem
     {
-        return AssetItem::with(['assetModel', 'division', 'users'])->find($id);
+        return AssetItem::with(['assetCategory', 'division', 'users'])->find($id);
     }
 }

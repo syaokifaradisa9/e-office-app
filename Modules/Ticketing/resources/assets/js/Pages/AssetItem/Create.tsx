@@ -14,7 +14,7 @@ interface AnotherAttributes {
     specs?: Record<string, string>;
 }
 
-interface AssetModel {
+interface AssetCategory {
     id: number;
     name: string;
     maintenance_count: number;
@@ -32,14 +32,14 @@ interface User {
 }
 
 interface Props {
-    assetModels: AssetModel[];
+    assetCategories: AssetCategory[];
     divisions: Division[];
     users: User[];
 }
 
-export default function AssetItemCreate({ assetModels, divisions, users }: Props) {
+export default function AssetItemCreate({ assetCategories, divisions, users }: Props) {
     const { data, setData, post, processing, errors } = useForm({
-        asset_model_id: '',
+        asset_category_id: '',
         merk: '',
         model: '',
         serial_number: '',
@@ -64,15 +64,15 @@ export default function AssetItemCreate({ assetModels, divisions, users }: Props
     }, [data.division_id]);
 
     const estimatedSchedules = useMemo(() => {
-        if (!data.asset_model_id || !data.last_maintenance_date) return [];
+        if (!data.asset_category_id || !data.last_maintenance_date) return [];
 
-        const selectedModel = assetModels.find((m) => m.id === Number(data.asset_model_id));
-        if (!selectedModel || !selectedModel.maintenance_count) return [];
+        const selectedCategory = assetCategories.find((m) => m.id === Number(data.asset_category_id));
+        if (!selectedCategory || !selectedCategory.maintenance_count) return [];
 
         const schedules: Date[] = [];
         const lastDate = new Date(data.last_maintenance_date);
         const currentYear = lastDate.getFullYear();
-        const intervalMonths = Math.floor(12 / selectedModel.maintenance_count);
+        const intervalMonths = Math.floor(12 / selectedCategory.maintenance_count);
 
         let nextDate = new Date(lastDate);
         nextDate.setMonth(nextDate.getMonth() + intervalMonths);
@@ -85,14 +85,14 @@ export default function AssetItemCreate({ assetModels, divisions, users }: Props
         // If no schedules found this year (meaning we just finished the last one for the year),
         // then show the full cycle for the next year.
         if (schedules.length === 0) {
-            for (let i = 0; i < selectedModel.maintenance_count; i++) {
+            for (let i = 0; i < selectedCategory.maintenance_count; i++) {
                 schedules.push(new Date(nextDate));
                 nextDate.setMonth(nextDate.getMonth() + intervalMonths);
             }
         }
 
         return schedules;
-    }, [data.asset_model_id, data.last_maintenance_date]);
+    }, [data.asset_category_id, data.last_maintenance_date]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -115,13 +115,13 @@ export default function AssetItemCreate({ assetModels, divisions, users }: Props
 
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                             <FormSelect
-                                name="asset_model_id"
-                                label="Asset Model"
-                                placeholder="Pilih Asset Model"
-                                value={data.asset_model_id}
-                                onChange={(e) => setData('asset_model_id', e.target.value)}
-                                options={assetModels.map(m => ({ value: m.id, label: m.name }))}
-                                error={errors.asset_model_id}
+                                name="asset_category_id"
+                                label="Kategori Asset"
+                                placeholder="Pilih Kategori Asset"
+                                value={data.asset_category_id}
+                                onChange={(e) => setData('asset_category_id', e.target.value)}
+                                options={assetCategories.map(m => ({ value: m.id, label: m.name }))}
+                                error={errors.asset_category_id}
                                 required
                             />
 
@@ -164,6 +164,8 @@ export default function AssetItemCreate({ assetModels, divisions, users }: Props
                             />
                         </div>
                     </div>
+
+
 
                     <div className="space-y-6">
                         <div className="flex items-center gap-2 border-l-4 border-primary pl-3">
@@ -212,12 +214,12 @@ export default function AssetItemCreate({ assetModels, divisions, users }: Props
                                 error={errors.last_maintenance_date}
                             />
 
-                            {data.asset_model_id && (
+                            {data.asset_category_id && (
                                 <div className="flex flex-col justify-center rounded-xl bg-slate-50 dark:bg-slate-900/50 p-4 border border-slate-100 dark:border-slate-800">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Frekuensi Maintenance</p>
                                     <div className="flex items-baseline gap-2 mt-1">
                                         <span className="text-2xl font-black text-primary">
-                                            {assetModels.find(m => m.id === Number(data.asset_model_id))?.maintenance_count || 0}
+                                            {assetCategories.find(m => m.id === Number(data.asset_category_id))?.maintenance_count || 0}
                                         </span>
                                         <span className="text-sm font-medium text-slate-500 italic">Kali per Tahun</span>
                                     </div>
@@ -254,7 +256,7 @@ export default function AssetItemCreate({ assetModels, divisions, users }: Props
                                         </div>
                                         <p className="text-[11px] text-primary/70 italic mt-4 flex items-center gap-1.5">
                                             <span className="size-1 rounded-full bg-primary/40" />
-                                            Dihitung otomatis berdasarkan frekuensi maintenance model aset ({assetModels.find(m => m.id === Number(data.asset_model_id))?.maintenance_count}x per tahun)
+                                            Dihitung otomatis berdasarkan frekuensi maintenance kategori aset ({assetCategories.find(m => m.id === Number(data.asset_category_id))?.maintenance_count}x per tahun)
                                         </p>
                                     </div>
                                 </div>

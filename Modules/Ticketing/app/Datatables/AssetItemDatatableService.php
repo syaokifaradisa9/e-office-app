@@ -21,13 +21,19 @@ class AssetItemDatatableService
         $data = $query->paginate($limit)
             ->through(fn ($item) => [
                 'id' => $item->id,
-                'asset_model' => $item->assetModel?->name,
+                'asset_category' => $item->assetCategory?->name,
                 'merk' => $item->merk,
                 'model' => $item->model,
                 'serial_number' => $item->serial_number,
                 'division' => $item->division?->name,
                 'user' => $item->users->pluck('name')->join(', '),
+                'status' => [
+                    'value' => $item->status->value,
+                    'label' => $item->status->label(),
+                    'color' => $item->status->color(),
+                ],
                 'created_at' => $item->created_at->format('Y-m-d H:i:s'),
+
             ]);
 
         return [
@@ -53,26 +59,30 @@ class AssetItemDatatableService
             // Header
             $writer->addRow(Row::fromValues([
                 'No',
-                'Asset Model',
+                'Kategori Asset',
                 'Merk',
                 'Model',
                 'Serial Number',
                 'Divisi',
                 'User',
+                'Status',
                 'Tanggal Ditambah',
+
             ]));
 
             // Data
             foreach ($data as $index => $item) {
                 $writer->addRow(Row::fromValues([
                     $index + 1,
-                    $item->assetModel?->name ?? '-',
+                    $item->assetCategory?->name ?? '-',
                     $item->merk ?? '-',
                     $item->model ?? '-',
                     $item->serial_number ?? '-',
                     $item->division?->name ?? '-',
                     $item->users->pluck('name')->join(', ') ?: '-',
+                    $item->status->label(),
                     $item->created_at->format('d/m/Y H:i'),
+
                 ]));
             }
 
@@ -84,7 +94,7 @@ class AssetItemDatatableService
 
     private function getStartedQuery(DatatableRequest $request, User $loggedUser): Builder
     {
-        $query = AssetItem::with(['assetModel', 'division', 'users']);
+        $query = AssetItem::with(['assetCategory', 'division', 'users']);
 
         // Permission check
         if ($loggedUser->can(TicketingPermission::ViewAllAsset->value)) {
@@ -103,7 +113,7 @@ class AssetItemDatatableService
                 $q->where('merk', 'like', "%{$search}%")
                     ->orWhere('model', 'like', "%{$search}%")
                     ->orWhere('serial_number', 'like', "%{$search}%")
-                    ->orWhereHas('assetModel', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('assetCategory', fn ($q) => $q->where('name', 'like', "%{$search}%"))
                     ->orWhereHas('division', fn ($q) => $q->where('name', 'like', "%{$search}%"))
                     ->orWhereHas('users', fn ($q) => $q->where('name', 'like', "%{$search}%"));
             });

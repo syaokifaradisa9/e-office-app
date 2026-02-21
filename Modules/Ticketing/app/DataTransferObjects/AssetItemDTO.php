@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 class AssetItemDTO
 {
     public function __construct(
-        public readonly int $asset_model_id,
+        public readonly int $asset_category_id,
         public readonly ?string $merk,
         public readonly ?string $model,
         public readonly ?string $serial_number,
@@ -20,7 +20,7 @@ class AssetItemDTO
     public static function fromRequest(Request $request): self
     {
         return new self(
-            asset_model_id: (int) $request->validated('asset_model_id'),
+            asset_category_id: (int) $request->validated('asset_category_id'),
             merk: $request->validated('merk'),
             model: $request->validated('model'),
             serial_number: $request->validated('serial_number'),
@@ -34,7 +34,7 @@ class AssetItemDTO
     public function toArray(): array
     {
         return [
-            'asset_model_id' => $this->asset_model_id,
+            'asset_category_id' => $this->asset_category_id,
             'merk' => $this->merk,
             'model' => $this->model,
             'serial_number' => $this->serial_number,

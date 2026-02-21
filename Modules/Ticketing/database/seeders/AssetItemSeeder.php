@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Models\Division;
 use Illuminate\Database\Seeder;
 use Modules\Ticketing\Models\AssetItem;
-use Modules\Ticketing\Models\AssetModel;
+use Modules\Ticketing\Models\AssetCategory;
 
 class AssetItemSeeder extends Seeder
 {
@@ -88,16 +88,16 @@ class AssetItemSeeder extends Seeder
         ];
 
         foreach ($items as $item) {
-            $assetModel = AssetModel::where('name', $item['model_name'])->first();
+            $assetCategory = AssetCategory::where('name', $item['model_name'])->first();
 
-            if ($assetModel) {
+            if ($assetCategory) {
                 $assetItem = AssetItem::updateOrCreate(
                     ['serial_number' => $item['serial_number']],
                     [
-                        'asset_model_id' => $assetModel->id,
+                        'asset_category_id' => $assetCategory->id,
                         'merk' => $item['merk'],
                         'model' => $item['model'],
-                        'division_id' => $item['division_id'] ?? $assetModel->division_id,
+                        'division_id' => $item['division_id'] ?? $assetCategory->division_id,
                         'another_attributes' => $item['attributes'],
                     ]
                 );

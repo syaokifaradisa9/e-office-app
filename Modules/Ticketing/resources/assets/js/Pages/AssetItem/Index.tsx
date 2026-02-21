@@ -13,17 +13,25 @@ import CheckPermissions from '@/components/utils/CheckPermissions';
 import MobileSearchBar from '@/components/forms/MobileSearchBar';
 import Tooltip from '@/components/commons/Tooltip';
 import FloatingActionButton from '@/components/buttons/FloatingActionButton';
+import Badge from '@/components/badges/Badge';
 import AssetItemCardItem from './AssetItemCardItem';
+
 
 interface AssetItem {
     id: number;
-    asset_model: string;
+    asset_category: string;
     merk: string | null;
     model: string | null;
     serial_number: string | null;
     division: string;
     user: string;
+    status: {
+        value: string;
+        label: string;
+        color: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'dark';
+    };
     created_at: string;
+
 }
 
 interface PaginationData {
@@ -165,7 +173,7 @@ export default function AssetItemIndex() {
                     isOpen={openConfirm}
                     setOpenModalStatus={setOpenConfirm}
                     title="Konfirmasi Hapus"
-                    message={`Hapus asset "${selectedItem?.asset_model} - ${selectedItem?.serial_number || selectedItem?.merk}"? Tindakan ini tidak dapat dibatalkan.`}
+                    message={`Hapus asset "${selectedItem?.asset_category} - ${selectedItem?.serial_number || selectedItem?.merk}"? Tindakan ini tidak dapat dibatalkan.`}
                     confirmText="Ya, Hapus"
                     cancelText="Batal"
                     type="danger"
@@ -226,11 +234,11 @@ export default function AssetItemIndex() {
                         }}
                         columns={[
                             {
-                                header: 'Asset Model',
+                                header: 'Kategori Asset',
                                 render: (item: AssetItem) => (
                                     <div className="flex items-center gap-2">
                                         <Box className="size-4 text-primary" />
-                                        <span className="font-medium">{item.asset_model}</span>
+                                        <span className="font-medium">{item.asset_category}</span>
                                     </div>
                                 ),
                             },
@@ -270,7 +278,16 @@ export default function AssetItemIndex() {
                                     </div>
                                 ),
                             },
+                            {
+                                header: 'Status',
+                                render: (item: AssetItem) => (
+                                    <Badge color={item.status.color}>
+                                        {item.status.label}
+                                    </Badge>
+                                ),
+                            },
                             ...((canManage || canDelete)
+
                                 ? [
                                     {
                                         header: 'Aksi',

@@ -13,7 +13,7 @@ interface AnotherAttributes {
     specs?: Record<string, string>;
 }
 
-interface AssetModel {
+interface AssetCategory {
     id: number;
     name: string;
     maintenance_count: number;
@@ -32,7 +32,7 @@ interface User {
 
 interface AssetItem {
     id: number;
-    asset_model_id: number;
+    asset_category_id: number;
     merk: string | null;
     model: string | null;
     serial_number: string | null;
@@ -42,16 +42,18 @@ interface AssetItem {
     last_maintenance_date: string | null;
 }
 
+
+
 interface Props {
     asset: AssetItem;
-    assetModels: AssetModel[];
+    assetCategories: AssetCategory[];
     divisions: Division[];
     users: User[];
 }
 
-export default function AssetItemEdit({ asset, assetModels, divisions, users }: Props) {
+export default function AssetItemEdit({ asset, assetCategories, divisions, users }: Props) {
     const { data, setData, put, processing, errors } = useForm({
-        asset_model_id: asset.asset_model_id,
+        asset_category_id: asset.asset_category_id,
         merk: asset.merk || '',
         model: asset.model || '',
         serial_number: asset.serial_number || '',
@@ -59,6 +61,8 @@ export default function AssetItemEdit({ asset, assetModels, divisions, users }: 
         user_ids: asset.users.map(u => u.id),
         another_attributes: asset.another_attributes || {} as AnotherAttributes,
     });
+
+
 
     const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
     const isFirstRender = useRef(true);
@@ -105,13 +109,13 @@ export default function AssetItemEdit({ asset, assetModels, divisions, users }: 
 
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                             <FormSelect
-                                name="asset_model_id"
-                                label="Asset Model"
-                                placeholder="Pilih Asset Model"
-                                value={data.asset_model_id}
-                                onChange={(e) => setData('asset_model_id', Number(e.target.value))}
-                                options={assetModels.map(m => ({ value: m.id, label: m.name }))}
-                                error={errors.asset_model_id}
+                                name="asset_category_id"
+                                label="Kategori Asset"
+                                placeholder="Pilih Kategori Asset"
+                                value={data.asset_category_id}
+                                onChange={(e) => setData('asset_category_id', Number(e.target.value))}
+                                options={assetCategories.map(m => ({ value: m.id, label: m.name }))}
+                                error={errors.asset_category_id}
                                 required
                             />
 
@@ -154,6 +158,8 @@ export default function AssetItemEdit({ asset, assetModels, divisions, users }: 
                             />
                         </div>
                     </div>
+
+
 
                     <div className="space-y-6">
                         <div className="flex items-center gap-2 border-l-4 border-primary pl-3">

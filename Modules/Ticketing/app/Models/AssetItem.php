@@ -5,6 +5,7 @@ namespace Modules\Ticketing\Models;
 use App\Models\User;
 use App\Models\Division;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Ticketing\Enums\AssetItemStatus;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +14,7 @@ use Modules\Ticketing\Database\Factories\AssetItemFactory;
 
 class AssetItem extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected static function newFactory(): AssetItemFactory
     {

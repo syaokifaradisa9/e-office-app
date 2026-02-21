@@ -4,6 +4,7 @@ namespace Modules\Ticketing\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+
 class StoreAssetItemRequest extends FormRequest
 {
     /**
@@ -12,7 +13,7 @@ class StoreAssetItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'asset_model_id' => 'required|exists:asset_models,id',
+            'asset_category_id' => 'required|exists:asset_categories,id',
             'merk' => 'nullable|string|max:255',
             'model' => 'nullable|string|max:255',
             'serial_number' => [
@@ -27,6 +28,8 @@ class StoreAssetItemRequest extends FormRequest
             'user_ids' => 'nullable|array',
             'user_ids.*' => 'exists:users,id',
         ];
+
+
     }
 
     public function messages(): array

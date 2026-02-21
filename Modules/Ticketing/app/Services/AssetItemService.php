@@ -30,6 +30,9 @@ class AssetItemService
 
     public function delete(int $id): bool
     {
+        // Hapus hanya maintenance PENDING, non-pending tetap sebagai history
+        $this->maintenanceRepository->deletePendingByAssetItemId($id);
+
         return $this->assetItemRepository->delete($id);
     }
 

@@ -7,8 +7,8 @@ use RecursiveDirectoryIterator;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Nwidart\Modules\Traits\PathNamespace;
-use Modules\Ticketing\Repositories\AssetModel\AssetModelRepository;
-use Modules\Ticketing\Repositories\AssetModel\EloquentAssetModelRepository;
+use Modules\Ticketing\Repositories\AssetCategory\AssetCategoryRepository;
+use Modules\Ticketing\Repositories\AssetCategory\EloquentAssetCategoryRepository;
 use Modules\Ticketing\Repositories\Checklist\ChecklistRepository;
 use Modules\Ticketing\Repositories\Checklist\EloquentChecklistRepository;
 use Modules\Ticketing\Repositories\AssetItem\AssetItemRepository;
@@ -44,8 +44,8 @@ class TicketingServiceProvider extends ServiceProvider
         $this->app->register(RouteServiceProvider::class);
 
         $this->app->singleton(
-            AssetModelRepository::class,
-            EloquentAssetModelRepository::class
+            AssetCategoryRepository::class,
+            EloquentAssetCategoryRepository::class
         );
 
         $this->app->singleton(

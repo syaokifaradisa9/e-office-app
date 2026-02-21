@@ -3,6 +3,8 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Modules\Ticketing\Enums\AssetItemStatus;
+
 
 return new class extends Migration
 {
@@ -13,13 +15,14 @@ return new class extends Migration
     {
         Schema::create('asset_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('asset_model_id')->constrained('asset_models')->onDelete('cascade');
+            $table->foreignId('asset_category_id')->constrained('asset_categories')->onDelete('cascade');
             $table->string('merk')->nullable();
             $table->string('model')->nullable();
             $table->string('serial_number')->unique()->nullable();
             $table->foreignId('division_id')->constrained('divisions')->onDelete('cascade');
             $table->json('another_attributes')->nullable();
             $table->date('last_maintenance_date')->nullable();
+            $table->enum('status', array_column(AssetItemStatus::cases(), 'value'))->default(AssetItemStatus::Available->value);
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
         });

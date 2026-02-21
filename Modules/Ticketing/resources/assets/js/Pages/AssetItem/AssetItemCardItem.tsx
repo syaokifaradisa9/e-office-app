@@ -1,15 +1,23 @@
-import { Edit, Trash2, Box, Users } from 'lucide-react';
+import { Edit, Trash2, Box, Users, Shield } from 'lucide-react';
 import Button from '@/components/buttons/Button';
+import Badge from '@/components/badges/Badge';
+
 
 interface AssetItem {
     id: number;
-    asset_model: string;
+    asset_category: string;
     merk: string | null;
     model: string | null;
     serial_number: string | null;
     division: string;
     user: string;
+    status: {
+        value: string;
+        label: string;
+        color: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'dark';
+    };
     created_at: string;
+
 }
 
 interface Props {
@@ -35,8 +43,13 @@ export default function AssetItemCardItem({ item, canManage, canDelete, onDelete
                 <div className="min-w-0 flex-1">
                     {/* Title */}
                     <h3 className="truncate text-[15px] font-semibold text-slate-800 dark:text-white">
-                        {item.asset_model} {item.division}
+                        {item.asset_category}
                     </h3>
+                    <div className="flex items-center gap-1.5 mt-0.5 text-[13px] text-slate-500 dark:text-slate-400">
+                        <Shield className="size-3" />
+                        <span>{item.division}</span>
+                    </div>
+
 
                     {/* Specs */}
                     {specs.length > 0 && (
@@ -47,12 +60,16 @@ export default function AssetItemCardItem({ item, canManage, canDelete, onDelete
 
                     {/* User count */}
                     {userCount > 0 && (
-                        <div className="mt-2 flex">
+                        <div className="mt-2 flex gap-2">
                             <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-0.5 text-[12px] font-medium text-slate-600 dark:bg-slate-700/60 dark:text-slate-300">
                                 <Users className="size-3" />
                                 {userCount} Pegawai
                             </span>
+                            <Badge color={item.status.color}>
+                                {item.status.label}
+                            </Badge>
                         </div>
+
                     )}
 
                     {/* Actions */}
