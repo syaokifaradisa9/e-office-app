@@ -13,15 +13,15 @@ class ChecklistService
         private ChecklistRepository $checklistRepository
     ) {}
 
-    public function getAllByAssetModelId(int $assetModelId): Collection
+    public function getAllByAssetCategoryId(int $assetCategoryId): Collection
     {
-        return $this->checklistRepository->getAllByAssetModelId($assetModelId);
+        return $this->checklistRepository->getAllByAssetCategoryId($assetCategoryId);
     }
 
-    public function store(int $assetModelId, ChecklistDTO $dto): Checklist
+    public function store(int $assetCategoryId, ChecklistDTO $dto): Checklist
     {
         return $this->checklistRepository->store([
-            'asset_model_id' => $assetModelId,
+            'asset_category_id' => $assetCategoryId,
             ...$dto->toArray(),
         ]);
     }

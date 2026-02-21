@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Collection;
 
 class EloquentChecklistRepository implements ChecklistRepository
 {
-    public function getAllByAssetModelId(int $assetModelId): Collection
+    public function getAllByAssetCategoryId(int $assetCategoryId): Collection
     {
-        return Checklist::where('asset_model_id', $assetModelId)
+        return Checklist::where('asset_category_id', $assetCategoryId)
             ->orderBy('label')
             ->get();
     }

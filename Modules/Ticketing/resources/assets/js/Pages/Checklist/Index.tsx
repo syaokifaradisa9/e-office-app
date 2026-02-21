@@ -14,7 +14,7 @@ import MobileSearchBar from '@/components/forms/MobileSearchBar';
 import Tooltip from '@/components/commons/Tooltip';
 import FloatingActionButton from '@/components/buttons/FloatingActionButton';
 
-interface AssetModelInfo {
+interface AssetCategoryInfo {
     id: number;
     name: string;
     type: string;
@@ -39,7 +39,7 @@ interface PaginationData {
 }
 
 interface PageProps {
-    assetModel: AssetModelInfo;
+    assetCategory: AssetCategoryInfo;
     permissions?: string[];
     [key: string]: unknown;
 }
@@ -55,7 +55,7 @@ interface Params {
 }
 
 export default function ChecklistIndex() {
-    const { assetModel, permissions } = usePage<PageProps>().props;
+    const { assetCategory, permissions } = usePage<PageProps>().props;
     const canManage = permissions?.includes(TicketingPermission.ManageChecklist);
 
     const [dataTable, setDataTable] = useState<PaginationData>({
@@ -79,7 +79,7 @@ export default function ChecklistIndex() {
     const [selectedItem, setSelectedItem] = useState<ChecklistItem | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const baseUrl = `/ticketing/asset-models/${assetModel.id}/checklists`;
+    const baseUrl = `/ticketing/asset-categories/${assetCategory.id}/checklists`;
 
     async function loadDatatable() {
         setIsLoading(true);
@@ -139,8 +139,8 @@ export default function ChecklistIndex() {
 
     return (
         <RootLayout
-            title={`Checklist - ${assetModel.name}`}
-            backPath="/ticketing/asset-models"
+            title={`Checklist - ${assetCategory.name}`}
+            backPath="/ticketing/asset-categories"
             mobileSearchBar={
                 <MobileSearchBar
                     searchValue={params.search}
@@ -180,9 +180,9 @@ export default function ChecklistIndex() {
                 />
 
                 <ContentCard
-                    title={`Checklist: ${assetModel.name}`}
-                    subtitle={`Kelola daftar checklist untuk asset model ${assetModel.name} (${assetModel.type === 'Physic' ? 'Fisik' : 'Digital'}) - ${assetModel.division || 'Tanpa Divisi'}`}
-                    backPath="/ticketing/asset-models"
+                    title={`Checklist: ${assetCategory.name}`}
+                    subtitle={`Kelola daftar checklist untuk kategori aset ${assetCategory.name} (${assetCategory.type === 'Physic' ? 'Fisik' : 'Digital'}) - ${assetCategory.division || 'Tanpa Divisi'}`}
+                    backPath="/ticketing/asset-categories"
                     mobileFullWidth
                     bodyClassName="px-0 pb-24 pt-2 md:p-6"
                     additionalButton={

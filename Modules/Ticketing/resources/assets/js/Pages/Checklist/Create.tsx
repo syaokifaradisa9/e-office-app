@@ -6,16 +6,16 @@ import Button from '@/components/buttons/Button';
 import { useForm } from '@inertiajs/react';
 import { Save, X } from 'lucide-react';
 
-interface AssetModelInfo {
+interface AssetCategoryInfo {
     id: number;
     name: string;
 }
 
 interface Props {
-    assetModel: AssetModelInfo;
+    assetCategory: AssetCategoryInfo;
 }
 
-export default function ChecklistCreate({ assetModel }: Props) {
+export default function ChecklistCreate({ assetCategory }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         label: '',
         description: '',
@@ -23,15 +23,15 @@ export default function ChecklistCreate({ assetModel }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(`/ticketing/asset-models/${assetModel.id}/checklists/store`);
+        post(`/ticketing/asset-categories/${assetCategory.id}/checklists/store`);
     };
 
     return (
-        <RootLayout title={`Tambah Checklist - ${assetModel.name}`} backPath={`/ticketing/asset-models/${assetModel.id}/checklists`}>
+        <RootLayout title={`Tambah Checklist - ${assetCategory.name}`} backPath={`/ticketing/asset-categories/${assetCategory.id}/checklists`}>
             <ContentCard
                 title="Tambah Checklist Baru"
-                subtitle={`Tambahkan item checklist untuk Asset Model: ${assetModel.name}`}
-                backPath={`/ticketing/asset-models/${assetModel.id}/checklists`}
+                subtitle={`Tambahkan item checklist untuk Kategori Asset: ${assetCategory.name}`}
+                backPath={`/ticketing/asset-categories/${assetCategory.id}/checklists`}
                 mobileFullWidth
             >
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -58,7 +58,7 @@ export default function ChecklistCreate({ assetModel }: Props) {
 
                     <div className="flex justify-end gap-3 border-t border-slate-100 pt-6 dark:border-slate-800">
                         <Button
-                            href={`/ticketing/asset-models/${assetModel.id}/checklists`}
+                            href={`/ticketing/asset-categories/${assetCategory.id}/checklists`}
                             label="Batal"
                             variant="secondary"
                             icon={<X className="size-4" />}

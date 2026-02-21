@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('checklists', function (Blueprint $blueprint) {
             $blueprint->id();
-            $blueprint->foreignId('asset_model_id')->constrained('asset_models')->cascadeOnDelete();
+            $blueprint->foreignId('asset_category_id')->constrained('asset_categories')->cascadeOnDelete();
             $blueprint->string('label');
             $blueprint->text('description')->nullable();
             $blueprint->timestamps();

@@ -5,7 +5,7 @@ namespace Modules\Ticketing\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DatatableRequest;
 use Inertia\Inertia;
-use Modules\Ticketing\Models\AssetModel;
+use Modules\Ticketing\Models\AssetCategory;
 use Modules\Ticketing\Models\Checklist;
 use Modules\Ticketing\Services\ChecklistService;
 use Modules\Ticketing\Datatables\ChecklistDatatableService;
@@ -20,43 +20,43 @@ class ChecklistController extends Controller
         private ChecklistDatatableService $datatableService,
     ) {}
 
-    public function index(AssetModel $assetModel)
+    public function index(AssetCategory $assetCategory)
     {
         return Inertia::render('Ticketing/Checklist/Index', [
-            'assetModel' => [
-                'id' => $assetModel->id,
-                'name' => $assetModel->name,
-                'type' => $assetModel->type?->value,
-                'division' => $assetModel->division?->name,
+            'assetCategory' => [
+                'id' => $assetCategory->id,
+                'name' => $assetCategory->name,
+                'type' => $assetCategory->type?->value,
+                'division' => $assetCategory->division?->name,
             ],
         ]);
     }
 
-    public function create(AssetModel $assetModel)
+    public function create(AssetCategory $assetCategory)
     {
         return Inertia::render('Ticketing/Checklist/Create', [
-            'assetModel' => [
-                'id' => $assetModel->id,
-                'name' => $assetModel->name,
+            'assetCategory' => [
+                'id' => $assetCategory->id,
+                'name' => $assetCategory->name,
             ],
         ]);
     }
 
-    public function store(StoreChecklistRequest $request, AssetModel $assetModel)
+    public function store(StoreChecklistRequest $request, AssetCategory $assetCategory)
     {
         $dto = ChecklistDTO::fromRequest($request);
-        $this->checklistService->store($assetModel->id, $dto);
+        $this->checklistService->store($assetCategory->id, $dto);
 
-        return to_route('ticketing.asset-models.checklists.index', $assetModel->id)
+        return to_route('ticketing.asset-categories.checklists.index', $assetCategory->id)
             ->with('success', 'Checklist berhasil ditambahkan.');
     }
 
-    public function edit(AssetModel $assetModel, Checklist $checklist)
+    public function edit(AssetCategory $assetCategory, Checklist $checklist)
     {
         return Inertia::render('Ticketing/Checklist/Edit', [
-            'assetModel' => [
-                'id' => $assetModel->id,
-                'name' => $assetModel->name,
+            'assetCategory' => [
+                'id' => $assetCategory->id,
+                'name' => $assetCategory->name,
             ],
             'checklist' => [
                 'id' => $checklist->id,
@@ -66,29 +66,29 @@ class ChecklistController extends Controller
         ]);
     }
 
-    public function update(UpdateChecklistRequest $request, AssetModel $assetModel, Checklist $checklist)
+    public function update(UpdateChecklistRequest $request, AssetCategory $assetCategory, Checklist $checklist)
     {
         $dto = ChecklistDTO::fromRequest($request);
         $this->checklistService->update($checklist->id, $dto);
 
-        return to_route('ticketing.asset-models.checklists.index', $assetModel->id)
+        return to_route('ticketing.asset-categories.checklists.index', $assetCategory->id)
             ->with('success', 'Checklist berhasil diperbarui.');
     }
 
-    public function delete(AssetModel $assetModel, Checklist $checklist)
+    public function delete(AssetCategory $assetCategory, Checklist $checklist)
     {
         $this->checklistService->delete($checklist->id);
 
         return back()->with('success', 'Checklist berhasil dihapus.');
     }
 
-    public function datatable(DatatableRequest $request, AssetModel $assetModel)
+    public function datatable(DatatableRequest $request, AssetCategory $assetCategory)
     {
-        return $this->datatableService->getDatatable($request, $assetModel->id);
+        return $this->datatableService->getDatatable($request, $assetCategory->id);
     }
 
-    public function printExcel(DatatableRequest $request, AssetModel $assetModel)
+    public function printExcel(DatatableRequest $request, AssetCategory $assetCategory)
     {
-        return $this->datatableService->printExcel($request, $assetModel->id, $assetModel->name);
+        return $this->datatableService->printExcel($request, $assetCategory->id, $assetCategory->name);
     }
 }

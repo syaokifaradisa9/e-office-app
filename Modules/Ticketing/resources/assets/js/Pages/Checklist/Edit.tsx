@@ -6,7 +6,7 @@ import Button from '@/components/buttons/Button';
 import { useForm } from '@inertiajs/react';
 import { Save, X } from 'lucide-react';
 
-interface AssetModelInfo {
+interface AssetCategoryInfo {
     id: number;
     name: string;
 }
@@ -18,11 +18,11 @@ interface Checklist {
 }
 
 interface Props {
-    assetModel: AssetModelInfo;
+    assetCategory: AssetCategoryInfo;
     checklist: Checklist;
 }
 
-export default function ChecklistEdit({ assetModel, checklist }: Props) {
+export default function ChecklistEdit({ assetCategory, checklist }: Props) {
     const { data, setData, put, processing, errors } = useForm({
         label: checklist.label,
         description: checklist.description || '',
@@ -30,15 +30,15 @@ export default function ChecklistEdit({ assetModel, checklist }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(`/ticketing/asset-models/${assetModel.id}/checklists/${checklist.id}/update`);
+        put(`/ticketing/asset-categories/${assetCategory.id}/checklists/${checklist.id}/update`);
     };
 
     return (
-        <RootLayout title={`Edit Checklist - ${assetModel.name}`} backPath={`/ticketing/asset-models/${assetModel.id}/checklists`}>
+        <RootLayout title={`Edit Checklist - ${assetCategory.name}`} backPath={`/ticketing/asset-categories/${assetCategory.id}/checklists`}>
             <ContentCard
                 title="Edit Checklist"
-                subtitle={`Perbarui item checklist untuk Asset Model: ${assetModel.name}`}
-                backPath={`/ticketing/asset-models/${assetModel.id}/checklists`}
+                subtitle={`Perbarui item checklist untuk Kategori Asset: ${assetCategory.name}`}
+                backPath={`/ticketing/asset-categories/${assetCategory.id}/checklists`}
                 mobileFullWidth
             >
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -65,7 +65,7 @@ export default function ChecklistEdit({ assetModel, checklist }: Props) {
 
                     <div className="flex justify-end gap-3 border-t border-slate-100 pt-6 dark:border-slate-800">
                         <Button
-                            href={`/ticketing/asset-models/${assetModel.id}/checklists`}
+                            href={`/ticketing/asset-categories/${assetCategory.id}/checklists`}
                             label="Batal"
                             variant="secondary"
                             icon={<X className="size-4" />}

@@ -5,6 +5,7 @@ namespace Modules\Ticketing\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Modules\Ticketing\Enums\TicketingPermission;
+use Modules\Ticketing\Models\AssetCategory;
 use Symfony\Component\HttpFoundation\Response;
 
 class TicketingRoutePermissionCheck
@@ -112,6 +113,30 @@ class TicketingRoutePermissionCheck
 
         if (!$hasPermission) {
             abort(403);
+        }
+
+        // Division-level access control for checklist routes
+        // User dengan ViewAssetCategoryDivisi hanya bisa akses checklist dari kategori divisi sendiri
+        if (str_contains($routeName, 'ticketing.asset-categories.checklists.')) {
+            $assetCategory = $request->route('assetCategory');
+
+            if ($assetCategory) {
+                // Resolve model jbika masih berupa ID
+                if (!$assetCategory instanceof AssetCategory) {
+                    $assetCategory = AssetCategory::find($assetCategory);
+                }
+
+                if ($assetCategory) {
+                    $isAll = $user->can(TicketingPermission::ViewAllAssetCategory->value);
+
+                    if (!$isAll) {
+                        // User level divisi: hanya bisa akses kategori milik divisi sendiri
+                        if ($assetCategory->division_id !== $user->division_id) {
+                            abort(403);
+                        }
+                    }
+                }
+            }
         }
 
         return $next($request);

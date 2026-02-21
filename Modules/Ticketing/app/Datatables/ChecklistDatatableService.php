@@ -11,9 +11,9 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ChecklistDatatableService
 {
-    public function getDatatable(DatatableRequest $request, int $assetModelId): array
+    public function getDatatable(DatatableRequest $request, int $assetCategoryId): array
     {
-        $query = $this->getStartedQuery($request, $assetModelId);
+        $query = $this->getStartedQuery($request, $assetCategoryId);
 
         $limit = $request->input('limit', 10);
 
@@ -36,9 +36,9 @@ class ChecklistDatatableService
         ];
     }
 
-    public function printExcel(DatatableRequest $request, int $assetModelId, string $assetModelName): mixed
+    public function printExcel(DatatableRequest $request, int $assetCategoryId, string $assetCategoryName): mixed
     {
-        $query = $this->getStartedQuery($request, $assetModelId);
+        $query = $this->getStartedQuery($request, $assetCategoryId);
         $data = $query->orderBy('label')->get();
 
         return response()->streamDownload(function () use ($data) {
@@ -62,14 +62,14 @@ class ChecklistDatatableService
             }
 
             $writer->close();
-        }, 'Checklist '.($assetModelName).' Per '.date('d F Y').'.xlsx', [
+        }, 'Checklist '.($assetCategoryName).' Per '.date('d F Y').'.xlsx', [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ]);
     }
 
-    private function getStartedQuery(DatatableRequest $request, int $assetModelId): Builder
+    private function getStartedQuery(DatatableRequest $request, int $assetCategoryId): Builder
     {
-        $query = Checklist::where('asset_model_id', $assetModelId);
+        $query = Checklist::where('asset_category_id', $assetCategoryId);
 
         // Global Search
         if ($search = $request->input('search')) {
