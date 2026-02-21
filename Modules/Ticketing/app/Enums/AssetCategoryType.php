@@ -2,7 +2,7 @@
 
 namespace Modules\Ticketing\Enums;
 
-enum AssetModelType: string
+enum AssetCategoryType: string
 {
     case Physic = 'Physic';
     case Digital = 'Digital';

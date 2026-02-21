@@ -2,7 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Ticketing\Http\Controllers\TicketingController;
-use Modules\Ticketing\Http\Controllers\AssetModelController;
+
+use Modules\Ticketing\Http\Controllers\AssetCategoryController;
 use Modules\Ticketing\Http\Controllers\ChecklistController;
 use Modules\Ticketing\Http\Controllers\AssetItemController;
 use Modules\Ticketing\Http\Middleware\TicketingRoutePermissionCheck;
@@ -11,15 +12,15 @@ Route::middleware(['auth', TicketingRoutePermissionCheck::class])->group(functio
     Route::prefix('ticketing')->name('ticketing.')->group(function () {
         Route::get('/', [TicketingController::class, 'index'])->name('index');
 
-        // Asset Model Management
-        Route::prefix('asset-models')->name('asset-models.')->controller(AssetModelController::class)->group(function () {
+        // Asset Category Management
+        Route::prefix('asset-categories')->name('asset-categories.')->controller(AssetCategoryController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/datatable', 'datatable')->name('datatable');
             Route::get('/print/excel', 'printExcel')->name('print-excel');
             Route::get('/create', 'create')->name('create');
             Route::post('/store', 'store')->name('store');
 
-            Route::prefix('{assetModel}')->group(function () {
+            Route::prefix('{assetCategory}')->group(function () {
                 Route::get('/edit', 'edit')->name('edit');
                 Route::put('/update', 'update')->name('update');
                 Route::delete('/delete', 'delete')->name('delete');
@@ -67,6 +68,10 @@ Route::middleware(['auth', TicketingRoutePermissionCheck::class])->group(functio
             Route::post('/{maintenance}/store-checklist', 'storeChecklist')->name('store-checklist');
             Route::post('/{maintenance}/cancel', 'cancel')->name('cancel');
             Route::post('/{maintenance}/confirm', 'confirm')->name('confirm');
+            Route::get('/{id}/refinement', [\Modules\Ticketing\Http\Controllers\RefinementController::class, 'index'])->name('refinement.index');
+            Route::get('/{id}/refinement/create', [\Modules\Ticketing\Http\Controllers\RefinementController::class, 'create'])->name('refinement.create');
+            Route::post('/{id}/refinement', [\Modules\Ticketing\Http\Controllers\RefinementController::class, 'store'])->name('refinement.store');
+            Route::get('/{id}/refinement/datatable', [\Modules\Ticketing\Http\Controllers\RefinementController::class, 'datatable'])->name('refinement.datatable');
         });
     });
 });

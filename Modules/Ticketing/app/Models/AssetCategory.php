@@ -7,13 +7,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Modules\Ticketing\Enums\AssetModelType;
+use Modules\Ticketing\Enums\AssetCategoryType;
 
-class AssetModel extends Model
+use Modules\Ticketing\Database\Factories\AssetCategoryFactory;
+
+class AssetCategory extends Model
 {
     use HasFactory;
 
-    protected $table = 'asset_models';
+    protected static function newFactory(): AssetCategoryFactory
+    {
+        return AssetCategoryFactory::new();
+    }
+
+    protected $table = 'asset_categories';
 
     protected $fillable = [
         'name',
@@ -23,7 +30,7 @@ class AssetModel extends Model
     ];
 
     protected $casts = [
-        'type' => AssetModelType::class,
+        'type' => AssetCategoryType::class,
         'maintenance_count' => 'integer',
     ];
 
@@ -42,4 +49,3 @@ class AssetModel extends Model
         return $this->hasMany(AssetItem::class);
     }
 }
-

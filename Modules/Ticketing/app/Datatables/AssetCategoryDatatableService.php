@@ -7,11 +7,11 @@ use App\Models\User;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Writer\XLSX\Writer;
 use App\Http\Requests\DatatableRequest;
-use Modules\Ticketing\Models\AssetModel;
+use Modules\Ticketing\Models\AssetCategory;
 use Illuminate\Database\Eloquent\Builder;
 use Modules\Ticketing\Enums\TicketingPermission;
 
-class AssetModelDatatableService
+class AssetCategoryDatatableService
 {
     public function getDatatable(DatatableRequest $request, User $loggedUser): array
     {
@@ -53,7 +53,7 @@ class AssetModelDatatableService
             // Header
             $writer->addRow(Row::fromValues([
                 'No',
-                'Nama Asset Model',
+                'Nama Kategori Asset',
                 'Tipe',
                 'Divisi',
                 'Maintenance (Tahun)',
@@ -71,21 +71,21 @@ class AssetModelDatatableService
             }
 
             $writer->close();
-        }, 'Laporan Data Asset Model Per '.date('d F Y').'.xlsx', [
+        }, 'Laporan Data Kategori Asset Per '.date('d F Y').'.xlsx', [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ]);
     }
 
     private function getStartedQuery(DatatableRequest $request, User $loggedUser): Builder
     {
-        $query = AssetModel::with('division')->withCount('checklists');
+        $query = AssetCategory::with('division')->withCount('checklists');
 
         // Permission Filtering
-        $canViewAll = $loggedUser->hasPermissionTo(TicketingPermission::ViewAllAssetModel) || 
-                     $loggedUser->hasPermissionTo(TicketingPermission::ManageAssetModel);
+        $canViewAll = $loggedUser->hasPermissionTo(TicketingPermission::ViewAllAssetCategory->value);
 
         if (!$canViewAll) {
-            if ($loggedUser->hasPermissionTo(TicketingPermission::ViewAssetModelDivisi)) {
+            if ($loggedUser->hasPermissionTo(TicketingPermission::ViewAssetCategoryDivisi->value) || 
+                $loggedUser->hasPermissionTo(TicketingPermission::ManageAssetCategory->value)) {
                 $query->where('division_id', $loggedUser->division_id);
             } else {
                 $query->whereNull('id');

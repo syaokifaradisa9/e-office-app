@@ -4,10 +4,10 @@ namespace Modules\Ticketing\Enums;
 
 enum TicketingPermission: string
 {
-    case ViewAssetModelDivisi = 'Lihat Data Asset Model Divisi';
-    case ViewAllAssetModel = 'Lihat Data Asset Model Keseluruhan';
-    case ManageAssetModel = 'Kelola Data Asset Model';
-    case DeleteAssetModel = 'Hapus Data Asset Model';
+    case ViewAssetCategoryDivisi = 'Lihat Data Kategori Asset Divisi';
+    case ViewAllAssetCategory = 'Lihat Data Kategori Asset Keseluruhan';
+    case ManageAssetCategory = 'Kelola Data Kategori Asset';
+    case DeleteAssetCategory = 'Hapus Data Kategori Asset';
 
     case ViewChecklist = 'Lihat Data Checklist';
     case ManageChecklist = 'Kelola Data Checklist';

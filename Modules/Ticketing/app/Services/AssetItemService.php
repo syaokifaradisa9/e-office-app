@@ -38,9 +38,9 @@ class AssetItemService
         return $this->assetItemRepository->findById($id);
     }
 
-    public function regenerateByModel(int $modelId): void
+    public function regenerateByCategory(int $categoryId): void
     {
-        $assets = AssetItem::where('asset_model_id', $modelId)->get();
+        $assets = AssetItem::where('asset_category_id', $categoryId)->get();
         foreach ($assets as $asset) {
             $this->generateMaintenances($asset);
         }
@@ -48,17 +48,19 @@ class AssetItemService
 
     public function generateMaintenances(AssetItem $assetItem): void
     {
-        $assetModel = $assetItem->assetModel;
-        if (!$assetModel || $assetModel->maintenance_count <= 0) {
+        // Fresh load to ensure updated maintenance_count is used
+        $assetCategory = $assetItem->assetCategory()->first();
+
+        // 1. Delete ONLY Pending maintenances (always clean up first)
+        $this->maintenanceRepository->deletePendingByAssetItemId($assetItem->id);
+
+        if (!$assetCategory || $assetCategory->maintenance_count <= 0) {
             return;
         }
 
-        // 1. Delete ONLY Pending maintenances
-        $this->maintenanceRepository->deletePendingByAssetItemId($assetItem->id);
-
         // 2. Determine Year and Periods logic
         // We use maintenance_count to split 12 months.
-        $count = (int) $assetModel->maintenance_count;
+        $count = (int) $assetCategory->maintenance_count;
         $periodLength = 12 / $count;
 
         // 3. Get all existing non-pending maintenances to find filled periods

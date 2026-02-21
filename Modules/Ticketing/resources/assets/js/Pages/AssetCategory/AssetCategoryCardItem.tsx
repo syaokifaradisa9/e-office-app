@@ -1,7 +1,7 @@
 import { Edit, Trash2, Box, Shield, ListChecks } from 'lucide-react';
 import Button from '@/components/buttons/Button';
 
-interface AssetModel {
+interface AssetCategory {
     id: number;
     name: string;
     type: string; // Returns 'Physic' or 'Digital' from ->value
@@ -11,14 +11,14 @@ interface AssetModel {
 }
 
 interface Props {
-    item: AssetModel;
+    item: AssetCategory;
     canManage?: boolean;
     canDelete?: boolean;
     canViewChecklist?: boolean;
-    onDelete: (item: AssetModel) => void;
+    onDelete: (item: AssetCategory) => void;
 }
 
-export default function AssetModelCardItem({ item, canManage, canDelete, canViewChecklist, onDelete }: Props) {
+export default function AssetCategoryCardItem({ item, canManage, canDelete, canViewChecklist, onDelete }: Props) {
     return (
         <div className="group transition-colors duration-150 hover:bg-slate-50/80 dark:hover:bg-slate-700/20">
             <div className="flex items-start gap-3.5 px-4 py-4">
@@ -59,7 +59,7 @@ export default function AssetModelCardItem({ item, canManage, canDelete, canView
                         {/* Primary Action: Checklist (Full Width) */}
                         {canViewChecklist && (item.maintenance_count || 0) > 0 && (
                             <Button
-                                href={`/ticketing/asset-models/${item.id}/checklists`}
+                                href={`/ticketing/asset-categories/${item.id}/checklists`}
                                 variant="outline"
                                 className="w-full !py-2.5 !bg-transparent !text-primary !border-primary/30 hover:!bg-primary/5 dark:!border-primary/20 dark:hover:!bg-primary/10"
                                 icon={<ListChecks className="size-4" />}
@@ -72,7 +72,7 @@ export default function AssetModelCardItem({ item, canManage, canDelete, canView
                             <div className="grid grid-cols-2 gap-2">
                                 {canManage ? (
                                     <Button
-                                        href={`/ticketing/asset-models/${item.id}/edit`}
+                                        href={`/ticketing/asset-categories/${item.id}/edit`}
                                         variant="outline"
                                         className="!py-2 !bg-transparent !text-amber-600 !border-amber-200 hover:!bg-amber-50 dark:!text-amber-400 dark:!border-amber-800/50 dark:hover:!bg-amber-900/20"
                                         icon={<Edit className="size-4" />}

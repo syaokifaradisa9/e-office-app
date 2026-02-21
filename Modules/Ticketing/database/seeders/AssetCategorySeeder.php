@@ -4,11 +4,11 @@ namespace Modules\Ticketing\Database\Seeders;
 
 use App\Models\Division;
 use Illuminate\Database\Seeder;
-use Modules\Ticketing\Models\AssetModel;
+use Modules\Ticketing\Models\AssetCategory;
 use Modules\Ticketing\Models\Checklist;
-use Modules\Ticketing\Enums\AssetModelType;
+use Modules\Ticketing\Enums\AssetCategoryType;
 
-class AssetModelSeeder extends Seeder
+class AssetCategorySeeder extends Seeder
 {
     public function run(): void
     {
@@ -16,11 +16,11 @@ class AssetModelSeeder extends Seeder
         $itDivision = Division::where('name', 'IT')->first() ?? Division::create(['name' => 'IT', 'description' => 'Information Technology', 'is_active' => true]);
         $tuDivision = Division::where('name', 'Tata Usaha')->first() ?? Division::create(['name' => 'Tata Usaha', 'description' => 'Bagian Umum / Tata Usaha', 'is_active' => true]);
 
-        $models = [
+        $categories = [
             // IT Assets with Checklists
             [
                 'name' => 'Laptop',
-                'type' => AssetModelType::Physic,
+                'type' => AssetCategoryType::Physic,
                 'division_id' => $itDivision->id,
                 'checklists' => [
                     'Kondisi Layar',
@@ -33,7 +33,7 @@ class AssetModelSeeder extends Seeder
             ],
             [
                 'name' => 'Printer',
-                'type' => AssetModelType::Physic,
+                'type' => AssetCategoryType::Physic,
                 'division_id' => $itDivision->id,
                 'checklists' => [
                     'Ketersediaan Tinta/Toner',
@@ -46,7 +46,7 @@ class AssetModelSeeder extends Seeder
             // TU Assets with Checklists
             [
                 'name' => 'Air Conditioner',
-                'type' => AssetModelType::Physic,
+                'type' => AssetCategoryType::Physic,
                 'division_id' => $tuDivision->id,
                 'checklists' => [
                     'Kebersihan Filter Udara',
@@ -58,7 +58,7 @@ class AssetModelSeeder extends Seeder
             ],
             [
                 'name' => 'Mobil',
-                'type' => AssetModelType::Physic,
+                'type' => AssetCategoryType::Physic,
                 'division_id' => $tuDivision->id,
                 'checklists' => [
                     'Kondisi Mesin & Cairan (Oli/Air)',
@@ -72,13 +72,13 @@ class AssetModelSeeder extends Seeder
             // Physic Assets without Checklists
             [
                 'name' => 'Meja',
-                'type' => AssetModelType::Physic,
+                'type' => AssetCategoryType::Physic,
                 'division_id' => $tuDivision->id,
                 'checklists' => []
             ],
             [
                 'name' => 'Kursi',
-                'type' => AssetModelType::Physic,
+                'type' => AssetCategoryType::Physic,
                 'division_id' => $tuDivision->id,
                 'checklists' => []
             ],
@@ -86,32 +86,32 @@ class AssetModelSeeder extends Seeder
             // Other existing ones
             [
                 'name' => 'PC Desktop',
-                'type' => AssetModelType::Physic,
+                'type' => AssetCategoryType::Physic,
                 'division_id' => $itDivision->id,
                 'checklists' => ['Kondisi CPU', 'Kondisi Monitor', 'Keyboard & Mouse']
             ],
             [
                 'name' => 'Switch Networking',
-                'type' => AssetModelType::Physic,
+                'type' => AssetCategoryType::Physic,
                 'division_id' => $itDivision->id,
                 'checklists' => ['Power Status', 'Kondisi Port']
             ],
             [
                 'name' => 'Email Account',
-                'type' => AssetModelType::Digital,
+                'type' => AssetCategoryType::Digital,
                 'division_id' => $itDivision->id,
                 'checklists' => []
             ],
             [
                 'name' => 'VPS Server',
-                'type' => AssetModelType::Digital,
+                'type' => AssetCategoryType::Digital,
                 'division_id' => $itDivision->id,
                 'checklists' => []
             ],
         ];
 
-        foreach ($models as $item) {
-            $assetModel = AssetModel::updateOrCreate(
+        foreach ($categories as $item) {
+            $assetCategory = AssetCategory::updateOrCreate(
                 ['name' => $item['name']],
                 [
                     'type' => $item['type'],
@@ -124,7 +124,7 @@ class AssetModelSeeder extends Seeder
                 foreach ($item['checklists'] as $label) {
                     Checklist::updateOrCreate(
                         [
-                            'asset_model_id' => $assetModel->id,
+                            'asset_category_id' => $assetCategory->id,
                             'label' => $label
                         ],
                         [

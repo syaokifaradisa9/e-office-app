@@ -28,7 +28,7 @@ class DatabaseSeeder extends Seeder
             EmployeeSeeder::class,
             
             // Module Specific Seeders
-            \Modules\Ticketing\Database\Seeders\AssetModelSeeder::class,
+            \Modules\Ticketing\Database\Seeders\AssetCategorySeeder::class,
             \Modules\Ticketing\Database\Seeders\AssetItemSeeder::class,
             \Modules\Archieve\Database\Seeders\ArchieveCategorySeeder::class,
             \Modules\Archieve\Database\Seeders\DocumentClassificationSeeder::class,

@@ -35,41 +35,26 @@ class RoleService
         // Define grouping rules for permissions with module separation
         // Order matters: specific modules first, generic "Data Master" last to avoid broad keyword matches
         $groupingRules = [
-            // Gudang BHP (Inventory)
-            'inv_category' => [
-                'module' => 'Gudang BHP',
-                'label' => 'Kategori Barang',
-                'keywords' => ['Kategori Barang', 'Data Kategori'],
+            // Ticketing
+            'ticketing_asset_category' => [
+                'module' => 'Ticketing',
+                'label' => 'Kategori Asset',
+                'keywords' => ['Kategori Asset'],
             ],
-            'inv_item' => [
-                'module' => 'Gudang BHP',
-                'label' => 'Data Barang',
-                'keywords' => ['Barang Gudang'],
+            'ticketing_checklist' => [
+                'module' => 'Ticketing',
+                'label' => 'Checklist',
+                'keywords' => ['Checklist'],
             ],
-            'inv_order' => [
-                'module' => 'Gudang BHP',
-                'label' => 'Permintaan Barang',
-                'keywords' => ['Permintaan Barang', 'Serah Terima Barang', 'Terima Barang'],
+            'ticketing_asset' => [
+                'module' => 'Ticketing',
+                'label' => 'Data Asset',
+                'keywords' => ['Data Asset', 'Asset Pribadi', 'Asset Divisi', 'Asset Keseluruhan'],
             ],
-            'inv_opname' => [
-                'module' => 'Gudang BHP',
-                'label' => 'Stock Opname',
-                'keywords' => ['Stock Opname'],
-            ],
-            'inv_monitoring' => [
-                'module' => 'Gudang BHP',
-                'label' => 'Monitoring & Stok',
-                'keywords' => ['Transaksi Barang', 'Stok Divisi', 'Stok Keseluruhan', 'Konversi Stok', 'Pengeluaran Stok'],
-            ],
-            'inv_dashboard' => [
-                'module' => 'Gudang BHP',
-                'label' => 'Dashboard Gudang',
-                'keywords' => ['Dashboard Gudang'],
-            ],
-            'inv_report' => [
-                'module' => 'Gudang BHP',
-                'label' => 'Laporan Gudang',
-                'keywords' => ['Laporan Gudang'],
+            'maintenance' => [
+                'module' => 'Ticketing',
+                'label' => 'Maintenance',
+                'keywords' => ['Maintenance'],
             ],
 
             // Arsiparis (Archieve)
@@ -131,26 +116,41 @@ class RoleService
                 'keywords' => ['laporan_pengunjung', 'dashboard_pengunjung'],
             ],
 
-            // Ticketing
-            'ticketing_asset' => [
-                'module' => 'Ticketing',
-                'label' => 'Asset Model',
-                'keywords' => ['Asset Model'],
+            // Gudang BHP (Inventory)
+            'inv_category' => [
+                'module' => 'Gudang BHP',
+                'label' => 'Kategori Barang',
+                'keywords' => ['Kategori Barang', 'Data Kategori'],
             ],
-            'ticketing_checklist' => [
-                'module' => 'Ticketing',
-                'label' => 'Checklist',
-                'keywords' => ['Checklist'],
+            'inv_item' => [
+                'module' => 'Gudang BHP',
+                'label' => 'Data Barang',
+                'keywords' => ['Barang Gudang'],
             ],
-            'ticketing_asset_item' => [
-                'module' => 'Ticketing',
-                'label' => 'Asset',
-                'keywords' => ['Asset'],
+            'inv_order' => [
+                'module' => 'Gudang BHP',
+                'label' => 'Permintaan Barang',
+                'keywords' => ['Permintaan Barang', 'Serah Terima Barang', 'Terima Barang'],
             ],
-            'maintenance' => [
-                'module' => 'Ticketing',
-                'label' => 'Maintenance',
-                'keywords' => ['Maintenance'],
+            'inv_opname' => [
+                'module' => 'Gudang BHP',
+                'label' => 'Stock Opname',
+                'keywords' => ['Stock Opname'],
+            ],
+            'inv_monitoring' => [
+                'module' => 'Gudang BHP',
+                'label' => 'Monitoring & Stok',
+                'keywords' => ['Transaksi Barang', 'Stok Divisi', 'Stok Keseluruhan', 'Konversi Stok', 'Pengeluaran Stok'],
+            ],
+            'inv_dashboard' => [
+                'module' => 'Gudang BHP',
+                'label' => 'Dashboard Gudang',
+                'keywords' => ['Dashboard Gudang'],
+            ],
+            'inv_report' => [
+                'module' => 'Gudang BHP',
+                'label' => 'Laporan Gudang',
+                'keywords' => ['Laporan Gudang'],
             ],
 
             // Data Master (Generic - Checked last)

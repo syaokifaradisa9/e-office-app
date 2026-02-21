@@ -1,8 +1,8 @@
 export enum TicketingPermission {
-    ViewAssetModelDivisi = 'Lihat Data Asset Model Divisi',
-    ViewAllAssetModel = 'Lihat Data Asset Model Keseluruhan',
-    ManageAssetModel = 'Kelola Data Asset Model',
-    DeleteAssetModel = 'Hapus Data Asset Model',
+    ViewAssetCategoryDivisi = 'Lihat Data Kategori Asset Divisi',
+    ViewAllAssetCategory = 'Lihat Data Kategori Asset Keseluruhan',
+    ManageAssetCategory = 'Kelola Data Kategori Asset',
+    DeleteAssetCategory = 'Hapus Data Kategori Asset',
 
     ViewChecklist = 'Lihat Data Checklist',
     ManageChecklist = 'Kelola Data Checklist',

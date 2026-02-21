@@ -15,11 +15,11 @@ export default function TicketingSidebar() {
                 </div>
 
                 <CheckPermissions permissions={[
-                    TicketingPermission.ViewAssetModelDivisi,
-                    TicketingPermission.ViewAllAssetModel,
-                    TicketingPermission.ManageAssetModel,
+                    TicketingPermission.ViewAssetCategoryDivisi,
+                    TicketingPermission.ViewAllAssetCategory,
+                    TicketingPermission.ManageAssetCategory,
                 ]}>
-                    <SidebarLink name="Asset Model" href="/ticketing/asset-models" icon={Box} />
+                    <SidebarLink name="Kategori Asset" href="/ticketing/asset-categories" icon={Box} />
                 </CheckPermissions>
 
                 <CheckPermissions permissions={[

@@ -13,7 +13,7 @@ class TicketingDatabaseSeeder extends Seeder
     {
         $this->call([
             TicketingPermissionSeeder::class,
-            AssetModelSeeder::class,
+            AssetCategorySeeder::class,
         ]);
     }
 }

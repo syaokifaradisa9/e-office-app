@@ -6,11 +6,14 @@ use Modules\Ticketing\Models\Maintenance;
 use Modules\Ticketing\Repositories\Maintenance\MaintenanceRepository;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Modules\Ticketing\Enums\AssetItemStatus;
+
 
 class MaintenanceService
 {
     public function __construct(
-        private MaintenanceRepository $maintenanceRepository
+        private MaintenanceRepository $maintenanceRepository,
+        private \Modules\Ticketing\Repositories\AssetItemRefinement\AssetItemRefinementRepository $refinementRepository
     ) {}
 
     public function findById(int $id): ?Maintenance
@@ -50,15 +53,10 @@ class MaintenanceService
             throw new \Exception("Maintenance record has been confirmed and cannot be updated.");
         }
 
-        $hasNotGood = false;
-        foreach ($dto->checklists as $item) {
-            if ($item['value'] === 'Tidak Baik') {
-                $hasNotGood = true;
-                break;
-            }
-        }
-
-        $status = $hasNotGood ? \Modules\Ticketing\Enums\MaintenanceStatus::REFINEMENT : \Modules\Ticketing\Enums\MaintenanceStatus::FINISH;
+        // Determine status based on user's checkbox decision
+        $status = $dto->needs_further_repair
+            ? \Modules\Ticketing\Enums\MaintenanceStatus::REFINEMENT
+            : \Modules\Ticketing\Enums\MaintenanceStatus::FINISH;
 
         // Save checklists to new table
         $maintenance->checklists()->delete();
@@ -96,6 +94,12 @@ class MaintenanceService
             'attachments' => $attachments,
         ]);
 
+        // Update asset_item status based on needs_further_repair
+        $maintenance->assetItem()->update([
+            'status' => $dto->needs_further_repair ? AssetItemStatus::Refinement->value : AssetItemStatus::Available->value,
+        ]);
+
+
         return $maintenance;
     }
 
@@ -124,5 +128,41 @@ class MaintenanceService
         ]);
 
         return $maintenance;
+    }
+
+    public function saveRefinement(int $id, array $data): \Modules\Ticketing\Models\AssetItemRefinement
+    {
+        $maintenance = $this->maintenanceRepository->findById($id);
+        if (!$maintenance) {
+            throw new \Exception("Maintenance record not found.");
+        }
+
+        $attachments = [];
+        if (!empty($data['attachments'])) {
+            foreach ($data['attachments'] as $file) {
+                $path = $file->store('refinement-evidence', 'public');
+                $attachments[] = [
+                    'name' => $file->getClientOriginalName(),
+                    'path' => $path,
+                    'url' => Storage::url($path),
+                    'size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType(),
+                ];
+            }
+        }
+
+        return $this->refinementRepository->store([
+            'maintenance_id' => $id,
+            'date' => $data['date'],
+            'description' => $data['description'],
+            'note' => $data['note'],
+            'result' => $data['result'],
+            'attachments' => $attachments,
+        ]);
+    }
+
+    public function getRefinements(int $id)
+    {
+        return $this->refinementRepository->getByMaintenanceId($id);
     }
 }

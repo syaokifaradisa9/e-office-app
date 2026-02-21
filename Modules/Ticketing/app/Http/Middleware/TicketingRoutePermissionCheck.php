@@ -29,72 +29,72 @@ class TicketingRoutePermissionCheck
         }
 
         $hasPermission = match (true) {
-            // Asset Model Management - View
-            str_contains($routeName, 'ticketing.asset-models.index'),
-            str_contains($routeName, 'ticketing.asset-models.datatable'),
-            str_contains($routeName, 'ticketing.asset-models.print-excel') => 
-                $user->can(TicketingPermission::ViewAssetModelDivisi) ||
-                $user->can(TicketingPermission::ViewAllAssetModel) ||
-                $user->can(TicketingPermission::ManageAssetModel),
+            // Asset Category Management - View
+            str_contains($routeName, 'ticketing.asset-categories.index'),
+            str_contains($routeName, 'ticketing.asset-categories.datatable'),
+            str_contains($routeName, 'ticketing.asset-categories.print-excel') => 
+                $user->can(TicketingPermission::ViewAssetCategoryDivisi->value) ||
+                $user->can(TicketingPermission::ViewAllAssetCategory->value) ||
+                $user->can(TicketingPermission::ManageAssetCategory->value),
 
-            // Asset Model Management - Manage
-            str_contains($routeName, 'ticketing.asset-models.create'),
-            str_contains($routeName, 'ticketing.asset-models.store'),
-            str_contains($routeName, 'ticketing.asset-models.edit'),
-            str_contains($routeName, 'ticketing.asset-models.update') => 
-                $user->can(TicketingPermission::ManageAssetModel),
+            // Asset Category Management - Manage
+            str_contains($routeName, 'ticketing.asset-categories.create'),
+            str_contains($routeName, 'ticketing.asset-categories.store'),
+            str_contains($routeName, 'ticketing.asset-categories.edit'),
+            str_contains($routeName, 'ticketing.asset-categories.update') => 
+                $user->can(TicketingPermission::ManageAssetCategory->value),
 
-            // Asset Model Management - Delete
-            str_contains($routeName, 'ticketing.asset-models.delete') => 
-                $user->can(TicketingPermission::DeleteAssetModel),
+            // Asset Category Management - Delete
+            str_contains($routeName, 'ticketing.asset-categories.delete') => 
+                $user->can(TicketingPermission::DeleteAssetCategory->value),
 
             // Checklist Management - View
-            str_contains($routeName, 'ticketing.asset-models.checklists.index'),
-            str_contains($routeName, 'ticketing.asset-models.checklists.datatable'),
-            str_contains($routeName, 'ticketing.asset-models.checklists.print-excel') =>
-                $user->can(TicketingPermission::ViewChecklist) ||
-                $user->can(TicketingPermission::ManageChecklist),
+            str_contains($routeName, 'ticketing.asset-categories.checklists.index'),
+            str_contains($routeName, 'ticketing.asset-categories.checklists.datatable'),
+            str_contains($routeName, 'ticketing.asset-categories.checklists.print-excel') =>
+                $user->can(TicketingPermission::ViewChecklist->value) ||
+                $user->can(TicketingPermission::ManageChecklist->value),
 
             // Checklist Management - Manage
-            str_contains($routeName, 'ticketing.asset-models.checklists.create'),
-            str_contains($routeName, 'ticketing.asset-models.checklists.store'),
-            str_contains($routeName, 'ticketing.asset-models.checklists.edit'),
-            str_contains($routeName, 'ticketing.asset-models.checklists.update') =>
-                $user->can(TicketingPermission::ManageChecklist),
+            str_contains($routeName, 'ticketing.asset-categories.checklists.create'),
+            str_contains($routeName, 'ticketing.asset-categories.checklists.store'),
+            str_contains($routeName, 'ticketing.asset-categories.checklists.edit'),
+            str_contains($routeName, 'ticketing.asset-categories.checklists.update') =>
+                $user->can(TicketingPermission::ManageChecklist->value),
 
             // Checklist Management - Delete
-            str_contains($routeName, 'ticketing.asset-models.checklists.delete') =>
-                $user->can(TicketingPermission::ManageChecklist),
+            str_contains($routeName, 'ticketing.asset-categories.checklists.delete') =>
+                $user->can(TicketingPermission::ManageChecklist->value),
 
             // Asset Management - View
             str_contains($routeName, 'ticketing.assets.index'),
             str_contains($routeName, 'ticketing.assets.datatable'),
             str_contains($routeName, 'ticketing.assets.print-excel') =>
-                $user->can(TicketingPermission::ViewPersonalAsset) ||
-                $user->can(TicketingPermission::ViewDivisionAsset) ||
-                $user->can(TicketingPermission::ViewAllAsset) ||
-                $user->can(TicketingPermission::ManageAsset),
+                $user->can(TicketingPermission::ViewPersonalAsset->value) ||
+                $user->can(TicketingPermission::ViewDivisionAsset->value) ||
+                $user->can(TicketingPermission::ViewAllAsset->value) ||
+                $user->can(TicketingPermission::ManageAsset->value),
 
             // Asset Management - Manage
             str_contains($routeName, 'ticketing.assets.create'),
             str_contains($routeName, 'ticketing.assets.store'),
             str_contains($routeName, 'ticketing.assets.edit'),
             str_contains($routeName, 'ticketing.assets.update') =>
-                $user->can(TicketingPermission::ManageAsset),
+                $user->can(TicketingPermission::ManageAsset->value),
 
             // Asset Management - Delete
             str_contains($routeName, 'ticketing.assets.delete') =>
-                $user->can(TicketingPermission::DeleteAsset),
+                $user->can(TicketingPermission::DeleteAsset->value),
 
             // Maintenance Management - View
             str_contains($routeName, 'ticketing.maintenances.index'),
             str_contains($routeName, 'ticketing.maintenances.datatable'),
             str_contains($routeName, 'ticketing.maintenances.print-excel'),
             str_contains($routeName, 'ticketing.maintenances.detail') =>
-                $user->can(TicketingPermission::ViewDivisionMaintenance) ||
-                $user->can(TicketingPermission::ViewAllMaintenance) ||
-                $user->can(TicketingPermission::ViewPersonalAsset) ||
-                $user->can(TicketingPermission::ManageAsset),
+                $user->can(TicketingPermission::ViewDivisionMaintenance->value) ||
+                $user->can(TicketingPermission::ViewAllMaintenance->value) ||
+                $user->can(TicketingPermission::ViewPersonalAsset->value) ||
+                $user->can(TicketingPermission::ManageAsset->value),
 
             // Maintenance Management - Manage
             str_contains($routeName, 'ticketing.maintenances.complete') ||

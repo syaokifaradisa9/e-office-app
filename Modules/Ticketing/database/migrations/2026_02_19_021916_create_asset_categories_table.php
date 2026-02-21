@@ -3,7 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Modules\Ticketing\Enums\AssetModelType;
+use Modules\Ticketing\Enums\AssetCategoryType;
 
 return new class extends Migration
 {
@@ -12,10 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('asset_models', function (Blueprint $blueprint) {
+        Schema::create('asset_categories', function (Blueprint $blueprint) {
             $blueprint->id();
             $blueprint->string('name');
-            $blueprint->enum('type', AssetModelType::values());
+            $blueprint->enum('type', AssetCategoryType::values());
             $blueprint->foreignId('division_id')->nullable()->constrained('divisions')->nullOnDelete();
             $blueprint->integer('maintenance_count')->default(0);
             $blueprint->timestamps();
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('asset_models');
+        Schema::dropIfExists('asset_categories');
     }
 };

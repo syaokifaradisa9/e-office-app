@@ -11,7 +11,7 @@ interface Division {
     name: string;
 }
 
-interface AssetModel {
+interface AssetCategory {
     id: number;
     name: string;
     type: string;
@@ -20,26 +20,26 @@ interface AssetModel {
 }
 
 interface Props {
-    assetModel?: AssetModel;
+    assetCategory?: AssetCategory;
     divisions: Division[];
 }
 
-export default function AssetModelCreate({ assetModel, divisions }: Props) {
-    const isEdit = !!assetModel;
+export default function AssetCategoryCreate({ assetCategory, divisions }: Props) {
+    const isEdit = !!assetCategory;
 
     const { data, setData, post, put, processing, errors } = useForm({
-        name: assetModel?.name || '',
-        type: assetModel?.type || '',
-        division_id: assetModel?.division_id?.toString() || '',
-        maintenance_count: assetModel?.maintenance_count?.toString() || '0',
+        name: assetCategory?.name || '',
+        type: assetCategory?.type || '',
+        division_id: assetCategory?.division_id?.toString() || '',
+        maintenance_count: assetCategory?.maintenance_count?.toString() || '0',
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (isEdit) {
-            put(`/ticketing/asset-models/${assetModel.id}/update`);
+            put(`/ticketing/asset-categories/${assetCategory.id}/update`);
         } else {
-            post('/ticketing/asset-models/store');
+            post('/ticketing/asset-categories/store');
         }
     };
 
@@ -54,11 +54,11 @@ export default function AssetModelCreate({ assetModel, divisions }: Props) {
     }));
 
     return (
-        <RootLayout title={isEdit ? 'Edit Asset Model' : 'Tambah Asset Model'} backPath="/ticketing/asset-models">
+        <RootLayout title={isEdit ? 'Edit Kategori Asset' : 'Tambah Kategori Asset'} backPath="/ticketing/asset-categories">
             <ContentCard
-                title={isEdit ? 'Edit Asset Model' : 'Tambah Asset Model Baru'}
-                subtitle={isEdit ? 'Perbarui informasi detail asset model' : 'Daftarkan asset model baru ke dalam sistem untuk pengelolaan aset divisi'}
-                backPath="/ticketing/asset-models"
+                title={isEdit ? 'Edit Kategori Asset' : 'Tambah Kategori Asset Baru'}
+                subtitle={isEdit ? 'Perbarui informasi detail kategori aset' : 'Daftarkan kategori aset baru ke dalam sistem untuk pengelolaan aset divisi'}
+                backPath="/ticketing/asset-categories"
                 mobileFullWidth
                 bodyClassName="p-4 md:p-6"
             >
@@ -66,8 +66,8 @@ export default function AssetModelCreate({ assetModel, divisions }: Props) {
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <FormInput
                             name="name"
-                            label="Nama Asset Model"
-                            placeholder="Masukkan nama asset model"
+                            label="Nama Kategori Asset"
+                            placeholder="Masukkan nama kategori aset"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
                             error={errors.name}
@@ -100,7 +100,7 @@ export default function AssetModelCreate({ assetModel, divisions }: Props) {
                             type="number"
                             label="Jumlah Maintenance (Per Tahun)"
                             placeholder="Contoh: 4"
-                            helpText="Tentukan berapa kali maintenance rutin yang dilakukan untuk model aset ini dalam satu tahun."
+                            helpText="Tentukan berapa kali maintenance rutin yang dilakukan untuk kategori aset ini dalam satu tahun."
                             value={data.maintenance_count}
                             onChange={(e) => setData('maintenance_count', e.target.value)}
                             error={errors.maintenance_count}
@@ -109,10 +109,10 @@ export default function AssetModelCreate({ assetModel, divisions }: Props) {
                     </div>
 
                     <div className="flex justify-end gap-3 border-t border-gray-100 pt-6 dark:border-slate-800">
-                        <Button href="/ticketing/asset-models" label="Batal" variant="secondary" />
+                        <Button href="/ticketing/asset-categories" label="Batal" variant="secondary" />
                         <Button
                             type="submit"
-                            label={isEdit ? 'Simpan Perubahan' : 'Simpan Asset Model'}
+                            label={isEdit ? 'Simpan Perubahan' : 'Simpan Kategori Asset'}
                             icon={<Save className="size-4" />}
                             isLoading={processing}
                         />
