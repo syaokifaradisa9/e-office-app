@@ -5,7 +5,7 @@ interface Maintenance {
     id: number;
     asset_item: {
         id: number;
-        model_name: string;
+        category_name: string;
         merk: string;
         model: string;
         serial_number: string;
@@ -32,11 +32,11 @@ export default function MaintenanceCardItem({ item, canProcess, canConfirm, onCo
     const getStatusStyles = (status: string) => {
         switch (status) {
             case 'finish':
-                return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
-            case 'confirmed':
-                return 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400';
-            case 'refinement':
                 return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+            case 'confirmed':
+                return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+            case 'refinement':
+                return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
             case 'cancelled':
                 return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400';
             default:
@@ -60,7 +60,7 @@ export default function MaintenanceCardItem({ item, canProcess, canConfirm, onCo
                 <div className="min-w-0 flex-1">
                     {/* Title */}
                     <h3 className="truncate text-[15px] font-semibold text-slate-800 dark:text-white">
-                        {item.asset_item.model_name}
+                        {item.asset_item.category_name}
                     </h3>
 
                     {/* Specs */}
@@ -89,11 +89,20 @@ export default function MaintenanceCardItem({ item, canProcess, canConfirm, onCo
                     {/* Actions */}
                     {(showActions || showConfirm) && (
                         <div className="mt-3 space-y-2">
-                            {showActions && (
+                            {showActions && item.status.value === 'refinement' && (
                                 <Button
-                                    href={`/ticketing/maintenances/${item.id}/complete`}
+                                    href={`/ticketing/maintenances/${item.id}/refinement`}
                                     variant="outline"
-                                    className="w-full !py-2 !bg-transparent !text-primary !border-primary/30 hover:!bg-primary/5 dark:!border-primary/20 dark:hover:!bg-primary/10"
+                                    className="w-full !py-2 !bg-transparent !text-purple-600 !border-purple-200 dark:!text-purple-400 dark:!border-purple-800/50 hover:!bg-transparent"
+                                    label="Proses Perbaikan"
+                                    icon={<Wrench className="size-4" />}
+                                />
+                            )}
+                            {showActions && (item.status.value === 'pending' || item.status.value === 'refinement' || item.status.value === 'finish') && (
+                                <Button
+                                    href={`/ticketing/maintenances/${item.id}/process`}
+                                    variant="outline"
+                                    className="w-full !py-2 !bg-transparent !text-primary !border-primary/30 dark:!border-primary/20 hover:!bg-transparent"
                                     label="Maintenance Sekarang"
                                     icon={<Wrench className="size-4" />}
                                 />
@@ -102,7 +111,7 @@ export default function MaintenanceCardItem({ item, canProcess, canConfirm, onCo
                                 <Button
                                     onClick={() => onConfirm?.(item.id)}
                                     variant="outline"
-                                    className="w-full !py-2 !bg-transparent !text-emerald-600 !border-emerald-200 hover:!bg-emerald-50 dark:!text-emerald-400 dark:!border-emerald-800/50 dark:hover:!bg-emerald-900/20"
+                                    className="w-full !py-2 !bg-transparent !text-emerald-600 !border-emerald-200 dark:!text-emerald-400 dark:!border-emerald-800/50 hover:!bg-transparent"
                                     label="Konfirmasi"
                                     icon={<CheckCircle2 className="size-4" />}
                                 />

@@ -11,6 +11,7 @@ class MaintenanceChecklistRequest extends FormRequest
         return [
             'actual_date' => 'required|date',
             'note' => 'nullable|string',
+            'needs_further_repair' => 'nullable|boolean',
             'checklists' => 'required|array',
             'checklists.*.checklist_id' => 'required|exists:checklists,id',
             'checklists.*.label' => 'required|string',

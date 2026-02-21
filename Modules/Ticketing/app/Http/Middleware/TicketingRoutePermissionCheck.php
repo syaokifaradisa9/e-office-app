@@ -98,7 +98,7 @@ class TicketingRoutePermissionCheck
                 $user->can(TicketingPermission::ManageAsset->value),
 
             // Maintenance Management - Manage
-            str_contains($routeName, 'ticketing.maintenances.complete') ||
+            str_contains($routeName, 'ticketing.maintenances.process') ||
             str_contains($routeName, 'ticketing.maintenances.store-checklist') =>
                 $user->can(TicketingPermission::ProsesMaintenance->value),
 
@@ -121,7 +121,7 @@ class TicketingRoutePermissionCheck
             $assetCategory = $request->route('assetCategory');
 
             if ($assetCategory) {
-                // Resolve model jbika masih berupa ID
+                // Resolve model jika masih berupa ID
                 if (!$assetCategory instanceof AssetCategory) {
                     $assetCategory = AssetCategory::find($assetCategory);
                 }

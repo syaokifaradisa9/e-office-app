@@ -20,7 +20,7 @@ class EloquentMaintenanceRepository implements MaintenanceRepository
 
     public function findById(int $id): ?Maintenance
     {
-        return Maintenance::with(['assetItem.assetModel.checklists', 'checklists'])->find($id);
+        return Maintenance::with(['assetItem.assetCategory.checklists', 'checklists', 'refinements'])->find($id);
     }
 
     public function deletePendingByAssetItemId(int $assetItemId): void

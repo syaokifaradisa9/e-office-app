@@ -23,7 +23,7 @@ class MaintenanceDatatableService
                 'id' => $item->id,
                 'asset_item' => [
                     'id' => $item->assetItem->id,
-                    'model_name' => $item->assetItem->assetModel?->name,
+                    'category_name' => $item->assetItem->assetCategory?->name,
                     'merk' => $item->assetItem->merk,
                     'model' => $item->assetItem->model,
                     'serial_number' => $item->assetItem->serial_number,
@@ -78,7 +78,7 @@ class MaintenanceDatatableService
             foreach ($data as $index => $item) {
                 $writer->addRow(Row::fromValues([
                     $index + 1,
-                    ($item->assetItem->assetModel?->name ?? '-'),
+                    ($item->assetItem->assetCategory?->name ?? '-'),
                     ($item->assetItem->merk ?? '-') . ' / ' . ($item->assetItem->model ?? '-'),
                     ($item->assetItem->serial_number ?? '-'),
                     $item->estimation_date->format('d/m/Y'),
@@ -96,7 +96,7 @@ class MaintenanceDatatableService
 
     private function getStartedQuery(DatatableRequest $request, User $loggedUser): Builder
     {
-        $query = Maintenance::with(['assetItem.assetModel', 'assetItem.division', 'user']);
+        $query = Maintenance::with(['assetItem.assetCategory', 'assetItem.division', 'user']);
 
         // Permission check
         if ($loggedUser->can(TicketingPermission::ViewAllMaintenance->value)) {
@@ -121,7 +121,7 @@ class MaintenanceDatatableService
                     $q2->where('merk', 'like', "%{$search}%")
                        ->orWhere('model', 'like', "%{$search}%")
                        ->orWhere('serial_number', 'like', "%{$search}%")
-                       ->orWhereHas('assetModel', fn ($q3) => $q3->where('name', 'like', "%{$search}%"));
+                        ->orWhereHas('assetCategory', fn ($q3) => $q3->where('name', 'like', "%{$search}%"));
                 })->orWhere('note', 'like', "%{$search}%");
             });
         }

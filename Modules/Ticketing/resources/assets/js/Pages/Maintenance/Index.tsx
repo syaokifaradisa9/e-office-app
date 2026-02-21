@@ -18,7 +18,7 @@ interface Maintenance {
     id: number;
     asset_item: {
         id: number;
-        model_name: string;
+        category_name: string;
         merk: string;
         model: string;
         serial_number: string;
@@ -154,11 +154,11 @@ export default function MaintenanceIndex() {
     const getStatusStyles = (status: string) => {
         switch (status) {
             case 'finish':
-                return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
-            case 'confirmed':
-                return 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400';
-            case 'refinement':
                 return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+            case 'confirmed':
+                return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+            case 'refinement':
+                return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
             case 'cancelled':
                 return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400';
             default:
@@ -254,14 +254,14 @@ export default function MaintenanceIndex() {
                                     <div className="flex flex-col">
                                         <div className="flex items-center gap-2">
                                             <Box className="size-4 text-primary" />
-                                            <span className="font-medium">{item.asset_item.model_name}</span>
+                                            <span className="font-medium">{item.asset_item.category_name}</span>
                                         </div>
                                         <span className="text-xs text-slate-500">{item.asset_item.merk} / {item.asset_item.model}</span>
                                     </div>
                                 ),
                                 footer: (
                                     <div className="flex flex-col gap-2 pb-1">
-                                        <FormSearch name="model_name" onChange={onParamsChange} placeholder="Filter Aset" />
+                                        <FormSearch name="category_name" onChange={onParamsChange} placeholder="Filter Asset" />
                                     </div>
                                 )
                             },
@@ -303,6 +303,7 @@ export default function MaintenanceIndex() {
                                     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusStyles(item.status.value)}`}>
                                         {item.status.value === 'pending' && <Clock className="size-3" />}
                                         {item.status.value === 'finish' && <CheckCircle2 className="size-3" />}
+                                        {item.status.value === 'confirmed' && <CheckCircle2 className="size-3" />}
                                         {item.status.value === 'refinement' && <HistoryIcon className="size-3" />}
                                         {item.status.value === 'cancelled' && <XCircle className="size-3" />}
                                         {item.status.label}
@@ -313,12 +314,22 @@ export default function MaintenanceIndex() {
                                 header: 'Aksi',
                                 render: (item: Maintenance) => (
                                     <div className="flex justify-end gap-1">
+                                        {canProcess && item.status.value === 'refinement' && item.is_actionable && (
+                                            <Tooltip text="Proses Perbaikan">
+                                                <Button
+                                                    href={`/ticketing/maintenances/${item.id}/refinement`}
+                                                    variant="ghost"
+                                                    className="!p-1.5 !text-purple-600 dark:!text-purple-400 hover:!bg-transparent"
+                                                    icon={<Wrench className="size-4" />}
+                                                />
+                                            </Tooltip>
+                                        )}
                                         {canProcess && (item.status.value === 'pending' || item.status.value === 'refinement' || item.status.value === 'finish') && item.is_actionable && (
                                             <Tooltip text="Maintenance Sekarang">
                                                 <Button
-                                                    href={`/ticketing/maintenances/${item.id}/complete`}
+                                                    href={`/ticketing/maintenances/${item.id}/process`}
                                                     variant="ghost"
-                                                    className="!p-1.5 !text-primary hover:bg-primary/10 dark:!text-primary dark:hover:bg-primary/10"
+                                                    className="!p-1.5 !text-primary dark:!text-primary hover:!bg-transparent"
                                                     icon={<Wrench className="size-4" />}
                                                 />
                                             </Tooltip>
@@ -328,7 +339,7 @@ export default function MaintenanceIndex() {
                                                 <Button
                                                     onClick={() => handleConfirm(item.id)}
                                                     variant="ghost"
-                                                    className="!p-1.5 !text-emerald-600 hover:bg-emerald-50 dark:!text-emerald-400 dark:hover:bg-emerald-900/20"
+                                                    className="!p-1.5 !text-emerald-600 dark:!text-emerald-400 hover:!bg-transparent"
                                                     icon={<CheckCircle2 className="size-4" />}
                                                 />
                                             </Tooltip>

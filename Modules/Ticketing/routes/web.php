@@ -64,7 +64,7 @@ Route::middleware(['auth', TicketingRoutePermissionCheck::class])->group(functio
             Route::get('/datatable', 'datatable')->name('datatable');
             Route::get('/print/excel', 'printExcel')->name('print-excel');
             Route::get('/{maintenance}/detail', 'detail')->name('detail');
-            Route::get('/{maintenance}/complete', 'complete')->name('complete');
+            Route::get('/{maintenance}/process', 'process')->name('process');
             Route::post('/{maintenance}/store-checklist', 'storeChecklist')->name('store-checklist');
             Route::post('/{maintenance}/cancel', 'cancel')->name('cancel');
             Route::post('/{maintenance}/confirm', 'confirm')->name('confirm');

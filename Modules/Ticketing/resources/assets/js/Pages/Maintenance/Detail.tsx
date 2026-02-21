@@ -23,7 +23,7 @@ interface Maintenance {
     id: number;
     asset_item: {
         id: number;
-        model_name: string;
+        category_name: string;
         serial_number: string;
     };
     estimation_date: string;
@@ -57,7 +57,7 @@ export default function MaintenanceDetail({ maintenance }: Props) {
         <RootLayout title="Detail Maintenance" backPath="/ticketing/maintenances">
             <ContentCard
                 title="Detail Pengerjaan Maintenance"
-                subtitle={`Asset: ${maintenance.asset_item.model_name} (${maintenance.asset_item.serial_number})`}
+                subtitle={`Asset: ${maintenance.asset_item.category_name} (${maintenance.asset_item.serial_number})`}
                 backPath="/ticketing/maintenances"
                 mobileFullWidth
             >

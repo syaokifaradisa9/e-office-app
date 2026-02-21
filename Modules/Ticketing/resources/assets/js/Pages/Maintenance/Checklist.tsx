@@ -5,7 +5,7 @@ import FormTextArea from '@/components/forms/FormTextArea';
 import FormFile from '@/components/forms/FormFile';
 import Button from '@/components/buttons/Button';
 import { useForm } from '@inertiajs/react';
-import { Save, X, CheckSquare, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { Save, X, CheckSquare, AlertCircle, CheckCircle2, XCircle, Wrench } from 'lucide-react';
 import { useEffect } from 'react';
 
 interface ChecklistItem {
@@ -18,11 +18,11 @@ interface Maintenance {
     id: number;
     asset_item: {
         id: number;
-        model_name: string;
+        category_name: string;
         merk: string;
         model: string;
         serial_number: string;
-        asset_model: {
+        asset_category: {
             checklists: ChecklistItem[];
         };
     };
@@ -57,7 +57,8 @@ export default function MaintenanceChecklist({ maintenance }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         actual_date: (maintenance.actual_date || maintenance.estimation_date)?.split('T')[0] || '',
         note: maintenance.note || '',
-        checklists: (maintenance.checklist_results as any) || maintenance.asset_item.asset_model.checklists.map(c => ({
+        needs_further_repair: maintenance.status.value === 'refinement',
+        checklists: (maintenance.checklist_results as any) || maintenance.asset_item.asset_category.checklists.map(c => ({
             checklist_id: c.id,
             label: c.label,
             description: c.description,
@@ -67,6 +68,8 @@ export default function MaintenanceChecklist({ maintenance }: Props) {
         })),
         attachments: [] as File[],
     });
+
+    const hasNotGood = data.checklists.some((item: any) => item.value === 'Tidak Baik');
 
     const updateChecklist = (index: number, key: string, value: any) => {
         if (isConfirmed) return;
@@ -85,7 +88,7 @@ export default function MaintenanceChecklist({ maintenance }: Props) {
         <RootLayout title="Checklist Maintenance" backPath="/ticketing/maintenances">
             <ContentCard
                 title="Form Checklist Maintenance"
-                subtitle={`Asset: ${maintenance.asset_item.model_name} (${maintenance.asset_item.serial_number})`}
+                subtitle={`Asset: ${maintenance.asset_item.category_name} (${maintenance.asset_item.serial_number})`}
                 backPath="/ticketing/maintenances"
                 mobileFullWidth
             >
@@ -150,15 +153,15 @@ export default function MaintenanceChecklist({ maintenance }: Props) {
                                             <p className="text-xs text-slate-500">{item.description || "Pastikan kondisi komponen ini dalam keadaan optimal sesuai standar."}</p>
                                         </div>
 
-                                        <div className="flex shrink-0 gap-2">
+                                        <div className="grid grid-cols-2 gap-2 w-full md:w-auto">
                                             <button
                                                 type="button"
                                                 disabled={isConfirmed}
                                                 onClick={() => updateChecklist(index, 'value', 'Baik')}
-                                                className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all ${item.value === 'Baik'
+                                                className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all ${item.value === 'Baik'
                                                     ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
                                                     : 'bg-white text-slate-400 border border-slate-200 dark:bg-slate-800 dark:border-slate-700'
-                                                    } ${isConfirmed ? 'cursor-not-allowed opacity-80' : ''}`}
+                                                    } ${isConfirmed ? 'cursor-not-allowed opacity-80' : ''} w-full`}
                                             >
                                                 <CheckCircle2 className="size-4" />
                                                 Baik
@@ -167,10 +170,10 @@ export default function MaintenanceChecklist({ maintenance }: Props) {
                                                 type="button"
                                                 disabled={isConfirmed}
                                                 onClick={() => updateChecklist(index, 'value', 'Tidak Baik')}
-                                                className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all ${item.value === 'Tidak Baik'
+                                                className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all ${item.value === 'Tidak Baik'
                                                     ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20'
                                                     : 'bg-white text-slate-400 border border-slate-200 dark:bg-slate-800 dark:border-slate-700'
-                                                    } ${isConfirmed ? 'cursor-not-allowed opacity-80' : ''}`}
+                                                    } ${isConfirmed ? 'cursor-not-allowed opacity-80' : ''} w-full`}
                                             >
                                                 <XCircle className="size-4" />
                                                 Tidak Baik
@@ -224,6 +227,7 @@ export default function MaintenanceChecklist({ maintenance }: Props) {
                             error={errors.attachments as unknown as string}
                             disabled={isConfirmed}
                             helpText="Upload foto pengerjaan atau dokumen pendukung lainnya. (Format: JPG, PNG, PDF)"
+                            defaultFiles={maintenance.attachments || []}
                         />
 
                         {isConfirmed && maintenance.attachments && maintenance.attachments.length > 0 && (
@@ -245,6 +249,41 @@ export default function MaintenanceChecklist({ maintenance }: Props) {
                             </div>
                         )}
                     </div>
+
+                    {/* Needs Further Repair Checkbox - only shown when there are 'Tidak Baik' items */}
+                    {hasNotGood && !isConfirmed && (
+                        <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div
+                                onClick={() => setData('needs_further_repair', !data.needs_further_repair)}
+                                className={`flex cursor-pointer items-center gap-4 rounded-xl border-2 p-5 transition-all duration-200 ${data.needs_further_repair
+                                    ? 'border-amber-400 bg-amber-50 dark:border-amber-500/50 dark:bg-amber-900/10'
+                                    : 'border-slate-200 bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/40 dark:hover:border-slate-600'
+                                    }`}
+                            >
+                                <div className={`flex size-6 shrink-0 items-center justify-center rounded-md border-2 transition-all ${data.needs_further_repair
+                                    ? 'border-amber-500 bg-amber-500 text-white'
+                                    : 'border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-800'
+                                    }`}>
+                                    {data.needs_further_repair && (
+                                        <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    )}
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <Wrench className={`size-4 ${data.needs_further_repair ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'}`} />
+                                        <h4 className={`text-sm font-bold ${data.needs_further_repair ? 'text-amber-800 dark:text-amber-200' : 'text-slate-700 dark:text-slate-300'}`}>
+                                            Perlu Perbaikan Lebih Lanjut
+                                        </h4>
+                                    </div>
+                                    <p className={`mt-1 text-xs ${data.needs_further_repair ? 'text-amber-700 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                                        Perbaikan yang memerlukan proses lebih lanjut dalam waktu tertentu atau membutuhkan proses tertentu. Jika perbaikan sudah selesai dan aset berjalan dengan baik kembali, tidak perlu mencentang opsi ini.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Action Buttons */}
                     <div className="flex justify-end gap-3 border-t border-slate-100 pt-6 dark:border-slate-800">

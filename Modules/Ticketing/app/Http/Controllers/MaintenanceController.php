@@ -75,7 +75,7 @@ class MaintenanceController extends Controller
         ]);
     }
 
-    public function complete(int $id)
+    public function process(int $id)
     {
         abort_unless(auth()->user()->can(TicketingPermission::ProsesMaintenance->value), 403);
         
@@ -110,12 +110,12 @@ class MaintenanceController extends Controller
             'id' => $item->id,
             'asset_item' => [
                 'id' => $item->assetItem->id,
-                'model_name' => $item->assetItem->assetModel?->name,
+                'category_name' => $item->assetItem->assetCategory?->name,
                 'merk' => $item->assetItem->merk,
                 'model' => $item->assetItem->model,
                 'serial_number' => $item->assetItem->serial_number,
-                'asset_model' => [
-                    'checklists' => $item->assetItem->assetModel?->checklists?->map(fn($c) => [
+                'asset_category' => [
+                    'checklists' => $item->assetItem->assetCategory?->checklists?->map(fn($c) => [
                         'id' => $c->id,
                         'label' => $c->label,
                         'description' => $c->description,

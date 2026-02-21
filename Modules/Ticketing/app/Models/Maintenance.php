@@ -43,4 +43,9 @@ class Maintenance extends Model
     {
         return $this->hasMany(MaintenanceChecklist::class);
     }
+
+    public function refinements(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AssetItemRefinement::class);
+    }
 }
