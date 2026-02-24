@@ -109,9 +109,13 @@ class MaintenanceDatatableService
             $query->whereRaw('1 = 0');
         }
 
-        // Filter by year if provided
+        // Filter by year if provided (global header filter)
         if ($year = $request->input('year')) {
-            $query->whereYear('estimation_date', $year);
+            // Only apply global year filter if individual estimation_date filter is not present
+            // This prevents conflict when user selects a different year in the month picker
+            if (!$request->has('estimation_date') && !$request->has('actual_date')) {
+                $query->whereYear('estimation_date', $year);
+            }
         }
 
         // Global Search
@@ -124,6 +128,37 @@ class MaintenanceDatatableService
                         ->orWhereHas('assetCategory', fn ($q3) => $q3->where('name', 'like', "%{$search}%"));
                 })->orWhere('note', 'like', "%{$search}%");
             });
+        }
+
+        // Individual Search Data
+        if ($categoryName = $request->input('category_name')) {
+            $query->whereHas('assetItem.assetCategory', fn ($q) => $q->where('name', 'like', "%{$categoryName}%"));
+        }
+
+        if ($serialNumber = $request->input('serial_number')) {
+            $query->whereHas('assetItem', fn ($q) => $q->where('serial_number', 'like', "%{$serialNumber}%"));
+        }
+
+        if ($estimationDate = $request->input('estimation_date')) {
+            // estimationDate format from type="month" is YYYY-MM
+            $dateParts = explode('-', $estimationDate);
+            if (count($dateParts) === 2) {
+                $query->whereYear('estimation_date', $dateParts[0])
+                      ->whereMonth('estimation_date', $dateParts[1]);
+            }
+        }
+
+        if ($actualDate = $request->input('actual_date')) {
+            // actualDate format from type="month" is YYYY-MM
+            $dateParts = explode('-', $actualDate);
+            if (count($dateParts) === 2) {
+                $query->whereYear('actual_date', $dateParts[0])
+                      ->whereMonth('actual_date', $dateParts[1]);
+            }
+        }
+
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
         }
 
         // Sorting

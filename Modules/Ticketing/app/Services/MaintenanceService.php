@@ -78,7 +78,7 @@ class MaintenanceService
                 $attachments[] = [
                     'name' => $file->getClientOriginalName(),
                     'path' => $path,
-                    'url' => Storage::url($path),
+                    'url' => Storage::disk('public')->url($path),
                     'size' => $file->getSize(),
                     'mime_type' => $file->getMimeType(),
                 ];
@@ -118,6 +118,26 @@ class MaintenanceService
         return $maintenance;
     }
 
+    public function finishRefinement(int $id): Maintenance
+    {
+        $maintenance = Maintenance::findOrFail($id);
+        
+        if ($maintenance->status !== \Modules\Ticketing\Enums\MaintenanceStatus::REFINEMENT) {
+            throw new \Exception("Hanya maintenance dengan status Perlu Perbaikan yang dapat diselesaikan.");
+        }
+
+        $maintenance->update([
+            'status' => \Modules\Ticketing\Enums\MaintenanceStatus::FINISH,
+            'user_id' => auth()->id(),
+        ]);
+
+        $maintenance->assetItem()->update([
+            'status' => AssetItemStatus::Available->value,
+        ]);
+
+        return $maintenance;
+    }
+
     public function cancel(int $id, ?string $note): Maintenance
     {
         $maintenance = Maintenance::findOrFail($id);
@@ -144,7 +164,7 @@ class MaintenanceService
                 $attachments[] = [
                     'name' => $file->getClientOriginalName(),
                     'path' => $path,
-                    'url' => Storage::url($path),
+                    'url' => Storage::disk('public')->url($path),
                     'size' => $file->getSize(),
                     'mime_type' => $file->getMimeType(),
                 ];
@@ -164,5 +184,47 @@ class MaintenanceService
     public function getRefinements(int $id)
     {
         return $this->refinementRepository->getByMaintenanceId($id);
+    }
+
+    public function deleteRefinement(int $id): bool
+    {
+        return $this->refinementRepository->delete($id);
+    }
+
+    public function findRefinementById(int $id): ?\Modules\Ticketing\Models\AssetItemRefinement
+    {
+        return $this->refinementRepository->findById($id);
+    }
+
+    public function updateRefinement(int $refinementId, array $data): bool
+    {
+        $refinement = $this->refinementRepository->findById($refinementId);
+        if (!$refinement) {
+            throw new \Exception("Refinement record not found.");
+        }
+
+        $attachments = $refinement->attachments ?? [];
+        if (!empty($data['attachments'])) {
+            foreach ($data['attachments'] as $file) {
+                if ($file instanceof \Illuminate\Http\UploadedFile) {
+                    $path = $file->store('refinement-evidence', 'public');
+                    $attachments[] = [
+                        'name' => $file->getClientOriginalName(),
+                        'path' => $path,
+                        'url' => Storage::disk('public')->url($path),
+                        'size' => $file->getSize(),
+                        'mime_type' => $file->getMimeType(),
+                    ];
+                }
+            }
+        }
+
+        return $this->refinementRepository->update($refinementId, [
+            'date' => $data['date'],
+            'description' => $data['description'],
+            'note' => $data['note'],
+            'result' => $data['result'],
+            'attachments' => $attachments,
+        ]);
     }
 }

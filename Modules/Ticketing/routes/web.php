@@ -72,6 +72,13 @@ Route::middleware(['auth', TicketingRoutePermissionCheck::class])->group(functio
             Route::get('/{id}/refinement/create', [\Modules\Ticketing\Http\Controllers\RefinementController::class, 'create'])->name('refinement.create');
             Route::post('/{id}/refinement', [\Modules\Ticketing\Http\Controllers\RefinementController::class, 'store'])->name('refinement.store');
             Route::get('/{id}/refinement/datatable', [\Modules\Ticketing\Http\Controllers\RefinementController::class, 'datatable'])->name('refinement.datatable');
+            Route::post('/{id}/refinement/finish', [\Modules\Ticketing\Http\Controllers\RefinementController::class, 'finish'])->name('refinement.finish');
+        });
+
+        Route::prefix('refinement')->name('refinement.')->controller(\Modules\Ticketing\Http\Controllers\RefinementController::class)->group(function () {
+            Route::delete('/{id}/delete', 'delete')->name('delete');
+            Route::get('/{id}/edit', 'edit')->name('edit');
+            Route::put('/{id}/update', 'update')->name('update');
         });
     });
 });

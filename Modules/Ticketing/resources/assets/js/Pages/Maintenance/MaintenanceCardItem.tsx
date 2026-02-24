@@ -1,4 +1,4 @@
-import { Box, Calendar, CheckCircle2, Clock, XCircle, History as HistoryIcon, Wrench, Info } from 'lucide-react';
+import { Box, Calendar, Check, Clock, XCircle, History as HistoryIcon, Wrench, Info } from 'lucide-react';
 import Button from '@/components/buttons/Button';
 
 interface Maintenance {
@@ -74,8 +74,8 @@ export default function MaintenanceCardItem({ item, canProcess, canConfirm, onCo
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                         <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${getStatusStyles(item.status.value)}`}>
                             {item.status.value === 'pending' && <Clock className="size-3" />}
-                            {item.status.value === 'finish' && <CheckCircle2 className="size-3" />}
-                            {item.status.value === 'confirmed' && <CheckCircle2 className="size-3" />}
+                            {item.status.value === 'finish' && <Check className="size-3" />}
+                            {item.status.value === 'confirmed' && <Check className="size-3" />}
                             {item.status.value === 'refinement' && <HistoryIcon className="size-3" />}
                             {item.status.value === 'cancelled' && <XCircle className="size-3" />}
                             {item.status.label}
@@ -87,37 +87,42 @@ export default function MaintenanceCardItem({ item, canProcess, canConfirm, onCo
                     </div>
 
                     {/* Actions */}
-                    {(showActions || showConfirm) && (
-                        <div className="mt-3 space-y-2">
-                            {showActions && item.status.value === 'refinement' && (
-                                <Button
-                                    href={`/ticketing/maintenances/${item.id}/refinement`}
-                                    variant="outline"
-                                    className="w-full !py-2 !bg-transparent !text-purple-600 !border-purple-200 dark:!text-purple-400 dark:!border-purple-800/50 hover:!bg-transparent"
-                                    label="Proses Perbaikan"
-                                    icon={<Wrench className="size-4" />}
-                                />
-                            )}
-                            {showActions && (item.status.value === 'pending' || item.status.value === 'refinement' || item.status.value === 'finish') && (
-                                <Button
-                                    href={`/ticketing/maintenances/${item.id}/process`}
-                                    variant="outline"
-                                    className="w-full !py-2 !bg-transparent !text-primary !border-primary/30 dark:!border-primary/20 hover:!bg-transparent"
-                                    label="Maintenance Sekarang"
-                                    icon={<Wrench className="size-4" />}
-                                />
-                            )}
-                            {showConfirm && (
-                                <Button
-                                    onClick={() => onConfirm?.(item.id)}
-                                    variant="outline"
-                                    className="w-full !py-2 !bg-transparent !text-emerald-600 !border-emerald-200 dark:!text-emerald-400 dark:!border-emerald-800/50 hover:!bg-transparent"
-                                    label="Konfirmasi"
-                                    icon={<CheckCircle2 className="size-4" />}
-                                />
-                            )}
-                        </div>
-                    )}
+                    <div className="mt-3 space-y-2">
+                        {showActions && item.status.value === 'refinement' && (
+                            <Button
+                                href={`/ticketing/maintenances/${item.id}/refinement`}
+                                variant="outline"
+                                className="w-full !py-2 !bg-transparent !text-purple-600 !border-purple-200 dark:!text-purple-400 dark:!border-purple-800/50 hover:!bg-transparent"
+                                label="Proses Perbaikan"
+                                icon={<Wrench className="size-4" />}
+                            />
+                        )}
+                        {showActions && (item.status.value === 'pending' || item.status.value === 'refinement' || item.status.value === 'finish') && (
+                            <Button
+                                href={`/ticketing/maintenances/${item.id}/process`}
+                                variant="outline"
+                                className="w-full !py-2 !bg-transparent !text-primary !border-primary/30 dark:!border-primary/20 hover:!bg-transparent"
+                                label="Maintenance Sekarang"
+                                icon={<Wrench className="size-4" />}
+                            />
+                        )}
+                        {showConfirm && (
+                            <Button
+                                onClick={() => onConfirm?.(item.id)}
+                                variant="outline"
+                                className="w-full !py-2 !bg-transparent !text-emerald-600 !border-emerald-200 dark:!text-emerald-400 dark:!border-emerald-800/50 hover:!bg-transparent"
+                                label="Konfirmasi"
+                                icon={<Check className="size-4" />}
+                            />
+                        )}
+                        <Button
+                            href={`/ticketing/maintenances/${item.id}/detail`}
+                            variant="outline"
+                            className="w-full !py-2 !bg-transparent !text-slate-500 !border-slate-200 dark:!text-slate-400 dark:!border-slate-700 hover:!bg-slate-100 dark:hover:!bg-slate-800"
+                            label="Detail Maintenance"
+                            icon={<Info className="size-4" />}
+                        />
+                    </div>
                 </div>
             </div>
         </div>

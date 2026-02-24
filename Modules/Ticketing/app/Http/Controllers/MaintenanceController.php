@@ -69,9 +69,13 @@ class MaintenanceController extends Controller
         $maintenance = $this->maintenanceService->findById($id);
         
         $formattedMaintenance = $this->formatMaintenance($maintenance);
+        $refinements = $maintenance->refinements()->orderBy('date', 'desc')->get();
+        $refinementCount = $refinements->count();
 
         return Inertia::render('Ticketing/Maintenance/Detail', [
             'maintenance' => $formattedMaintenance,
+            'refinements' => $refinements,
+            'refinementCount' => $refinementCount,
         ]);
     }
 
@@ -106,6 +110,8 @@ class MaintenanceController extends Controller
             ]);
         }
 
+        $hasRefinement = $item->refinements()->exists();
+
         return [
             'id' => $item->id,
             'asset_item' => [
@@ -132,16 +138,20 @@ class MaintenanceController extends Controller
             'checklist_results' => $checklistResults,
             'attachments' => $item->attachments,
             'user' => $item->user?->name,
+            'has_refinement' => $hasRefinement,
         ];
     }
 
     public function storeChecklist(\Modules\Ticketing\Http\Requests\MaintenanceChecklistRequest $request, int $id)
     {
         abort_unless(auth()->user()->can(TicketingPermission::ProsesMaintenance->value), 403);
-        
         $maintenance = $this->maintenanceService->findById($id);
         if (!$this->maintenanceService->isActionable($maintenance)) {
             abort(403, 'Terdapat maintenance sebelumnya yang belum dikonfirmasi.');
+        }
+
+        if ($maintenance->refinements()->exists()) {
+            abort(403, 'Data maintenance ini sudah memiliki data perbaikan (refinement) dan tidak dapat diubah kembali.');
         }
 
         $dto = \Modules\Ticketing\DataTransferObjects\MaintenanceChecklistDTO::fromRequest($request);

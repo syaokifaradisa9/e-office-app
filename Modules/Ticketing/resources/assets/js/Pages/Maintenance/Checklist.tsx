@@ -5,7 +5,7 @@ import FormTextArea from '@/components/forms/FormTextArea';
 import FormFile from '@/components/forms/FormFile';
 import Button from '@/components/buttons/Button';
 import { useForm } from '@inertiajs/react';
-import { Save, X, CheckSquare, AlertCircle, CheckCircle2, XCircle, Wrench } from 'lucide-react';
+import { Save, X, CheckSquare, AlertCircle, Check, XCircle, Wrench } from 'lucide-react';
 import { useEffect } from 'react';
 
 interface ChecklistItem {
@@ -45,6 +45,7 @@ interface Maintenance {
         url: string;
         size: number;
     }> | null;
+    has_refinement: boolean;
 }
 
 interface Props {
@@ -53,6 +54,7 @@ interface Props {
 
 export default function MaintenanceChecklist({ maintenance }: Props) {
     const isConfirmed = maintenance.status.value === 'confirmed';
+    const isReadonly = isConfirmed || maintenance.has_refinement;
 
     const { data, setData, post, processing, errors } = useForm({
         actual_date: (maintenance.actual_date || maintenance.estimation_date)?.split('T')[0] || '',
@@ -72,7 +74,7 @@ export default function MaintenanceChecklist({ maintenance }: Props) {
     const hasNotGood = data.checklists.some((item: any) => item.value === 'Tidak Baik');
 
     const updateChecklist = (index: number, key: string, value: any) => {
-        if (isConfirmed) return;
+        if (isReadonly) return;
         const newChecklists = [...data.checklists];
         newChecklists[index] = { ...newChecklists[index], [key]: value };
         setData('checklists', newChecklists);
@@ -80,7 +82,7 @@ export default function MaintenanceChecklist({ maintenance }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (isConfirmed) return;
+        if (isReadonly) return;
         post(`/ticketing/maintenances/${maintenance.id}/store-checklist`);
     };
 
@@ -97,12 +99,27 @@ export default function MaintenanceChecklist({ maintenance }: Props) {
                     {isConfirmed && (
                         <div className="flex items-center gap-3 rounded-xl bg-emerald-50 p-4 border border-emerald-100 dark:bg-emerald-900/10 dark:border-emerald-900/20">
                             <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400">
-                                <CheckCircle2 className="size-6" />
+                                <Check className="size-6" />
                             </div>
                             <div>
                                 <h4 className="text-sm font-bold text-emerald-900 dark:text-emerald-100">Maintenance Terkonfirmasi</h4>
                                 <p className="text-xs text-emerald-700 dark:text-emerald-400">
                                     Data maintenance ini telah dikonfirmasi dan tidak dapat diubah kembali.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Banner for Has Refinement Status */}
+                    {!isConfirmed && maintenance.has_refinement && (
+                        <div className="flex items-center gap-3 rounded-xl bg-indigo-50 p-4 border border-indigo-100 dark:bg-indigo-900/10 dark:border-indigo-900/20">
+                            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400">
+                                <AlertCircle className="size-6" />
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-100">Maintenance Tidak Dapat Diubah</h4>
+                                <p className="text-xs text-indigo-700 dark:text-indigo-400">
+                                    Data maintenance ini sudah memiliki data perbaikan (refinement) dan tidak dapat diubah kembali.
                                 </p>
                             </div>
                         </div>
@@ -123,7 +140,7 @@ export default function MaintenanceChecklist({ maintenance }: Props) {
                                 onChange={(e) => setData('actual_date', e.target.value)}
                                 error={errors.actual_date}
                                 required
-                                disabled={isConfirmed}
+                                disabled={isReadonly}
                             />
                             <FormTextArea
                                 name="note"
@@ -132,7 +149,7 @@ export default function MaintenanceChecklist({ maintenance }: Props) {
                                 value={data.note}
                                 onChange={(e) => setData('note', e.target.value)}
                                 error={errors.note}
-                                disabled={isConfirmed}
+                                disabled={isReadonly}
                             />
                         </div>
                     </div>
@@ -156,24 +173,24 @@ export default function MaintenanceChecklist({ maintenance }: Props) {
                                         <div className="grid grid-cols-2 gap-2 w-full md:w-auto">
                                             <button
                                                 type="button"
-                                                disabled={isConfirmed}
+                                                disabled={isReadonly}
                                                 onClick={() => updateChecklist(index, 'value', 'Baik')}
                                                 className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all ${item.value === 'Baik'
                                                     ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
                                                     : 'bg-white text-slate-400 border border-slate-200 dark:bg-slate-800 dark:border-slate-700'
-                                                    } ${isConfirmed ? 'cursor-not-allowed opacity-80' : ''} w-full`}
+                                                    } ${isReadonly ? 'cursor-not-allowed opacity-80' : ''} w-full`}
                                             >
-                                                <CheckCircle2 className="size-4" />
+                                                <Check className="size-4" />
                                                 Baik
                                             </button>
                                             <button
                                                 type="button"
-                                                disabled={isConfirmed}
+                                                disabled={isReadonly}
                                                 onClick={() => updateChecklist(index, 'value', 'Tidak Baik')}
                                                 className={`flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition-all ${item.value === 'Tidak Baik'
                                                     ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20'
                                                     : 'bg-white text-slate-400 border border-slate-200 dark:bg-slate-800 dark:border-slate-700'
-                                                    } ${isConfirmed ? 'cursor-not-allowed opacity-80' : ''} w-full`}
+                                                    } ${isReadonly ? 'cursor-not-allowed opacity-80' : ''} w-full`}
                                             >
                                                 <XCircle className="size-4" />
                                                 Tidak Baik
@@ -189,7 +206,7 @@ export default function MaintenanceChecklist({ maintenance }: Props) {
                                             value={item.note}
                                             onChange={(e) => updateChecklist(index, 'note', e.target.value)}
                                             rows={2}
-                                            disabled={isConfirmed}
+                                            disabled={isReadonly}
                                         />
 
                                         {item.value === 'Tidak Baik' && (
@@ -202,7 +219,7 @@ export default function MaintenanceChecklist({ maintenance }: Props) {
                                                     onChange={(e) => updateChecklist(index, 'follow_up', e.target.value)}
                                                     rows={2}
                                                     required
-                                                    disabled={isConfirmed}
+                                                    disabled={isReadonly}
                                                 />
                                             </div>
                                         )}
@@ -225,7 +242,7 @@ export default function MaintenanceChecklist({ maintenance }: Props) {
                             accept="image/*,.pdf"
                             onChange={(e) => setData('attachments', Array.from(e.target.files || []))}
                             error={errors.attachments as unknown as string}
-                            disabled={isConfirmed}
+                            disabled={isReadonly}
                             helpText="Upload foto pengerjaan atau dokumen pendukung lainnya. (Format: JPG, PNG, PDF)"
                             defaultFiles={maintenance.attachments || []}
                         />
@@ -251,7 +268,7 @@ export default function MaintenanceChecklist({ maintenance }: Props) {
                     </div>
 
                     {/* Needs Further Repair Checkbox - only shown when there are 'Tidak Baik' items */}
-                    {hasNotGood && !isConfirmed && (
+                    {hasNotGood && !isReadonly && (
                         <div className="animate-in fade-in slide-in-from-top-2 duration-300">
                             <div
                                 onClick={() => setData('needs_further_repair', !data.needs_further_repair)}
@@ -278,7 +295,7 @@ export default function MaintenanceChecklist({ maintenance }: Props) {
                                         </h4>
                                     </div>
                                     <p className={`mt-1 text-xs ${data.needs_further_repair ? 'text-amber-700 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'}`}>
-                                        Perbaikan yang memerlukan proses lebih lanjut dalam waktu tertentu atau membutuhkan proses tertentu. Jika perbaikan sudah selesai dan aset berjalan dengan baik kembali, tidak perlu mencentang opsi ini.
+                                        Pilih jika aset masih memerlukan tindakan perbaikan tambahan atau penggantian komponen. Biarkan kosong jika aset sudah dapat berfungsi kembali dengan normal.
                                     </p>
                                 </div>
                             </div>
@@ -287,13 +304,15 @@ export default function MaintenanceChecklist({ maintenance }: Props) {
 
                     {/* Action Buttons */}
                     <div className="flex justify-end gap-3 border-t border-slate-100 pt-6 dark:border-slate-800">
-                        <Button
-                            href="/ticketing/maintenances"
-                            label={isConfirmed ? "Kembali" : "Batal"}
-                            variant="secondary"
-                            icon={<X className="size-4" />}
-                        />
-                        {!isConfirmed && (
+                        {isReadonly && (
+                            <Button
+                                href="/ticketing/maintenances"
+                                label="Kembali"
+                                variant="secondary"
+                                icon={<X className="size-4" />}
+                            />
+                        )}
+                        {!isReadonly && (
                             <Button
                                 type="submit"
                                 label="Simpan Hasil Pemeriksaan"

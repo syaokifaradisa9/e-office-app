@@ -3,16 +3,18 @@ import ContentCard from '@/components/layouts/ContentCard';
 import DataTable from '@/components/tables/Datatable';
 import { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
-import { Box, Calendar, CheckCircle2, History as HistoryIcon, XCircle, FileSpreadsheet, Plus, AlertCircle, Clock, CheckSquare, Search, Wrench, Info } from 'lucide-react';
+import { Box, Calendar, Check, History as HistoryIcon, XCircle, FileSpreadsheet, Plus, AlertCircle, Clock, CheckSquare, Search, Wrench, Info, Filter } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import ConfirmationAlert from '@/components/alerts/ConfirmationAlert';
 import Button from '@/components/buttons/Button';
 import FormSearch from '@/components/forms/FormSearch';
 import FormSelect from '@/components/forms/FormSelect';
+import FormSearchSelect from '@/components/forms/FormSearchSelect';
 import MobileSearchBar from '@/components/forms/MobileSearchBar';
 import Tooltip from '@/components/commons/Tooltip';
 import CheckPermissions from '@/components/utils/CheckPermissions';
 import MaintenanceCardItem from './MaintenanceCardItem';
+import Modal from '@/components/modals/Modal';
 
 interface Maintenance {
     id: number;
@@ -58,6 +60,11 @@ interface Params {
     sort_by: string;
     sort_direction: 'asc' | 'desc';
     year: number | string;
+    status?: string;
+    category_name?: string;
+    serial_number?: string;
+    estimation_date?: string;
+    actual_date?: string;
 }
 
 export default function MaintenanceIndex() {
@@ -81,10 +88,16 @@ export default function MaintenanceIndex() {
         sort_by: 'estimation_date',
         sort_direction: 'asc',
         year: years.length > 0 ? years[0] : new Date().getFullYear(),
+        status: '',
+        category_name: '',
+        serial_number: '',
+        estimation_date: '',
+        actual_date: '',
     });
 
     const [openConfirm, setOpenConfirm] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null);
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
     const [isLoading, setIsLoading] = useState(true);
 
@@ -175,9 +188,28 @@ export default function MaintenanceIndex() {
                     onSearchChange={onParamsChange}
                     placeholder="Cari maintenance..."
                     actionButton={
-                        <div className="flex items-center gap-1"><a href={getPrintUrl()} target="_blank" className="p-2 text-slate-500" rel="noreferrer">
-                            <FileSpreadsheet className="size-4" />
-                        </a></div>
+                        <div className="flex items-center gap-1.5">
+                            <div className="hidden sm:block">
+                                <FormSearchSelect
+                                    name="year"
+                                    value={String(params.year)}
+                                    onChange={onParamsChange}
+                                    options={years.map(y => ({ value: String(y), label: String(y) }))}
+                                    className="w-[90px]"
+                                />
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={() => setIsFilterModalOpen(true)}
+                                    className="p-2 text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors"
+                                >
+                                    <Filter className="size-4" />
+                                </button>
+                                <a href={getPrintUrl()} target="_blank" className="p-2 text-slate-500" rel="noreferrer">
+                                    <FileSpreadsheet className="size-4" />
+                                </a>
+                            </div>
+                        </div>
 
                     }
                 />
@@ -195,25 +227,69 @@ export default function MaintenanceIndex() {
                     onConfirm={() => {
                         if (selectedId) {
                             router.post(`/ticketing/maintenances/${selectedId}/confirm`, {}, {
-                                onSuccess: () => loadDatatable()
+                                onSuccess: () => {
+                                    setOpenConfirm(false);
+                                    loadDatatable();
+                                }
                             });
                         }
                     }}
                 />
+                <Modal show={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)} title="Filter Data Maintenance" maxWidth="md">
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Tahun</label>
+                            <FormSelect
+                                name="year"
+                                value={params.year}
+                                onChange={onParamsChange}
+                                options={years.map(y => ({ value: y, label: String(y) }))}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Kategori Asset</label>
+                            <FormSearch name="category_name" value={params.category_name} onChange={onParamsChange} placeholder="Tuliskan nama kategori" />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Serial Number</label>
+                            <FormSearch name="serial_number" value={params.serial_number} onChange={onParamsChange} placeholder="Tuliskan S/N" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Estimasi Tanggal</label>
+                                <FormSearch name="estimation_date" type="month" value={params.estimation_date} onChange={onParamsChange} placeholder="Bulan-Tahun" />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Tanggal Aktual</label>
+                                <FormSearch name="actual_date" type="month" value={params.actual_date} onChange={onParamsChange} placeholder="Bulan-Tahun" />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Status</label>
+                            <FormSearchSelect
+                                name="status"
+                                value={params.status || ''}
+                                options={[
+                                    { value: '', label: 'Semua Status' },
+                                    { value: 'pending', label: 'Sedang Berjalan' },
+                                    { value: 'refinement', label: 'Perlu Perbaikan' },
+                                    { value: 'finish', label: 'Selesai' },
+                                    { value: 'confirmed', label: 'Terkonfirmasi' },
+                                    { value: 'cancelled', label: 'Dibatalkan' }
+                                ]}
+                                onChange={onParamsChange}
+                            />
+                        </div>
+                        <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800 mt-4">
+                            <Button onClick={() => setIsFilterModalOpen(false)} label="Terapkan Filter" />
+                        </div>
+                    </div>
+                </Modal>
                 <ContentCard
                     title="Jadwal Maintenance"
                     subtitle="Monitoring jadwal pemeliharaan asset tahunan"
                     mobileFullWidth
                     bodyClassName="px-0 pt-2 pb-5 md:p-6"
-                    additionalButton={
-                        <FormSelect
-                            name="year"
-                            value={params.year}
-                            onChange={onParamsChange}
-                            options={years.map(y => ({ value: y, label: String(y) }))}
-                            placeholder="Pilih Tahun"
-                        />
-                    }
                 >
                     <DataTable
                         onChangePage={onChangePage}
@@ -283,18 +359,33 @@ export default function MaintenanceIndex() {
                                         {new Date(item.estimation_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                                     </div>
                                 ),
+                                footer: (
+                                    <div className="flex flex-col gap-2 pb-1">
+                                        <FormSearch name="estimation_date" type="month" onChange={onParamsChange} />
+                                    </div>
+                                )
                             },
                             {
                                 name: 'actual_date',
                                 header: 'Tanggal Aktual',
                                 render: (item: Maintenance) => (
                                     item.actual_date ? (
-                                        <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
-                                            <CheckCircle2 className="size-3.5" />
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <Calendar className="size-3.5 text-slate-400" />
                                             {new Date(item.actual_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                                         </div>
-                                    ) : <span className="text-sm text-slate-400">-</span>
+                                    ) : (
+                                        <div className="flex items-center gap-2 text-sm text-slate-400 opacity-60">
+                                            <Calendar className="size-3.5" />
+                                            <span>Belum dikerjakan</span>
+                                        </div>
+                                    )
                                 ),
+                                footer: (
+                                    <div className="flex flex-col gap-2 pb-1">
+                                        <FormSearch name="actual_date" type="month" onChange={onParamsChange} />
+                                    </div>
+                                )
                             },
                             {
                                 name: 'status',
@@ -302,13 +393,30 @@ export default function MaintenanceIndex() {
                                 render: (item: Maintenance) => (
                                     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusStyles(item.status.value)}`}>
                                         {item.status.value === 'pending' && <Clock className="size-3" />}
-                                        {item.status.value === 'finish' && <CheckCircle2 className="size-3" />}
-                                        {item.status.value === 'confirmed' && <CheckCircle2 className="size-3" />}
+                                        {item.status.value === 'finish' && <Check className="size-3" />}
+                                        {item.status.value === 'confirmed' && <Check className="size-3" />}
                                         {item.status.value === 'refinement' && <HistoryIcon className="size-3" />}
                                         {item.status.value === 'cancelled' && <XCircle className="size-3" />}
                                         {item.status.label}
                                     </span>
                                 ),
+                                footer: (
+                                    <div className="flex flex-col gap-2 pb-1">
+                                        <FormSearchSelect
+                                            name="status"
+                                            value={params.status || ''}
+                                            options={[
+                                                { value: '', label: 'Semua Status' },
+                                                { value: 'pending', label: 'Sedang Berjalan' },
+                                                { value: 'refinement', label: 'Perlu Perbaikan' },
+                                                { value: 'finish', label: 'Selesai' },
+                                                { value: 'confirmed', label: 'Terkonfirmasi' },
+                                                { value: 'cancelled', label: 'Dibatalkan' }
+                                            ]}
+                                            onChange={onParamsChange}
+                                        />
+                                    </div>
+                                )
                             },
                             {
                                 header: 'Aksi',
@@ -340,7 +448,7 @@ export default function MaintenanceIndex() {
                                                     onClick={() => handleConfirm(item.id)}
                                                     variant="ghost"
                                                     className="!p-1.5 !text-emerald-600 dark:!text-emerald-400 hover:!bg-transparent"
-                                                    icon={<CheckCircle2 className="size-4" />}
+                                                    icon={<Check className="size-4" />}
                                                 />
                                             </Tooltip>
                                         )}
