@@ -1,3 +1,6 @@
+// Main Entry Point
+// Global glob refresh for Ticketing Report
+// v3
 import '../css/app.css';
 
 import { createInertiaApp } from '@inertiajs/react';
@@ -75,6 +78,38 @@ createInertiaApp({
 
         if (foundModule) {
             return resolvePageComponent(foundModule, pages);
+        }
+
+        // 3. Robust Search (Fallback through all keys)
+        const nameWithExtensionTSX = `${normalizedName}.tsx`;
+        const nameWithExtensionJSX = `${normalizedName}.jsx`;
+
+        // Search for a key that contains the page path (case-insensitive)
+        const robustMatch = pageKeys.find((key) => {
+            const lowKey = key.toLowerCase();
+            return (
+                lowKey.endsWith(`/${nameWithExtensionTSX}`) ||
+                lowKey.endsWith(`/${nameWithExtensionJSX}`) ||
+                lowKey.includes(`/pages/${nameWithExtensionTSX}`) ||
+                lowKey.includes('/pages/' + nameWithExtensionJSX)
+            );
+        });
+
+        if (robustMatch) {
+            console.log('Robust match found:', robustMatch);
+            return resolvePageComponent(robustMatch, pages);
+        }
+
+        // Manual mapping for Ticketing module (Legacy fallback)
+        if (normalizedName.startsWith('ticketing/')) {
+            const relativePath = name.split('/').slice(1).join('/'); // e.g. "Maintenance/Checklist"
+            const manualKey = `../../Modules/Ticketing/resources/assets/js/Pages/${relativePath}.tsx`;
+            if (pages[manualKey]) return resolvePageComponent(manualKey, pages);
+
+            // Try with normalized casing as well
+            const manualKeyNormalized = manualKey.toLowerCase();
+            const foundKey = Object.keys(pages).find(k => k.toLowerCase() === manualKeyNormalized);
+            if (foundKey) return resolvePageComponent(foundKey, pages);
         }
 
         // 3. Fallback for direct matches or complex cases

@@ -36,15 +36,16 @@ class StockOpnameSeeder extends Seeder
 
     private function createWarehouseOpnames($users, $items)
     {
-        // 1. Create 1 Pending for current month
-        $opnamePending = StockOpname::create([
+        // 1. Create 1 Finish for current month (So it doesn't block the UI by default)
+        $opnameFinishCurrent = StockOpname::create([
             'user_id' => $users->random()->id,
             'division_id' => null,
             'opname_date' => now(),
-            'notes' => 'Opname Gudang Rutin - Pending Bulan Ini',
-            'status' => StockOpnameStatus::Pending,
+            'notes' => 'Opname Gudang Rutin - Selesai Bulan Ini',
+            'status' => StockOpnameStatus::Finish,
+            'confirmed_at' => now(),
         ]);
-        $this->seedItems($opnamePending, $items, 5, false);
+        $this->seedItems($opnameFinishCurrent, $items, 5, true);
 
         // 2. Create 4 Finish for previous 4 months
         for ($i = 1; $i <= 4; $i++) {
@@ -53,7 +54,7 @@ class StockOpnameSeeder extends Seeder
                 'user_id' => $users->random()->id,
                 'division_id' => null,
                 'opname_date' => $date,
-                'notes' => 'Opname Gudang - Finish (Bulan T-' . $i . ')',
+                'notes' => 'Opname Gudang - Selesai (Bulan T-' . $i . ')',
                 'status' => StockOpnameStatus::Finish,
                 'confirmed_at' => $date->copy()->addDays(1),
             ]);
@@ -66,16 +67,16 @@ class StockOpnameSeeder extends Seeder
         if ($divisions->isEmpty()) return;
 
         foreach ($divisions as $division) {
-            // 1. Create 1 Pending for current month
-            $opnamePending = StockOpname::create([
+            // 1. Create 1 Finish for current month
+            $opnameFinishCurrent = StockOpname::create([
                 'user_id' => ($users->where('division_id', $division->id)->isEmpty() ? $users->random()->id : $users->where('division_id', $division->id)->random()->id),
                 'division_id' => $division->id,
                 'opname_date' => now(),
-                'notes' => 'Opname Divisi ' . $division->name . ' - Pending Bulan Ini',
-                'status' => StockOpnameStatus::Pending,
-                'confirmed_at' => null,
+                'notes' => 'Opname Divisi ' . $division->name . ' - Selesai Bulan Ini',
+                'status' => StockOpnameStatus::Finish,
+                'confirmed_at' => now(),
             ]);
-            $this->seedItems($opnamePending, $items, fake()->numberBetween(3, 7), false);
+            $this->seedItems($opnameFinishCurrent, $items, fake()->numberBetween(3, 7), true);
 
             // 2. Create 4 Finish for previous 4 months
             for ($i = 1; $i <= 4; $i++) {
@@ -84,7 +85,7 @@ class StockOpnameSeeder extends Seeder
                     'user_id' => ($users->where('division_id', $division->id)->isEmpty() ? $users->random()->id : $users->where('division_id', $division->id)->random()->id),
                     'division_id' => $division->id,
                     'opname_date' => $date,
-                    'notes' => 'Opname Divisi ' . $division->name . ' - Finish (Bulan T-' . $i . ')',
+                    'notes' => 'Opname Divisi ' . $division->name . ' - Selesai (Bulan T-' . $i . ')',
                     'status' => StockOpnameStatus::Finish,
                     'confirmed_at' => $date->copy()->addDays(1),
                 ]);

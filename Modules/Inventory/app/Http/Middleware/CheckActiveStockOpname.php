@@ -22,20 +22,8 @@ class CheckActiveStockOpname
     {
         $user = $request->user();
 
-        // 0. Only check for users who have some Inventory-related permission
-        // This keeps it dynamic: a user with only Archieve access won't trigger this logic.
-        if ($user) {
-            $hasInventoryPermission = $user->getAllPermissions()->contains(function ($permission) {
-                $name = $permission->name;
-                return str_contains($name, 'Gudang') || 
-                       str_contains($name, 'Barang') || 
-                       str_contains($name, 'Stok') || 
-                       str_contains($name, 'Stock Opname');
-            });
-
-            if (!$hasInventoryPermission) {
-                return $next($request);
-            }
+        if (!$user) {
+            return $next($request);
         }
 
         // 1. Safety check for database table
@@ -46,18 +34,36 @@ class CheckActiveStockOpname
         // 2. Check status via Service
         $isPending = $this->stockOpnameService->isMenuHidden($user?->division_id);
 
-        // 3. Share with Inertia dynamically
+        // 3. Share with Inertia dynamically for Sidebar
         \Inertia\Inertia::share('is_stock_opname_pending', $isPending);
 
-        // 4. Block access if necessary (Original logic)
+        // 4. Block access ONLY for specific transactional routes
         if ($isPending) {
-            $message = 'Akses ditangguhkan sementara karena sedang ada proses Stock Opname yang aktif di area Anda.';
+            $routeName = $request->route()->getName();
+            
+            $routesToBlock = [
+                'inventory.items.',
+                'inventory.stock-monitoring.',
+                'inventory.warehouse-orders.',
+            ];
 
-            if ($request->expectsJson()) {
-                return response()->json(['message' => $message], 403);
+            $shouldBlock = false;
+            foreach ($routesToBlock as $routePrefix) {
+                if (str_starts_with($routeName, $routePrefix)) {
+                    $shouldBlock = true;
+                    break;
+                }
             }
 
-            return back()->with('error', $message);
+            if ($shouldBlock) {
+                $message = 'Akses ditangguhkan sementara karena sedang ada proses Stock Opname yang aktif di area Anda.';
+
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => $message], 403);
+                }
+
+                abort(403, $message);
+            }
         }
 
         return $next($request);

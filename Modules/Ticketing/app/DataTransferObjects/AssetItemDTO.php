@@ -1,0 +1,46 @@
+<?php
+
+namespace Modules\Ticketing\DataTransferObjects;
+
+use Illuminate\Http\Request;
+
+class AssetItemDTO
+{
+    public function __construct(
+        public readonly int $asset_category_id,
+        public readonly ?string $merk,
+        public readonly ?string $model,
+        public readonly ?string $serial_number,
+        public readonly int $division_id,
+        public readonly ?array $another_attributes,
+        public readonly array $user_ids = [],
+        public readonly ?string $last_maintenance_date = null,
+    ) {}
+
+    public static function fromRequest(Request $request): self
+    {
+        return new self(
+            asset_category_id: (int) $request->validated('asset_category_id'),
+            merk: $request->validated('merk'),
+            model: $request->validated('model'),
+            serial_number: $request->validated('serial_number'),
+            division_id: (int) $request->validated('division_id'),
+            another_attributes: $request->validated('another_attributes') ?? [],
+            user_ids: $request->validated('user_ids') ?? [],
+            last_maintenance_date: $request->validated('last_maintenance_date'),
+        );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'asset_category_id' => $this->asset_category_id,
+            'merk' => $this->merk,
+            'model' => $this->model,
+            'serial_number' => $this->serial_number,
+            'division_id' => $this->division_id,
+            'another_attributes' => $this->another_attributes,
+            'last_maintenance_date' => $this->last_maintenance_date,
+        ];
+    }
+}

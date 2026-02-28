@@ -22,6 +22,9 @@ import {
     UserCheck,
     UserX,
     Star,
+    Wrench,
+    Calendar,
+    ChevronRight,
 } from 'lucide-react';
 
 // ============================================
@@ -192,6 +195,64 @@ interface VisitorTab {
 }
 
 // ============================================
+// TICKETING TYPES
+// ============================================
+interface TicketSummary {
+    total: number;
+    pending?: number;
+    process?: number;
+    resolved?: number;
+    active?: number;
+    finished?: number;
+}
+
+interface RecentTicket {
+    id: number;
+    subject: string;
+    status: { value: string; label: string };
+    user?: { name: string };
+    asset_item?: { asset_category?: { name: string } };
+    created_at: string;
+}
+
+interface CategoryReport {
+    name: string;
+    total: number;
+}
+
+interface TicketingTabData {
+    // New structure
+    stats?: {
+        total_assets: number;
+        remaining_maintenance: number;
+        tickets_this_year: number;
+        assets_under_repair: number;
+    };
+    nearest_maintenances?: any[];
+
+    // Original fields for Division/All
+    tickets?: TicketSummary;
+    assets_count?: number;
+    upcoming_maintenance?: number;
+    division_name?: string;
+    recent_active_tickets?: RecentTicket[];
+    maintenance_this_month?: number;
+    ticket_distribution?: Record<string, number>;
+    most_reported_categories?: CategoryReport[];
+    overdue_maintenance_count?: number;
+    total_open_tickets?: number;
+    average_rating?: number;
+}
+
+interface TicketingTab {
+    id: string;
+    label: string;
+    icon: string;
+    type: string;
+    data: TicketingTabData;
+}
+
+// ============================================
 // UNIFIED TAB TYPE
 // ============================================
 interface UnifiedTab {
@@ -199,8 +260,8 @@ interface UnifiedTab {
     label: string;
     icon: string;
     type: string;
-    module: 'inventory' | 'archieve' | 'visitor';
-    originalData: InventoryTabData | ArchieveTabData | VisitorTabData;
+    module: 'inventory' | 'archieve' | 'visitor' | 'ticketing';
+    originalData: InventoryTabData | ArchieveTabData | VisitorTabData | TicketingTabData;
     stock_opname_link?: string;
 }
 
@@ -208,6 +269,7 @@ interface DashboardData {
     inventory?: InventoryTab[];
     archieve?: ArchieveTab[];
     visitor?: VisitorTab[];
+    ticketing?: TicketingTab[];
     [key: string]: unknown;
 }
 
@@ -262,6 +324,19 @@ export default function UnifiedModuleDashboard() {
         });
     });
 
+    // Add Ticketing tabs
+    const ticketingTabs = dashboardData?.ticketing || [];
+    ticketingTabs.forEach((tab) => {
+        unifiedTabs.push({
+            id: `ticketing-${tab.id}`,
+            label: tab.label,
+            icon: tab.icon,
+            type: tab.type,
+            module: 'ticketing',
+            originalData: tab.data,
+        });
+    });
+
     const [activeTabIndex, setActiveTabIndex] = useState(0);
 
     if (unifiedTabs.length === 0) {
@@ -293,7 +368,11 @@ export default function UnifiedModuleDashboard() {
         if (tab.module === 'archieve') {
             return tab.icon === 'globe' ? Globe : FileArchive;
         }
-        if (tab.module === 'visitor') {
+        if (tab.module === 'visitor' || tab.module === 'ticketing') {
+            if (tab.icon === 'user') return Users;
+            if (tab.icon === 'building') return Building2;
+            if (tab.icon === 'globe') return Globe;
+            if (tab.icon === 'wrench') return Wrench;
             return Users;
         }
         switch (tab.icon) {
@@ -987,7 +1066,349 @@ export default function UnifiedModuleDashboard() {
     };
 
     // ============================================
+    const renderTicketingContent = (tab: UnifiedTab) => {
+        const data = tab.originalData as TicketingTabData;
+        const isPersonal = tab.id.includes('personal');
+
+        const {
+            stats,
+            nearest_maintenances = [],
+            tickets,
+            assets_count,
+            upcoming_maintenance,
+            division_name,
+            recent_active_tickets = [],
+            maintenance_this_month,
+            ticket_distribution,
+            most_reported_categories = [],
+            overdue_maintenance_count,
+            total_open_tickets,
+            average_rating
+        } = data;
+
+        const getTicketStatusColor = (status: string) => {
+            switch (status) {
+                case 'pending': return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+                case 'process': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+                case 'refinement': return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
+                case 'finish':
+                case 'closed': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+                case 'damaged': return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400';
+                default: return 'bg-slate-100 text-slate-700';
+            }
+        };
+
+        const getMaintenanceStatusColor = (status: string) => {
+            switch (status) {
+                case 'pending': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+                case 'refinement': return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+                case 'finish':
+                case 'confirmed': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+                default: return 'bg-slate-100 text-slate-700';
+            }
+        };
+
+        const getMaintenanceStatusLabel = (status: string) => {
+            switch (status) {
+                case 'pending': return 'Pending';
+                case 'refinement': return 'Perbaikan';
+                case 'finish': return 'Selesai';
+                case 'confirmed': return 'Terkonfirmasi';
+                case 'cancelled': return 'Dibatalkan';
+                default: return status.charAt(0).toUpperCase() + status.slice(1);
+            }
+        };
+
+        return (
+            <div className="space-y-5 animate-in fade-in duration-300">
+                {/* 4 Columns Stats */}
+                <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+                    {stats ? (
+                        <>
+                            <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                                    Jumlah Aset {division_name ? `(${division_name})` : tab.id.includes('all') ? '(Seluruh)' : ''}
+                                </p>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex size-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30">
+                                        <HardDrive className="size-5" />
+                                    </div>
+                                    <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.total_assets}</p>
+                                </div>
+                            </div>
+                            <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Sisa Maintenance <span className="text-[9px] lowercase opacity-60">({new Date().getFullYear()})</span></p>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex size-10 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-900/30">
+                                        <Wrench className="size-5" />
+                                    </div>
+                                    <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.remaining_maintenance}</p>
+                                </div>
+                            </div>
+                            <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">{tab.id.includes('all') ? 'Tiket Masuk' : 'Tiket Laporan'} <span className="text-[9px] lowercase opacity-60">({new Date().getFullYear()})</span></p>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex size-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/30">
+                                        <FileText className="size-5" />
+                                    </div>
+                                    <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.tickets_this_year}</p>
+                                </div>
+                            </div>
+                            <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Aset Perbaikan</p>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex size-10 items-center justify-center rounded-lg bg-rose-100 text-rose-600 dark:bg-rose-900/30">
+                                        <AlertTriangle className="size-5" />
+                                    </div>
+                                    <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.assets_under_repair}</p>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            {tickets && (
+                                <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                                    <p className="text-xs font-medium text-slate-500 mb-2">Total Tiket {division_name ? `(${division_name})` : ''}</p>
+                                    <div className="flex items-end justify-between">
+                                        <p className="text-2xl font-bold text-slate-900 dark:text-white">{tickets.total}</p>
+                                        <div className="text-right">
+                                            <p className="text-[10px] text-amber-600 font-bold uppercase tracking-wider">{tickets.pending || tickets.active || 0} Aktif</p>
+                                            <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">{tickets.resolved || tickets.finished || 0} Selesai</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {assets_count !== undefined && (
+                                <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                                    <p className="text-xs font-medium text-slate-500 mb-2">Aset Anda</p>
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex size-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30">
+                                            <HardDrive className="size-5" />
+                                        </div>
+                                        <p className="text-2xl font-bold text-slate-900 dark:text-white">{assets_count}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {(upcoming_maintenance !== undefined || maintenance_this_month !== undefined) && (
+                                <div className={`rounded-xl border p-4 ${(upcoming_maintenance || maintenance_this_month) ? 'border-amber-200 bg-amber-50 dark:border-amber-900/30 dark:bg-amber-900/10' : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800'}`}>
+                                    <p className="text-xs font-medium text-slate-500 mb-2">Jadwal Maint.</p>
+                                    <div className="flex items-center gap-3">
+                                        <div className={`flex size-10 items-center justify-center rounded-lg ${(upcoming_maintenance || maintenance_this_month) ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>
+                                            <Wrench className="size-5" />
+                                        </div>
+                                        <p className="text-2xl font-bold text-slate-900 dark:text-white">{upcoming_maintenance ?? maintenance_this_month}</p>
+                                        <span className="text-[10px] text-slate-400 lowercase">Bulan ini</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {total_open_tickets !== undefined && (
+                                <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                                    <p className="text-xs font-medium text-slate-500 mb-2">Open Issues</p>
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex size-10 items-center justify-center rounded-lg bg-rose-100 text-rose-600 dark:bg-rose-900/30">
+                                            <AlertTriangle className="size-5" />
+                                        </div>
+                                        <p className="text-2xl font-bold text-slate-900 dark:text-white">{total_open_tickets}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {average_rating !== undefined && (
+                                <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                                    <p className="text-xs font-medium text-slate-500 mb-2">Kepuasan Layanan</p>
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex size-10 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-900/30">
+                                            <Star className="size-5 fill-amber-600" />
+                                        </div>
+                                        <p className="text-2xl font-bold text-slate-900 dark:text-white">{average_rating}</p>
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+
+                {/* Main Content Area */}
+                <div className="grid gap-5 lg:grid-cols-2">
+                    {/* List 1 (Maintenance / Tickets) */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
+                        {(isPersonal || tab.id.includes('division') || tab.id.includes('all')) ? (
+                            <>
+                                <div className="mb-4 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Calendar className="size-5 text-amber-600" />
+                                        <h3 className="font-semibold text-slate-800 dark:text-white">Maintenance Terdekat</h3>
+                                    </div>
+                                    <Link href="/ticketing/maintenances" className="text-xs text-primary hover:underline">Lihat Semua</Link>
+                                </div>
+                                <div className="space-y-3">
+                                    {nearest_maintenances.length > 0 ? nearest_maintenances.map((m) => (
+                                        <div key={m.id} className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 dark:bg-slate-700/50">
+                                            <div className="min-w-0 flex-1 pr-4">
+                                                <p className="truncate text-sm font-medium text-slate-700 dark:text-slate-200">{m.asset_item?.merk} {m.asset_item?.model}</p>
+                                                <p className="text-[10px] text-slate-400">
+                                                    {((tab.id.includes('division') || tab.id.includes('all')) && m.asset_item?.users?.length > 0) && `${m.asset_item.users.map((u: any) => u.name).join(', ')} • `}
+                                                    {m.asset_item?.asset_category?.name} • Est. {formatDate(m.estimation_date)}
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${getMaintenanceStatusColor(m.status)}`}>
+                                                    {getMaintenanceStatusLabel(m.status)}
+                                                </span>
+                                                <ChevronRight className="size-4 text-slate-400" />
+                                            </div>
+                                        </div>
+                                    )) : <p className="py-4 text-center text-sm text-slate-400">Tidak ada jadwal terdekat</p>}
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                {recent_active_tickets.length > 0 ? (
+                                    <>
+                                        <div className="mb-4 flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="size-5 text-blue-600" />
+                                                <h3 className="font-semibold text-slate-800 dark:text-white">Tiket Aktif Terbaru</h3>
+                                            </div>
+                                            <Link href="/ticketing/tickets" className="text-xs text-primary hover:underline">Lihat Semua</Link>
+                                        </div>
+                                        <div className="space-y-3">
+                                            {recent_active_tickets.map((ticket) => (
+                                                <Link key={ticket.id} href={`/ticketing/tickets/${ticket.id}/show`} className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 transition-colors hover:bg-slate-100 dark:bg-slate-700/50 dark:hover:bg-slate-700">
+                                                    <div className="min-w-0 flex-1 pr-4">
+                                                        <p className="truncate text-sm font-medium text-slate-700 dark:text-slate-200">{ticket.subject}</p>
+                                                        <p className="text-[10px] text-slate-400">
+                                                            {ticket.user?.name} • {formatDate(ticket.created_at)}
+                                                        </p>
+                                                    </div>
+                                                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${getTicketStatusColor(ticket.status.value)}`}>
+                                                        {ticket.status.label}
+                                                    </span>
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : ticket_distribution ? (
+                                    <>
+                                        <div className="mb-4 flex items-center gap-2">
+                                            <TrendingUp className="size-5 text-primary" />
+                                            <h3 className="font-semibold text-slate-800 dark:text-white">Sebaran Status Tiket</h3>
+                                        </div>
+                                        <div className="flex h-48 items-center justify-center gap-8">
+                                            <div className="grid grid-cols-2 gap-x-8 gap-y-4 w-full">
+                                                {Object.entries(ticket_distribution).map(([status, count]) => (
+                                                    <div key={status} className="flex items-center gap-3">
+                                                        <div className={`size-3 rounded-full ${getTicketStatusColor(status).split(' ')[0]}`} />
+                                                        <div className="flex-1">
+                                                            <div className="flex justify-between text-[11px] mb-1">
+                                                                <span className="capitalize text-slate-500">{status}</span>
+                                                                <span className="font-bold">{count}</span>
+                                                            </div>
+                                                            <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                                                <div
+                                                                    className={`h-full ${getTicketStatusColor(status).split(' ')[0]}`}
+                                                                    style={{ width: `${Math.min((count / (total_open_tickets || 100)) * 100, 100)}%` }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : <p className="py-4 text-center text-sm text-slate-400">Tidak ada data tiket</p>}
+                            </>
+                        )}
+                    </div>
+
+                    {/* List 2 (Active Tickets / Categories) */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
+                        {(isPersonal || tab.id.includes('division') || tab.id.includes('all')) ? (
+                            <>
+                                <div className="mb-4 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Clock className="size-5 text-blue-600" />
+                                        <h3 className="font-semibold text-slate-800 dark:text-white">Tiket Aktif Terbaru</h3>
+                                    </div>
+                                    <Link href="/ticketing/tickets" className="text-xs text-primary hover:underline">Lihat Semua</Link>
+                                </div>
+                                <div className="space-y-3">
+                                    {recent_active_tickets.length > 0 ? recent_active_tickets.map((ticket) => (
+                                        <Link key={ticket.id} href={`/ticketing/tickets/${ticket.id}/show`} className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 transition-colors hover:bg-slate-100 dark:bg-slate-700/50 dark:hover:bg-slate-700">
+                                            <div className="min-w-0 flex-1 pr-4">
+                                                <p className="truncate text-sm font-medium text-slate-700 dark:text-slate-200">{ticket.subject}</p>
+                                                <p className="text-[10px] text-slate-400">
+                                                    {((tab.id.includes('division') || tab.id.includes('all')) && ticket.user?.name) && `${ticket.user.name} • `}
+                                                    {formatDate(ticket.created_at)}
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${getTicketStatusColor(ticket.status.value)}`}>
+                                                    {ticket.status.label}
+                                                </span>
+                                                <ChevronRight className="size-4 text-slate-400" />
+                                            </div>
+                                        </Link>
+                                    )) : <p className="py-4 text-center text-sm text-slate-400">Tidak ada tiket aktif</p>}
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                {most_reported_categories.length > 0 ? (
+                                    <>
+                                        <div className="mb-4 flex items-center gap-2">
+                                            <AlertTriangle className="size-5 text-rose-500" />
+                                            <h3 className="font-semibold text-slate-800 dark:text-white">Aset Paling Sering Bermasalah</h3>
+                                        </div>
+                                        <div className="space-y-3">
+                                            {most_reported_categories.map((cat, idx) => (
+                                                <div key={idx} className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 dark:bg-slate-700/50">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="flex size-7 items-center justify-center rounded-full bg-rose-100 text-xs font-bold text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">{idx + 1}</span>
+                                                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{cat.name}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm font-bold text-rose-600">{cat.total}</span>
+                                                        <span className="text-[10px] text-slate-400">Kasus</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : overdue_maintenance_count !== undefined ? (
+                                    <div className="flex h-full flex-col justify-center items-center text-center py-6">
+                                        <div className={`mb-4 flex size-20 items-center justify-center rounded-full ${overdue_maintenance_count > 0 ? 'bg-rose-50 text-rose-500' : 'bg-emerald-50 text-emerald-500'}`}>
+                                            {overdue_maintenance_count > 0 ? <AlertTriangle className="size-10" /> : <CheckCircle className="size-10" />}
+                                        </div>
+                                        <h4 className="text-lg font-bold text-slate-800 dark:text-white">
+                                            {overdue_maintenance_count > 0 ? `${overdue_maintenance_count} Maintenance Overdue!` : 'Semua Terjadwal'}
+                                        </h4>
+                                        <p className="text-sm text-slate-500 max-w-[250px] mt-1">
+                                            {overdue_maintenance_count > 0
+                                                ? 'Terdapat aset yang melewati tanggal estimasi pemeliharaan.'
+                                                : 'Seluruh aset telah dipelihara sesuai jadwal atau belum masuk waktu jatuh tempo.'}
+                                        </p>
+                                        <Link
+                                            href="/ticketing/maintenances"
+                                            className="mt-6 px-6 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+                                        >
+                                            Buka Jadwal
+                                        </Link>
+                                    </div>
+                                ) : <p className="py-4 text-center text-sm text-slate-400">Tidak ada data penunjang</p>}
+                            </>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     // RENDER TAB CONTENT
+
     // ============================================
     const renderTabContent = (tab: UnifiedTab) => {
         if (tab.module === 'inventory') {
@@ -1002,6 +1423,8 @@ export default function UnifiedModuleDashboard() {
             return renderArchieveDivisionContent(tab);
         } else if (tab.module === 'visitor') {
             return renderVisitorOverviewContent(tab);
+        } else if (tab.module === 'ticketing') {
+            return renderTicketingContent(tab);
         }
         return null;
     };

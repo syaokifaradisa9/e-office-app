@@ -6,7 +6,7 @@ import { ArchievePermission } from '@/enums/ArchievePermission';
 import CheckPermissions from '@/components/utils/CheckPermissions';
 
 export default function ArchieveSidebar() {
-    const { url } = usePage();
+    const { url = '' } = usePage();
     const isCollapsed = useSidebarCollapse();
 
     return (

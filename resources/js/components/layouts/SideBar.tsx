@@ -5,6 +5,7 @@ import { useLayoutEffect, useRef } from 'react';
 import InventorySidebar from '../../../../Modules/Inventory/resources/assets/js/components/layouts/InventorySidebar';
 import ArchieveSidebar from '../../../../Modules/Archieve/resources/assets/js/components/layouts/ArchieveSidebar';
 import VisitorSidebar from '../../../../Modules/VisitorManagement/resources/assets/js/components/layouts/VisitorSidebar';
+import TicketingSidebar from '../../../../Modules/Ticketing/resources/assets/js/components/layouts/TicketingSidebar';
 import { SidebarCollapseContext } from './SidebarContext';
 import SidebarLink from '@/components/layouts/SideBarLink';
 
@@ -92,6 +93,9 @@ export default function SideBar({ isOpen, setIsOpen, isCollapsed, hasMobileSearc
 
                                     {/* Visitor Management */}
                                     <VisitorSidebar />
+
+                                    {/* Ticketing */}
+                                    <TicketingSidebar />
                                 </div>
                             </div>
                         </div>

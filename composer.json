@@ -11,6 +11,7 @@
     "require": {
         "php": "^8.2",
         "inertiajs/inertia-laravel": "^2.0",
+        "intervention/image": "^3.11",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "laravel/wayfinder": "^0.1.11",
@@ -41,7 +42,10 @@
             "Modules\\Archieve\\": "Modules/Archieve/app/",
             "Modules\\VisitorManagement\\Database\\Seeders\\": "Modules/VisitorManagement/database/seeders/",
             "Modules\\VisitorManagement\\Database\\Factories\\": "Modules/VisitorManagement/database/factories/",
-            "Modules\\VisitorManagement\\": "Modules/VisitorManagement/app/"
+            "Modules\\VisitorManagement\\": "Modules/VisitorManagement/app/",
+            "Modules\\Ticketing\\Database\\Seeders\\": "Modules/Ticketing/database/seeders/",
+            "Modules\\Ticketing\\Database\\Factories\\": "Modules/Ticketing/database/factories/",
+            "Modules\\Ticketing\\": "Modules/Ticketing/app/"
         }
     },
     "autoload-dev": {

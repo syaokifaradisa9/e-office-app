@@ -19,6 +19,7 @@ interface FormFileProps {
     helpText?: string;
     className?: string;
     capture?: 'user' | 'environment';
+    defaultFiles?: Array<{ name: string; url: string; size?: number }>;
 }
 
 export default function FormFile({
@@ -33,9 +34,17 @@ export default function FormFile({
     helpText,
     className = '',
     capture,
+    defaultFiles = [],
 }: FormFileProps) {
     const [files, setFiles] = useState<File[]>([]);
-    const [previewUrls, setPreviewUrls] = useState<FilePreview[]>([]);
+    const [previewUrls, setPreviewUrls] = useState<FilePreview[]>(
+        defaultFiles.map(f => ({
+            name: f.name,
+            size: f.size || 0,
+            url: f.url
+        }))
+    );
+
     const [isDragging, setIsDragging] = useState(false);
     const [showCamera, setShowCamera] = useState(false);
     const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
@@ -144,6 +153,7 @@ export default function FormFile({
             setPreviewUrls([]);
         }
 
+
         if (onChange) {
             const dataTransfer = new DataTransfer();
             newFiles.forEach((file) => dataTransfer.items.add(file));
@@ -251,6 +261,7 @@ export default function FormFile({
                     )}
                 </div>
             )}
+
 
             <div
                 className={`

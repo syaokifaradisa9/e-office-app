@@ -2,12 +2,7 @@
 
 namespace Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Modules\Inventory\Database\Seeders\InventoryDatabaseSeeder;
-use Modules\Archieve\Database\Seeders\CategoryContextSeeder;
-use Modules\Archieve\Database\Seeders\DocumentClassificationSeeder;
-use Modules\VisitorManagement\Database\Seeders\VisitorManagementDatabaseSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,14 +12,35 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            // Core Seeders
             DivisionSeeder::class,
             PositionSeeder::class,
+            
+            // Permissions Seeders (App & Modules)
             AppPermissionSeeder::class,
             \Modules\Archieve\Database\Seeders\ArchievePermissionSeeder::class,
+            \Modules\Inventory\Database\Seeders\InventoryPermissionSeeder::class,
+            \Modules\Ticketing\Database\Seeders\TicketingPermissionSeeder::class,
+            \Modules\VisitorManagement\Database\Seeders\VisitorPermissionSeeder::class,
+            
+            // User Seeder (Depends on Roles/Permissions)
             UserSeeder::class,
+            EmployeeSeeder::class,
+            
+            // Module Specific Seeders
+            \Modules\Ticketing\Database\Seeders\AssetCategorySeeder::class,
+            \Modules\Ticketing\Database\Seeders\AssetItemSeeder::class,
+            \Modules\Ticketing\Database\Seeders\TicketSeeder::class,
+            \Modules\Ticketing\Database\Seeders\MaintenanceSeeder::class,
             \Modules\Archieve\Database\Seeders\ArchieveCategorySeeder::class,
             \Modules\Archieve\Database\Seeders\DocumentClassificationSeeder::class,
             \Modules\Archieve\Database\Seeders\DocumentSeeder::class,
+            
+            // Inventory module data
+            \Modules\Inventory\Database\Seeders\InventoryDatabaseSeeder::class,
+            
+            // Visitor management data
+            \Modules\VisitorManagement\Database\Seeders\VisitorManagementDatabaseSeeder::class,
         ]);
     }
 }

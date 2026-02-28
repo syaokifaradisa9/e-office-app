@@ -33,27 +33,43 @@ class RoleService
         $grouped = [];
 
         // Define grouping rules for permissions with module separation
+        // Order matters: specific modules first, generic "Data Master" last to avoid broad keyword matches
         $groupingRules = [
-            // Data Master
-            'divisi' => [
-                'module' => 'Data Master',
-                'label' => 'Divisi',
-                'keywords' => ['lihat_divisi', 'kelola_divisi'],
+            // Ticketing
+            'ticketing_asset_category' => [
+                'module' => 'Ticketing',
+                'label' => 'Kategori Asset',
+                'keywords' => ['Kategori Asset'],
             ],
-            'jabatan' => [
-                'module' => 'Data Master',
-                'label' => 'Jabatan',
-                'keywords' => ['lihat_jabatan', 'kelola_jabatan'],
+            'ticketing_checklist' => [
+                'module' => 'Ticketing',
+                'label' => 'Checklist',
+                'keywords' => ['Checklist'],
             ],
-            'pengguna' => [
-                'module' => 'Data Master',
-                'label' => 'Pengguna',
-                'keywords' => ['lihat_pengguna', 'kelola_pengguna'],
+            'ticketing_asset' => [
+                'module' => 'Ticketing',
+                'label' => 'Data Asset',
+                'keywords' => ['Data Asset', 'Asset Pribadi', 'Asset Divisi', 'Asset Keseluruhan'],
             ],
-            'role' => [
-                'module' => 'Data Master',
-                'label' => 'Role & Permission',
-                'keywords' => ['lihat_role', 'kelola_role'],
+            'maintenance' => [
+                'module' => 'Ticketing',
+                'label' => 'Maintenance',
+                'keywords' => ['Maintenance'],
+            ],
+            'ticketing_dashboard' => [
+                'module' => 'Ticketing',
+                'label' => 'Dashboard',
+                'keywords' => ['Dashboard Ticketing'],
+            ],
+            'ticketing_report' => [
+                'module' => 'Ticketing',
+                'label' => 'Laporan',
+                'keywords' => ['Laporan Ticketing'],
+            ],
+            'ticketing_ticket' => [
+                'module' => 'Ticketing',
+                'label' => 'Lapor Kendala',
+                'keywords' => ['Ticket'],
             ],
 
             // Arsiparis (Archieve)
@@ -70,7 +86,7 @@ class RoleService
             'arsip_dokumen' => [
                 'module' => 'Arsiparis',
                 'label' => 'Dokumen Arsip',
-                'keywords' => ['lihat_semua_arsip', 'kelola_semua_arsip', 'lihat_arsip_divisi', 'kelola_arsip_divisi', 'lihat_arsip_pribadi'],
+                'keywords' => ['arsip_divisi', 'semua_arsip', 'arsip_pribadi'],
             ],
             'arsip_penyimpanan' => [
                 'module' => 'Arsiparis',
@@ -92,16 +108,98 @@ class RoleService
                 'label' => 'Pencarian Dokumen',
                 'keywords' => ['pencarian_dokumen'],
             ],
+
+            // Kunjungan (Visitor Management)
+            'visitor_data' => [
+                'module' => 'Kunjungan',
+                'label' => 'Data Pengunjung',
+                'keywords' => ['data_pengunjung', 'konfirmasi_kunjungan', 'undangan_tamu'],
+            ],
+            'visitor_master' => [
+                'module' => 'Kunjungan',
+                'label' => 'Keperluan Kunjungan',
+                'keywords' => ['master_manajemen_pengunjung'],
+            ],
+            'visitor_feedback' => [
+                'module' => 'Kunjungan',
+                'label' => 'Feedback & Kritik',
+                'keywords' => ['pertanyaan_feedback', 'kritik_saran_pengunjung'],
+            ],
+            'visitor_stats' => [
+                'module' => 'Kunjungan',
+                'label' => 'Statistik & Laporan',
+                'keywords' => ['laporan_pengunjung', 'dashboard_pengunjung'],
+            ],
+
+            // Gudang BHP (Inventory)
+            'inv_category' => [
+                'module' => 'Gudang BHP',
+                'label' => 'Kategori Barang',
+                'keywords' => ['Kategori Barang', 'Data Kategori'],
+            ],
+            'inv_item' => [
+                'module' => 'Gudang BHP',
+                'label' => 'Data Barang',
+                'keywords' => ['Barang Gudang'],
+            ],
+            'inv_order' => [
+                'module' => 'Gudang BHP',
+                'label' => 'Permintaan Barang',
+                'keywords' => ['Permintaan Barang', 'Serah Terima Barang', 'Terima Barang'],
+            ],
+            'inv_opname' => [
+                'module' => 'Gudang BHP',
+                'label' => 'Stock Opname',
+                'keywords' => ['Stock Opname'],
+            ],
+            'inv_monitoring' => [
+                'module' => 'Gudang BHP',
+                'label' => 'Monitoring & Stok',
+                'keywords' => ['Transaksi Barang', 'Stok Divisi', 'Stok Keseluruhan', 'Konversi Stok', 'Pengeluaran Stok'],
+            ],
+            'inv_dashboard' => [
+                'module' => 'Gudang BHP',
+                'label' => 'Dashboard Gudang',
+                'keywords' => ['Dashboard Gudang'],
+            ],
+            'inv_report' => [
+                'module' => 'Gudang BHP',
+                'label' => 'Laporan Gudang',
+                'keywords' => ['Laporan Gudang'],
+            ],
+
+            // Data Master (Generic - Checked last)
+            'divisi' => [
+                'module' => 'Data Master',
+                'label' => 'Divisi',
+                'keywords' => ['lihat_divisi', 'kelola_divisi', 'lihat_data_divisi', 'kelola_data_divisi'],
+            ],
+            'jabatan' => [
+                'module' => 'Data Master',
+                'label' => 'Jabatan',
+                'keywords' => ['jabatan'],
+            ],
+            'pengguna' => [
+                'module' => 'Data Master',
+                'label' => 'Pengguna',
+                'keywords' => ['pengguna'],
+            ],
+            'role' => [
+                'module' => 'Data Master',
+                'label' => 'Role & Permission',
+                'keywords' => ['role'],
+            ],
         ];
 
         foreach ($permissions as $permission) {
             $assigned = false;
+            $permNameLow = strtolower($permission->name);
 
             foreach ($groupingRules as $groupKey => $rule) {
                 $hasKeyword = false;
 
                 foreach ($rule['keywords'] as $keyword) {
-                    if (str_contains(strtolower($permission->name), strtolower($keyword))) {
+                    if (str_contains($permNameLow, strtolower($keyword))) {
                         $hasKeyword = true;
                         break;
                     }
@@ -140,13 +238,31 @@ class RoleService
         // Sort permissions within each group
         foreach ($grouped as &$group) {
             usort($group['permissions'], function ($a, $b) {
-                // Priority: Lihat (1), Kelola (2), Others (99)
                 $getPriority = function ($perm) {
-                    if (str_contains($perm, 'lihat')) {
+                    $lowered = strtolower($perm);
+                    if (str_contains($lowered, 'lihat')) {
                         return 1;
                     }
-                    if (str_contains($perm, 'kelola')) {
+                    if (str_contains($lowered, 'kelola') || str_contains($lowered, 'tambah') || str_contains($lowered, 'buat')) {
                         return 2;
+                    }
+                    if (str_contains($lowered, 'konfirmasi')) {
+                        return 3;
+                    }
+                    if (str_contains($lowered, 'proses')) {
+                        return 4;
+                    }
+                    if (str_contains($lowered, 'perbaikan')) {
+                        return 5;
+                    }
+                    if (str_contains($lowered, 'penyelesaian')) {
+                        return 6;
+                    }
+                    if (str_contains($lowered, 'pemberian') || str_contains($lowered, 'feedback')) {
+                        return 7;
+                    }
+                    if (str_contains($lowered, 'hapus')) {
+                        return 8;
                     }
 
                     return 99;
@@ -166,7 +282,14 @@ class RoleService
 
         // Sort groups by module then by custom priority or label
         uasort($grouped, function ($a, $b) {
-            $moduleOrder = ['Data Master' => 1, 'Arsiparis' => 2, 'Lainnya' => 99];
+            $moduleOrder = [
+                'Data Master' => 1, 
+                'Gudang BHP' => 2, 
+                'Arsiparis' => 3, 
+                'Kunjungan' => 4, 
+                'Ticketing' => 5, 
+                'Lainnya' => 99
+            ];
             $aModuleOrder = $moduleOrder[$a['module']] ?? 50;
             $bModuleOrder = $moduleOrder[$b['module']] ?? 50;
 
