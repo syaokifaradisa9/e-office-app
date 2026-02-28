@@ -47,8 +47,8 @@ export default function RefinementUpdate({ maintenance, refinement }: Props) {
         clearErrors('attachments');
         if (data.attachments) {
             for (let i = 0; i < data.attachments.length; i++) {
-                if (data.attachments[i].size > 2 * 1024 * 1024) {
-                    setError('attachments', 'Ukuran maksimal setiap file lampiran adalah 2MB.');
+                if (data.attachments[i].size > 5 * 1024 * 1024) {
+                    setError('attachments', 'Ukuran maksimal setiap file lampiran adalah 5MB.');
                     return;
                 }
             }
@@ -130,7 +130,7 @@ export default function RefinementUpdate({ maintenance, refinement }: Props) {
 
                     <FormFile
                         name="attachments"
-                        label="Tambah Lampiran / Bukti Baru (Maks 2MB per File)"
+                        label="Tambah Lampiran / Bukti Baru (Maks 5MB per File)"
                         onChange={(e: any) => setData('attachments', e.target.files)}
                         multiple
                         error={errors.attachments as string}

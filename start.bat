@@ -1,0 +1,6 @@
+@echo off
+echo Opening Laragon...
+start "" "C:\laragon\laragon.exe"
+
+echo Starting Laravel server and Vite in one window...
+npx concurrently "php artisan serve" "npm run dev"

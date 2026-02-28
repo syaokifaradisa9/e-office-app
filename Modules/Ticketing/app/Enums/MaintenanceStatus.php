@@ -14,7 +14,7 @@ enum MaintenanceStatus: string
     {
         return match ($this) {
             self::PENDING => 'Sedang Berjalan',
-            self::REFINEMENT => 'Perlu Perbaikan',
+            self::REFINEMENT => 'Perbaikan',
             self::FINISH => 'Selesai',
             self::CONFIRMED => 'Terkonfirmasi',
             self::CANCELLED => 'Dibatalkan',

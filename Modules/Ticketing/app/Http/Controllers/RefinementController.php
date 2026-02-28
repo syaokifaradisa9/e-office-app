@@ -68,7 +68,7 @@ class RefinementController extends Controller
             'note' => 'nullable|string',
             'result' => 'required|string',
             'attachments' => 'nullable|array',
-            'attachments.*' => 'file|max:2048', // 2MB limit
+            'attachments.*' => 'file|max:5120', // 5MB limit
         ]);
 
         $this->maintenanceService->saveRefinement($id, $request->all());
@@ -113,7 +113,7 @@ class RefinementController extends Controller
             'note' => 'nullable|string',
             'result' => 'required|string',
             'attachments' => 'nullable|array',
-            'attachments.*' => 'file|max:2048', // 2MB limit
+            'attachments.*' => 'file|max:5120', // 5MB limit
         ]);
 
         $refinement = $this->maintenanceService->findRefinementById($id);

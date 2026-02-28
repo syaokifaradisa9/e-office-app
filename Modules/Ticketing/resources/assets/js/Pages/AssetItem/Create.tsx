@@ -74,7 +74,7 @@ export default function AssetItemCreate({ assetCategories, divisions, users }: P
         const currentYear = lastDate.getFullYear();
         const intervalMonths = Math.floor(12 / selectedCategory.maintenance_count);
 
-        let nextDate = new Date(lastDate);
+        const nextDate = new Date(lastDate);
         nextDate.setMonth(nextDate.getMonth() + intervalMonths);
 
         while (nextDate.getFullYear() === currentYear) {

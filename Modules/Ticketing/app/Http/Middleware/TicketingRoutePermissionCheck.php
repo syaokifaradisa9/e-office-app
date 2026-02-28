@@ -108,6 +108,37 @@ class TicketingRoutePermissionCheck
             str_contains($routeName, 'ticketing.maintenances.cancel') =>
                 $user->can(TicketingPermission::ManageAsset->value),
 
+            // Ticket / Lapor Kendala - View
+            str_contains($routeName, 'ticketing.tickets.index'),
+            str_contains($routeName, 'ticketing.tickets.datatable'),
+            str_contains($routeName, 'ticketing.tickets.show'),
+            str_contains($routeName, 'ticketing.tickets.create'),
+            str_contains($routeName, 'ticketing.tickets.store') =>
+                $user->can(TicketingPermission::ViewPersonalTicket->value) ||
+                $user->can(TicketingPermission::ViewDivisionTicket->value) ||
+                $user->can(TicketingPermission::ViewAllTicket->value),
+
+            // Ticket - Confirm
+            str_contains($routeName, 'ticketing.tickets.confirm') =>
+                $user->can(TicketingPermission::ConfirmTicket->value),
+
+            // Ticket - Process
+            str_contains($routeName, 'ticketing.tickets.process'),
+            str_contains($routeName, 'ticketing.tickets.store-process') =>
+                $user->can(TicketingPermission::ProcessTicket->value),
+
+            // Ticket - Refinement
+            str_contains($routeName, 'ticketing.tickets.refinement') =>
+                $user->can(TicketingPermission::RepairTicket->value),
+
+            // Ticket - Close
+            str_contains($routeName, 'ticketing.tickets.close') =>
+                $user->can(TicketingPermission::FinishTicket->value),
+
+            // Ticket - Feedback
+            str_contains($routeName, 'ticketing.tickets.feedback') =>
+                $user->can(TicketingPermission::FeedbackTicket->value),
+
             default => true,
         };
 

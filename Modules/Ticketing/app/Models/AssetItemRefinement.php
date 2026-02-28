@@ -11,6 +11,7 @@ class AssetItemRefinement extends Model
 
     protected $fillable = [
         'maintenance_id',
+        'ticket_id',
         'date',
         'description',
         'note',
@@ -26,5 +27,10 @@ class AssetItemRefinement extends Model
     public function maintenance(): BelongsTo
     {
         return $this->belongsTo(Maintenance::class);
+    }
+
+    public function ticket(): BelongsTo
+    {
+        return $this->belongsTo(Ticket::class);
     }
 }

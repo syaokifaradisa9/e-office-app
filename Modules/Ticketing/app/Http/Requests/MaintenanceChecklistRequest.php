@@ -24,6 +24,13 @@ class MaintenanceChecklistRequest extends FormRequest
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'attachments.*.max' => 'Ukuran maksimal setiap file adalah 5MB.',
+        ];
+    }
+
     public function authorize(): bool
     {
         return true;

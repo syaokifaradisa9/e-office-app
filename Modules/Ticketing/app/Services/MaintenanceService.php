@@ -7,6 +7,9 @@ use Modules\Ticketing\Repositories\Maintenance\MaintenanceRepository;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Modules\Ticketing\Enums\AssetItemStatus;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
+use Illuminate\Http\UploadedFile;
 
 
 class MaintenanceService
@@ -74,14 +77,7 @@ class MaintenanceService
         $attachments = $maintenance->attachments ?? [];
         if (!empty($dto->attachments)) {
             foreach ($dto->attachments as $file) {
-                $path = $file->store('maintenance-evidence', 'public');
-                $attachments[] = [
-                    'name' => $file->getClientOriginalName(),
-                    'path' => $path,
-                    'url' => Storage::disk('public')->url($path),
-                    'size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
-                ];
+                $attachments[] = $this->uploadAndCompressImage($file, 'maintenance-evidence');
             }
         }
 
@@ -160,14 +156,7 @@ class MaintenanceService
         $attachments = [];
         if (!empty($data['attachments'])) {
             foreach ($data['attachments'] as $file) {
-                $path = $file->store('refinement-evidence', 'public');
-                $attachments[] = [
-                    'name' => $file->getClientOriginalName(),
-                    'path' => $path,
-                    'url' => Storage::disk('public')->url($path),
-                    'size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
-                ];
+                $attachments[] = $this->uploadAndCompressImage($file, 'refinement-evidence');
             }
         }
 
@@ -206,15 +195,8 @@ class MaintenanceService
         $attachments = $refinement->attachments ?? [];
         if (!empty($data['attachments'])) {
             foreach ($data['attachments'] as $file) {
-                if ($file instanceof \Illuminate\Http\UploadedFile) {
-                    $path = $file->store('refinement-evidence', 'public');
-                    $attachments[] = [
-                        'name' => $file->getClientOriginalName(),
-                        'path' => $path,
-                        'url' => Storage::disk('public')->url($path),
-                        'size' => $file->getSize(),
-                        'mime_type' => $file->getMimeType(),
-                    ];
+                if ($file instanceof UploadedFile) {
+                    $attachments[] = $this->uploadAndCompressImage($file, 'refinement-evidence');
                 }
             }
         }
@@ -226,5 +208,40 @@ class MaintenanceService
             'result' => $data['result'],
             'attachments' => $attachments,
         ]);
+    }
+
+    private function uploadAndCompressImage(UploadedFile $file, string $directory): array
+    {
+        $extension = strtolower($file->getClientOriginalExtension());
+        $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'webp']);
+
+        if ($isImage) {
+            $manager = new ImageManager(new Driver());
+            $image = $manager->read($file->getPathname());
+            $image->scaleDown(1200); // compress large images
+            $encoded = $image->toJpeg(80); // quality 80%
+
+            $name = uniqid() . '.jpg';
+            $path = $directory . '/' . $name;
+            
+            Storage::disk('public')->put($path, $encoded->toString());
+
+            return [
+                'name' => $file->getClientOriginalName(),
+                'path' => $path,
+                'url' => Storage::disk('public')->url($path),
+                'size' => strlen($encoded->toString()),
+                'mime_type' => 'image/jpeg',
+            ];
+        }
+
+        $path = $file->store($directory, 'public');
+        return [
+            'name' => $file->getClientOriginalName(),
+            'path' => $path,
+            'url' => Storage::disk('public')->url($path),
+            'size' => $file->getSize(),
+            'mime_type' => $file->getMimeType(),
+        ];
     }
 }

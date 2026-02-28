@@ -1,5 +1,5 @@
 // Main Entry Point
-// Trigger Vite HMR update
+// Trigger Vite HMR update 
 import '../css/app.css';
 
 import { createInertiaApp } from '@inertiajs/react';

@@ -15,4 +15,17 @@ export enum TicketingPermission {
 
     ViewDivisionMaintenance = 'Lihat Jadwal Maintenance Divisi',
     ViewAllMaintenance = 'Lihat Jadwal Maintenance Keseluruhan',
+    ProsesMaintenance = 'Proses Maintenance',
+    ConfirmMaintenance = 'Konfirmasi Proses Maintenance',
+
+    // Ticket / Lapor Kendala
+    ViewPersonalTicket = 'Lihat Data Ticket Pribadi',
+    ViewDivisionTicket = 'Lihat Data Ticket Divisi',
+    ViewAllTicket = 'Lihat Data Ticket Keseluruhan',
+    ConfirmTicket = 'Konfirmasi Ticketing',
+    ProcessTicket = 'Proses Ticketing',
+    RepairTicket = 'Perbaikan Ticketing',
+    FinishTicket = 'Penyelesaian Ticketing',
+    FeedbackTicket = 'Pemberian Feedback Ticketing',
 }
+

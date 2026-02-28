@@ -56,6 +56,11 @@ class RoleService
                 'label' => 'Maintenance',
                 'keywords' => ['Maintenance'],
             ],
+            'ticketing_ticket' => [
+                'module' => 'Ticketing',
+                'label' => 'Lapor Kendala',
+                'keywords' => ['Ticket', 'Ticketing'],
+            ],
 
             // Arsiparis (Archieve)
             'arsip_kategori' => [
@@ -230,6 +235,24 @@ class RoleService
                     }
                     if (str_contains($lowered, 'kelola') || str_contains($lowered, 'tambah') || str_contains($lowered, 'buat')) {
                         return 2;
+                    }
+                    if (str_contains($lowered, 'konfirmasi')) {
+                        return 3;
+                    }
+                    if (str_contains($lowered, 'proses')) {
+                        return 4;
+                    }
+                    if (str_contains($lowered, 'perbaikan')) {
+                        return 5;
+                    }
+                    if (str_contains($lowered, 'penyelesaian')) {
+                        return 6;
+                    }
+                    if (str_contains($lowered, 'pemberian') || str_contains($lowered, 'feedback')) {
+                        return 7;
+                    }
+                    if (str_contains($lowered, 'hapus')) {
+                        return 8;
                     }
 
                     return 99;

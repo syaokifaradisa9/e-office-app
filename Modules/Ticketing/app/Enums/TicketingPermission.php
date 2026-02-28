@@ -23,6 +23,16 @@ enum TicketingPermission: string
     case ProsesMaintenance = 'Proses Maintenance';
     case ConfirmMaintenance = 'Konfirmasi Proses Maintenance';
 
+    // Ticket / Lapor Kendala
+    case ViewPersonalTicket = 'Lihat Data Ticket Pribadi';
+    case ViewDivisionTicket = 'Lihat Data Ticket Divisi';
+    case ViewAllTicket = 'Lihat Data Ticket Keseluruhan';
+    case ConfirmTicket = 'Konfirmasi Ticketing';
+    case ProcessTicket = 'Proses Ticketing';
+    case RepairTicket = 'Perbaikan Ticketing';
+    case FinishTicket = 'Penyelesaian Ticketing';
+    case FeedbackTicket = 'Pemberian Feedback Ticketing';
+
     public static function values(): array
     {
         return array_map(fn ($case) => $case->value, self::cases());

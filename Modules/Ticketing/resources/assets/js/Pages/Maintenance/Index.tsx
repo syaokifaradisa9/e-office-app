@@ -272,7 +272,7 @@ export default function MaintenanceIndex() {
                                 options={[
                                     { value: '', label: 'Semua Status' },
                                     { value: 'pending', label: 'Sedang Berjalan' },
-                                    { value: 'refinement', label: 'Perlu Perbaikan' },
+                                    { value: 'refinement', label: 'Perbaikan' },
                                     { value: 'finish', label: 'Selesai' },
                                     { value: 'confirmed', label: 'Terkonfirmasi' },
                                     { value: 'cancelled', label: 'Dibatalkan' }
@@ -408,7 +408,7 @@ export default function MaintenanceIndex() {
                                             options={[
                                                 { value: '', label: 'Semua Status' },
                                                 { value: 'pending', label: 'Sedang Berjalan' },
-                                                { value: 'refinement', label: 'Perlu Perbaikan' },
+                                                { value: 'refinement', label: 'Perbaikan' },
                                                 { value: 'finish', label: 'Selesai' },
                                                 { value: 'confirmed', label: 'Terkonfirmasi' },
                                                 { value: 'cancelled', label: 'Dibatalkan' }

@@ -1,4 +1,4 @@
-import { Box, Calendar, ClipboardCheck } from 'lucide-react';
+import { Box, Calendar, Ticket } from 'lucide-react';
 import SidebarLink from '@/components/layouts/SideBarLink';
 import { useSidebarCollapse } from '@/components/layouts/SidebarContext';
 import { TicketingPermission } from '../../types/permissions';
@@ -11,7 +11,7 @@ export default function TicketingSidebar() {
         <div className="mb-6 space-y-6">
             <div className="space-y-1">
                 <div className="py-2">
-                    <h3 className={`text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Modul Ticketing</h3>
+                    <h3 className={`text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Data Master Asset</h3>
                 </div>
 
                 <CheckPermissions permissions={[
@@ -19,7 +19,7 @@ export default function TicketingSidebar() {
                     TicketingPermission.ViewAllAssetCategory,
                     TicketingPermission.ManageAssetCategory,
                 ]}>
-                    <SidebarLink name="Kategori Asset" href="/ticketing/asset-categories" icon={Box} />
+                    <SidebarLink name="Kategori" href="/ticketing/asset-categories" icon={Box} />
                 </CheckPermissions>
 
                 <CheckPermissions permissions={[
@@ -32,24 +32,28 @@ export default function TicketingSidebar() {
                 </CheckPermissions>
             </div>
 
-            <CheckPermissions permissions={[
-                TicketingPermission.ViewDivisionMaintenance,
-                TicketingPermission.ViewAllMaintenance,
-                TicketingPermission.ManageAsset,
-            ]}>
-                <div className="space-y-1">
-                    <div className="py-2">
-                        <h3 className={`text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Modul Maintenance</h3>
-                    </div>
-                    <CheckPermissions permissions={[
-                        TicketingPermission.ViewDivisionMaintenance,
-                        TicketingPermission.ViewAllMaintenance,
-                        TicketingPermission.ManageAsset,
-                    ]}>
-                        <SidebarLink name="Jadwal Maintenance" href="/ticketing/maintenances" icon={Calendar} />
-                    </CheckPermissions>
+            <div className="space-y-1">
+                <div className="py-2">
+                    <h3 className={`text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Pengolahan Data Asset</h3>
                 </div>
-            </CheckPermissions>
+
+                <CheckPermissions permissions={[
+                    TicketingPermission.ViewDivisionMaintenance,
+                    TicketingPermission.ViewAllMaintenance,
+                    TicketingPermission.ManageAsset,
+                ]}>
+                    <SidebarLink name="Maintenance" href="/ticketing/maintenances" icon={Calendar} />
+                </CheckPermissions>
+
+                <CheckPermissions permissions={[
+                    TicketingPermission.ViewPersonalTicket,
+                    TicketingPermission.ViewDivisionTicket,
+                    TicketingPermission.ViewAllTicket,
+                ]}>
+                    <SidebarLink name="Pelaporan Masalah" href="/ticketing/tickets" icon={Ticket} />
+                </CheckPermissions>
+            </div>
         </div>
     );
 }
+

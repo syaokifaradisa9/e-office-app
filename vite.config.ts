@@ -29,3 +29,5 @@ export default defineConfig({
         jsx: 'automatic',
     },
 });
+
+// trigger reload

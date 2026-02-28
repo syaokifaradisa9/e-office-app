@@ -291,7 +291,7 @@ export default function MaintenanceChecklist({ maintenance }: Props) {
                                     <div className="flex items-center gap-2">
                                         <Wrench className={`size-4 ${data.needs_further_repair ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'}`} />
                                         <h4 className={`text-sm font-bold ${data.needs_further_repair ? 'text-amber-800 dark:text-amber-200' : 'text-slate-700 dark:text-slate-300'}`}>
-                                            Perlu Perbaikan Lebih Lanjut
+                                            Perbaikan Lebih Lanjut
                                         </h4>
                                     </div>
                                     <p className={`mt-1 text-xs ${data.needs_further_repair ? 'text-amber-700 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'}`}>
