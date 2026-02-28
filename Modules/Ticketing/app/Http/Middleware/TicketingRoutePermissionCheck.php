@@ -139,6 +139,17 @@ class TicketingRoutePermissionCheck
             str_contains($routeName, 'ticketing.tickets.feedback') =>
                 $user->can(TicketingPermission::FeedbackTicket->value),
 
+            // Ticketing Reports
+            str_contains($routeName, 'ticketing.reports.division') =>
+                $user->can(TicketingPermission::ViewDivisionReport->value),
+            
+            str_contains($routeName, 'ticketing.reports.all') =>
+                $user->can(TicketingPermission::ViewAllReport->value),
+            
+            str_contains($routeName, 'ticketing.reports.index') =>
+                $user->can(TicketingPermission::ViewDivisionReport->value) ||
+                $user->can(TicketingPermission::ViewAllReport->value),
+
             default => true,
         };
 

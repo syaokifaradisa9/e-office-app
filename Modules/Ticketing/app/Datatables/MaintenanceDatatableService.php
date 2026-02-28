@@ -69,7 +69,7 @@ class MaintenanceDatatableService
                 'Merk / Model',
                 'Serial Number',
                 'Estimasi Tanggal',
-                'Tanggal Aktual',
+                'Tanggal Maintenance',
                 'Status',
                 'Catatan',
             ]));

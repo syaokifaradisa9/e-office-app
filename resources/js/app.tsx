@@ -1,5 +1,6 @@
 // Main Entry Point
-// Trigger Vite HMR update 
+// Global glob refresh for Ticketing Report
+// v3
 import '../css/app.css';
 
 import { createInertiaApp } from '@inertiajs/react';

@@ -118,7 +118,7 @@ export default function MaintenanceDetail({ maintenance, refinements, refinement
                         />
                         <InfoItem
                             icon={<Calendar className="size-4" />}
-                            label="Tanggal Pelaksanaan"
+                            label="Tanggal Maintenance"
                             value={maintenance.actual_date
                                 ? new Date(maintenance.actual_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
                                 : <span className="text-slate-400 italic">Belum dilaksanakan</span>

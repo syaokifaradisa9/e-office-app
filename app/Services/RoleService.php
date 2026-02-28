@@ -56,10 +56,20 @@ class RoleService
                 'label' => 'Maintenance',
                 'keywords' => ['Maintenance'],
             ],
+            'ticketing_dashboard' => [
+                'module' => 'Ticketing',
+                'label' => 'Dashboard',
+                'keywords' => ['Dashboard Ticketing'],
+            ],
+            'ticketing_report' => [
+                'module' => 'Ticketing',
+                'label' => 'Laporan',
+                'keywords' => ['Laporan Ticketing'],
+            ],
             'ticketing_ticket' => [
                 'module' => 'Ticketing',
                 'label' => 'Lapor Kendala',
-                'keywords' => ['Ticket', 'Ticketing'],
+                'keywords' => ['Ticket'],
             ],
 
             // Arsiparis (Archieve)

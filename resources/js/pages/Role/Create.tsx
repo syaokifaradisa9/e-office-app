@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import { useState, useMemo, useEffect } from 'react';
-import { Save, Shield, Search, CheckSquare, Square, ChevronDown, ChevronRight, Database, FileArchive, Check, X, Filter } from 'lucide-react';
+import { Save, Shield, Search, CheckSquare, Square, ChevronDown, ChevronRight, Database, FileArchive, Check, X, Filter, Wrench, HardDrive, Users } from 'lucide-react';
 
 import Button from '../../components/buttons/Button';
 import FormInput from '../../components/forms/FormInput';
@@ -167,6 +167,12 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                 return <Database className="size-5" />;
             case 'Arsiparis':
                 return <FileArchive className="size-5" />;
+            case 'Ticketing':
+                return <Wrench className="size-5" />;
+            case 'Gudang BHP':
+                return <HardDrive className="size-5" />;
+            case 'Kunjungan':
+                return <Users className="size-5" />;
             default:
                 return <Shield className="size-5" />;
         }
@@ -186,6 +192,12 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                 return 'from-blue-500 to-blue-600';
             case 'Arsiparis':
                 return 'from-amber-500 to-amber-600';
+            case 'Ticketing':
+                return 'from-indigo-500 to-indigo-600';
+            case 'Gudang BHP':
+                return 'from-emerald-500 to-emerald-600';
+            case 'Kunjungan':
+                return 'from-rose-500 to-rose-600';
             default:
                 return 'from-slate-500 to-slate-600';
         }

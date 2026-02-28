@@ -32,6 +32,11 @@ enum TicketingPermission: string
     case RepairTicket = 'Perbaikan Ticketing';
     case FinishTicket = 'Penyelesaian Ticketing';
     case FeedbackTicket = 'Pemberian Feedback Ticketing';
+    case ViewPersonalDashboard = 'Lihat Dashboard Ticketing Pribadi';
+    case ViewDivisionDashboard = 'Lihat Dashboard Ticketing Divisi';
+    case ViewAllDashboard = 'Lihat Dashboard Ticketing Keseluruhan';
+    case ViewDivisionReport = 'Lihat Laporan Ticketing Divisi';
+    case ViewAllReport = 'Lihat Laporan Ticketing Keseluruhan';
 
     public static function values(): array
     {

@@ -3,7 +3,7 @@ import ContentCard from '@/components/layouts/ContentCard';
 import DataTable from '@/components/tables/Datatable';
 import { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
-import { Box, Calendar, Check, History as HistoryIcon, XCircle, FileSpreadsheet, Plus, AlertCircle, Clock, CheckSquare, Search, Wrench, Info, Filter } from 'lucide-react';
+import { Box, Calendar, Check, History as HistoryIcon, XCircle, FileSpreadsheet, Plus, AlertCircle, Clock, CheckSquare, Search, Wrench, Info, Filter, ClipboardCheck } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import ConfirmationAlert from '@/components/alerts/ConfirmationAlert';
 import Button from '@/components/buttons/Button';
@@ -256,11 +256,20 @@ export default function MaintenanceIndex() {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Estimasi Tanggal</label>
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Tahun</label>
+                                <FormSearchSelect
+                                    name="year"
+                                    value={String(params.year)}
+                                    options={years.map((y: string | number) => ({ value: String(y), label: String(y) }))}
+                                    onChange={onParamsChange}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Estimasi Bulan</label>
                                 <FormSearch name="estimation_date" type="month" value={params.estimation_date} onChange={onParamsChange} placeholder="Bulan-Tahun" />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Tanggal Aktual</label>
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Tanggal Maintenance</label>
                                 <FormSearch name="actual_date" type="month" value={params.actual_date} onChange={onParamsChange} placeholder="Bulan-Tahun" />
                             </div>
                         </div>
@@ -309,7 +318,14 @@ export default function MaintenanceIndex() {
                             />
                         )}
                         additionalHeaderElements={
-                            <div className="flex gap-2">
+                            <div className="flex items-center gap-2">
+                                <FormSearchSelect
+                                    name="year"
+                                    value={String(params.year)}
+                                    onChange={onParamsChange}
+                                    options={years.map(y => ({ value: String(y), label: String(y) }))}
+                                    className="w-[100px]"
+                                />
                                 <Tooltip text="Export Excel">
                                     <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
                                 </Tooltip>
@@ -367,7 +383,7 @@ export default function MaintenanceIndex() {
                             },
                             {
                                 name: 'actual_date',
-                                header: 'Tanggal Aktual',
+                                header: 'Tanggal Maintenance',
                                 render: (item: Maintenance) => (
                                     item.actual_date ? (
                                         <div className="flex items-center gap-2 text-sm">
@@ -433,12 +449,12 @@ export default function MaintenanceIndex() {
                                             </Tooltip>
                                         )}
                                         {canProcess && (item.status.value === 'pending' || item.status.value === 'refinement' || item.status.value === 'finish') && item.is_actionable && (
-                                            <Tooltip text="Maintenance Sekarang">
+                                            <Tooltip text="Form Checklist Maintenance">
                                                 <Button
                                                     href={`/ticketing/maintenances/${item.id}/process`}
                                                     variant="ghost"
                                                     className="!p-1.5 !text-primary dark:!text-primary hover:!bg-transparent"
-                                                    icon={<Wrench className="size-4" />}
+                                                    icon={<ClipboardCheck className="size-4" />}
                                                 />
                                             </Tooltip>
                                         )}

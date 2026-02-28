@@ -11,8 +11,6 @@ use Modules\Ticketing\DataTransferObjects\TicketFeedbackDTO;
 use Modules\Ticketing\Enums\TicketStatus;
 use Modules\Ticketing\Enums\AssetItemStatus;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
 use Illuminate\Http\UploadedFile;
 
 class TicketService
@@ -222,26 +220,56 @@ class TicketService
         $extension = strtolower($file->getClientOriginalExtension());
         $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'webp']);
 
-        if ($isImage) {
-            $manager = new ImageManager(new Driver());
-            $image = $manager->read($file->getPathname());
-            $image->scaleDown(1200); // compress large images
-            $encoded = $image->toJpeg(80); // quality 80%
-
-            $name = uniqid() . '.jpg';
-            $path = $directory . '/' . $name;
+        if ($isImage && extension_loaded('gd')) {
+            $pathname = $file->getPathname();
             
-            Storage::disk('public')->put($path, $encoded->toString());
+            // Create image from source
+            $src = match ($extension) {
+                'jpg', 'jpeg' => @imagecreatefromjpeg($pathname),
+                'png' => @imagecreatefrompng($pathname),
+                'webp' => @imagecreatefromwebp($pathname),
+                default => null,
+            };
 
-            return [
-                'name' => $file->getClientOriginalName(),
-                'path' => $path,
-                'url' => Storage::disk('public')->url($path),
-                'size' => strlen($encoded->toString()),
-                'mime_type' => 'image/jpeg',
-            ];
+            if ($src) {
+                $width = imagesx($src);
+                $height = imagesy($src);
+                $maxWidth = 1200;
+
+                if ($width > $maxWidth) {
+                    $newWidth = $maxWidth;
+                    $newHeight = (int) ($height * ($maxWidth / $width));
+                    
+                    // PHP 8+ imagescale is efficient
+                    $scaled = imagescale($src, $newWidth, $newHeight);
+                    if ($scaled) {
+                        imagedestroy($src);
+                        $src = $scaled;
+                    }
+                }
+
+                // Output to buffer
+                ob_start();
+                imagejpeg($src, null, 80); // quality 80%
+                $imageData = ob_get_clean();
+                imagedestroy($src);
+
+                $name = uniqid() . '.jpg';
+                $path = $directory . '/' . $name;
+                
+                Storage::disk('public')->put($path, $imageData);
+
+                return [
+                    'name' => $file->getClientOriginalName(),
+                    'path' => $path,
+                    'url' => Storage::disk('public')->url($path),
+                    'size' => strlen($imageData),
+                    'mime_type' => 'image/jpeg',
+                ];
+            }
         }
 
+        // Fallback for non-images or if GD is missing
         $path = $file->store($directory, 'public');
         return [
             'name' => $file->getClientOriginalName(),

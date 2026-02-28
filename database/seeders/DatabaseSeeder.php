@@ -30,6 +30,8 @@ class DatabaseSeeder extends Seeder
             // Module Specific Seeders
             \Modules\Ticketing\Database\Seeders\AssetCategorySeeder::class,
             \Modules\Ticketing\Database\Seeders\AssetItemSeeder::class,
+            \Modules\Ticketing\Database\Seeders\TicketSeeder::class,
+            \Modules\Ticketing\Database\Seeders\MaintenanceSeeder::class,
             \Modules\Archieve\Database\Seeders\ArchieveCategorySeeder::class,
             \Modules\Archieve\Database\Seeders\DocumentClassificationSeeder::class,
             \Modules\Archieve\Database\Seeders\DocumentSeeder::class,

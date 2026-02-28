@@ -1,4 +1,4 @@
-import { Box, Calendar, Check, Clock, XCircle, History as HistoryIcon, Wrench, Info } from 'lucide-react';
+import { Box, Calendar, Check, Clock, XCircle, History as HistoryIcon, Wrench, Info, ClipboardCheck } from 'lucide-react';
 import Button from '@/components/buttons/Button';
 
 interface Maintenance {
@@ -102,8 +102,8 @@ export default function MaintenanceCardItem({ item, canProcess, canConfirm, onCo
                                 href={`/ticketing/maintenances/${item.id}/process`}
                                 variant="outline"
                                 className="w-full !py-2 !bg-transparent !text-primary !border-primary/30 dark:!border-primary/20 hover:!bg-transparent"
-                                label="Maintenance Sekarang"
-                                icon={<Wrench className="size-4" />}
+                                label="Form Checklist Maintenance"
+                                icon={<ClipboardCheck className="size-4" />}
                             />
                         )}
                         {showConfirm && (

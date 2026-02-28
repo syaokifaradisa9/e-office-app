@@ -61,6 +61,14 @@ class DashboardController extends Controller
             $dashboardData['visitor'] = $visitorService->getDashboardTabs();
         }
 
+        // ========================================
+        // Module: Ticketing
+        // ========================================
+        if (File::isDirectory(base_path('Modules/Ticketing'))) {
+            $ticketingService = app(\Modules\Ticketing\Services\TicketingDashboardService::class);
+            $dashboardData['ticketing'] = $ticketingService->getDashboardTabs();
+        }
+
         return Inertia::render('Dashboard', [
             'statistics' => $statistics,
             'dashboardData' => $dashboardData,

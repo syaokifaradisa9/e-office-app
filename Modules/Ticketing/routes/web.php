@@ -85,6 +85,7 @@ Route::middleware(['auth', TicketingRoutePermissionCheck::class])->group(functio
         Route::prefix('tickets')->name('tickets.')->controller(\Modules\Ticketing\Http\Controllers\TicketController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/datatable', 'datatable')->name('datatable');
+            Route::get('/print/excel', 'printExcel')->name('print-excel');
             Route::get('/create', 'create')->name('create');
             Route::post('/', 'store')->name('store');
             Route::get('/{id}/show', 'show')->name('show');
@@ -102,6 +103,13 @@ Route::middleware(['auth', TicketingRoutePermissionCheck::class])->group(functio
             Route::get('/{id}/refinement/create', [\Modules\Ticketing\Http\Controllers\TicketRefinementController::class, 'create'])->name('refinement.create');
             Route::post('/{id}/refinement', [\Modules\Ticketing\Http\Controllers\TicketRefinementController::class, 'store'])->name('refinement.store');
             Route::post('/{id}/refinement/finish', [\Modules\Ticketing\Http\Controllers\TicketRefinementController::class, 'finish'])->name('refinement.finish');
+        });
+
+        // Reports
+        Route::prefix('reports')->name('reports.')->controller(\Modules\Ticketing\Http\Controllers\TicketingReportController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/division', 'division')->name('division');
+            Route::get('/all', 'all')->name('all');
         });
     });
 });

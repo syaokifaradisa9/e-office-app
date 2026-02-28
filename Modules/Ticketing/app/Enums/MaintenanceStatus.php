@@ -13,7 +13,7 @@ enum MaintenanceStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::PENDING => 'Sedang Berjalan',
+            self::PENDING => 'Pending',
             self::REFINEMENT => 'Perbaikan',
             self::FINISH => 'Selesai',
             self::CONFIRMED => 'Terkonfirmasi',

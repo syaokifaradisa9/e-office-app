@@ -26,10 +26,18 @@ class MaintenanceController extends Controller
         ]), 403);
 
         $years = \Modules\Ticketing\Models\Maintenance::selectRaw('YEAR(estimation_date) as year')
+            ->whereNotNull('estimation_date')
             ->distinct()
             ->orderBy('year', 'desc')
             ->pluck('year')
             ->toArray();
+
+        // Pastikan tahun sekarang selalu ada dalam pilihan jika data kosong atau belum ada data tahun berjalan
+        $currentYear = (int)date('Y');
+        if (!in_array($currentYear, $years)) {
+            $years[] = $currentYear;
+            rsort($years);
+        }
 
         return Inertia::render('Ticketing/Maintenance/Index', [
             'years' => $years,

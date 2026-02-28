@@ -40,9 +40,35 @@ class TicketController extends Controller
             'label' => $case->label(),
         ]);
 
+        $years = \Modules\Ticketing\Models\Ticket::selectRaw('YEAR(created_at) as year')
+            ->whereNotNull('created_at')
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year')
+            ->toArray();
+
+        // Ensure current year is always available
+        $currentYear = (int)date('Y');
+        if (!in_array($currentYear, $years)) {
+            $years[] = $currentYear;
+            rsort($years);
+        }
+
         return Inertia::render('Ticketing/Ticket/Index', [
             'priorities' => $priorities,
+            'years' => $years,
         ]);
+    }
+
+    public function printExcel(DatatableRequest $request)
+    {
+        abort_unless(auth()->user()->canAny([
+            TicketingPermission::ViewPersonalTicket->value,
+            TicketingPermission::ViewDivisionTicket->value,
+            TicketingPermission::ViewAllTicket->value,
+        ]), 403);
+
+        return $this->datatableService->printExcel($request, auth()->user());
     }
 
     public function datatable(DatatableRequest $request)

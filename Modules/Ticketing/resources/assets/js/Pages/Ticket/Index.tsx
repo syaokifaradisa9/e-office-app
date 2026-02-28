@@ -49,6 +49,7 @@ interface PaginationData {
 interface PageProps {
     permissions?: string[];
     priorities: { value: string; label: string }[];
+    years: (string | number)[];
     [key: string]: unknown;
 }
 
@@ -61,10 +62,11 @@ interface Params {
     status?: string;
     priority?: string;
     subject?: string;
+    year?: string | number;
 }
 
 export default function TicketIndex() {
-    const { permissions, priorities, auth } = usePage<SharedData & PageProps>().props;
+    const { permissions, priorities, auth, years = [] } = usePage<any>().props;
     const canConfirm = permissions?.includes('Konfirmasi Ticketing');
     const canProcess = permissions?.includes('Proses Ticketing');
     const canRepair = permissions?.includes('Perbaikan Ticketing');
@@ -76,6 +78,7 @@ export default function TicketIndex() {
     });
     const [params, setParams] = useState<Params>({
         search: '', limit: 10, page: 1, sort_by: 'created_at', sort_direction: 'desc', status: '', priority: '', subject: '',
+        year: years.length > 0 ? years[0] : new Date().getFullYear(),
     });
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -114,6 +117,19 @@ export default function TicketIndex() {
 
     function onParamsChange(e: { target: { name: string; value: string | number } }) {
         setParams({ ...params, [e.target.name]: e.target.value, page: 1 });
+    }
+
+    function getPrintUrl() {
+        let url = `${baseUrl}/print/excel`;
+        const queryParams: string[] = [];
+        Object.keys(params).forEach((key) => {
+            const value = params[key as keyof Params];
+            if (value !== undefined && value !== null && value !== '') {
+                queryParams.push(`${key}=${value}`);
+            }
+        });
+        if (queryParams.length > 0) url += `?${queryParams.join('&')}`;
+        return url;
     }
 
     const getStatusStyles = (status: string) => {
@@ -344,13 +360,27 @@ export default function TicketIndex() {
                     onSearchChange={onParamsChange}
                     placeholder="Cari laporan..."
                     actionButton={
-                        <div className="flex items-center gap-1">
-                            <button
-                                onClick={() => setIsFilterModalOpen(true)}
-                                className="p-2 text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors"
-                            >
-                                <Filter className="size-4" />
-                            </button>
+                        <div className="flex items-center gap-1.5">
+                            <div className="hidden sm:block">
+                                <FormSearchSelect
+                                    name="year"
+                                    value={String(params.year)}
+                                    onChange={onParamsChange}
+                                    options={years.map((y: string | number) => ({ value: String(y), label: String(y) }))}
+                                    className="w-[90px]"
+                                />
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={() => setIsFilterModalOpen(true)}
+                                    className="p-2 text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors"
+                                >
+                                    <Filter className="size-4" />
+                                </button>
+                                <a href={getPrintUrl()} target="_blank" className="p-2 text-slate-500" rel="noreferrer">
+                                    <FileSpreadsheet className="size-4" />
+                                </a>
+                            </div>
                         </div>
                     }
                 />
@@ -379,6 +409,15 @@ export default function TicketIndex() {
                 <FloatingActionButton href={`${baseUrl}/create`} label="Lapor Masalah" />
                 <Modal show={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)} title="Filter Laporan Masalah" maxWidth="md">
                     <div className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Tahun</label>
+                            <FormSearchSelect
+                                name="year"
+                                value={String(params.year)}
+                                options={years.map((y: string | number) => ({ value: String(y), label: String(y) }))}
+                                onChange={onParamsChange}
+                            />
+                        </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Status</label>
                             <FormSearchSelect
@@ -437,6 +476,20 @@ export default function TicketIndex() {
                         dataTable={dataTable}
                         isLoading={isLoading}
                         columns={columns}
+                        additionalHeaderElements={
+                            <div className="flex items-center gap-2">
+                                <FormSearchSelect
+                                    name="year"
+                                    value={String(params.year)}
+                                    onChange={onParamsChange}
+                                    options={years.map((y: string | number) => ({ value: String(y), label: String(y) }))}
+                                    className="w-[100px]"
+                                />
+                                <Tooltip text="Export Excel">
+                                    <Button href={getPrintUrl()} className="!bg-transparent !p-2 !text-black hover:opacity-75 dark:!text-white" icon={<FileSpreadsheet className="size-4" />} target="_blank" />
+                                </Tooltip>
+                            </div>
+                        }
                         cardItem={(item: Ticket) => (
                             <TicketCardItem
                                 item={item}

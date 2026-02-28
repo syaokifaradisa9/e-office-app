@@ -14,6 +14,9 @@ class TicketingDatabaseSeeder extends Seeder
         $this->call([
             TicketingPermissionSeeder::class,
             AssetCategorySeeder::class,
+            AssetItemSeeder::class,
+            TicketSeeder::class,
+            MaintenanceSeeder::class,
         ]);
     }
 }

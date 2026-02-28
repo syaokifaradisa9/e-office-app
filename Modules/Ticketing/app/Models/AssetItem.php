@@ -60,4 +60,9 @@ class AssetItem extends Model
     {
         return $this->hasMany(Maintenance::class);
     }
+
+    public function tickets(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Ticket::class);
+    }
 }

@@ -27,5 +27,10 @@ export enum TicketingPermission {
     RepairTicket = 'Perbaikan Ticketing',
     FinishTicket = 'Penyelesaian Ticketing',
     FeedbackTicket = 'Pemberian Feedback Ticketing',
+    ViewPersonalDashboard = 'Lihat Dashboard Ticketing Pribadi',
+    ViewDivisionDashboard = 'Lihat Dashboard Ticketing Divisi',
+    ViewAllDashboard = 'Lihat Dashboard Ticketing Keseluruhan',
+    ViewDivisionReport = 'Lihat Laporan Ticketing Divisi',
+    ViewAllReport = 'Lihat Laporan Ticketing Keseluruhan',
 }
 

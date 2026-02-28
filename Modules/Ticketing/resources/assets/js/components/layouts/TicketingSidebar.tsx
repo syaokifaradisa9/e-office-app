@@ -1,4 +1,4 @@
-import { Box, Calendar, Ticket } from 'lucide-react';
+import { BarChart3, Box, Calendar, Ticket } from 'lucide-react';
 import SidebarLink from '@/components/layouts/SideBarLink';
 import { useSidebarCollapse } from '@/components/layouts/SidebarContext';
 import { TicketingPermission } from '../../types/permissions';
@@ -51,6 +51,19 @@ export default function TicketingSidebar() {
                     TicketingPermission.ViewAllTicket,
                 ]}>
                     <SidebarLink name="Pelaporan Masalah" href="/ticketing/tickets" icon={Ticket} />
+                </CheckPermissions>
+            </div>
+
+            <div className="space-y-1">
+                <div className="py-2">
+                    <h3 className={`text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Monitoring & Laporan</h3>
+                </div>
+
+                <CheckPermissions permissions={[
+                    TicketingPermission.ViewDivisionReport,
+                    TicketingPermission.ViewAllReport,
+                ]}>
+                    <SidebarLink name="Laporan" href="/ticketing/reports" icon={BarChart3} />
                 </CheckPermissions>
             </div>
         </div>

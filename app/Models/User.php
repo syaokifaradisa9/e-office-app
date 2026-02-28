@@ -92,4 +92,9 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(\Modules\Ticketing\Models\AssetItem::class, 'asset_item_user');
     }
+
+    public function tickets(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\Modules\Ticketing\Models\Ticket::class);
+    }
 }
