@@ -195,6 +195,41 @@ class TicketService
         return $ticket;
     }
 
+    public function findRefinementById(int $id): ?\Modules\Ticketing\Models\AssetItemRefinement
+    {
+        return $this->refinementRepository->findById($id);
+    }
+
+    public function updateRefinement(int $refinementId, array $data): bool
+    {
+        $refinement = $this->refinementRepository->findById($refinementId);
+        if (!$refinement) {
+            throw new \Exception('Data perbaikan tidak ditemukan.');
+        }
+
+        $attachments = $refinement->attachments ?? [];
+        if (!empty($data['attachments'])) {
+            foreach ($data['attachments'] as $file) {
+                if ($file instanceof UploadedFile) {
+                    $attachments[] = $this->uploadAndCompressImage($file, 'refinement-evidence');
+                }
+            }
+        }
+
+        return $this->refinementRepository->update($refinementId, [
+            'date' => $data['date'],
+            'description' => $data['description'],
+            'note' => $data['note'],
+            'result' => $data['result'],
+            'attachments' => $attachments,
+        ]);
+    }
+
+    public function deleteRefinement(int $id): bool
+    {
+        return $this->refinementRepository->delete($id);
+    }
+
     public function storeFeedback(int $ticketId, TicketFeedbackDTO $dto): Ticket
     {
         $ticket = Ticket::findOrFail($ticketId);

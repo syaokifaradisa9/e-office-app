@@ -181,7 +181,13 @@ export default function ReportIndex() {
                                     datasets: [{
                                         label: 'Total Pelaporan',
                                         data: priority_stats.map((c: any) => c.total),
-                                        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981', '#8b5cf6'],
+                                        backgroundColor: priority_stats.map((c: any) => {
+                                            const p = String(c.priority).toLowerCase();
+                                            if (p === 'low') return '#3b82f6';
+                                            if (p === 'medium') return '#f59e0b';
+                                            if (p === 'high') return '#ef4444';
+                                            return '#8b5cf6';
+                                        }),
                                         borderRadius: 6,
                                     }]
                                 }}
@@ -922,7 +928,13 @@ export default function ReportIndex() {
                                                     datasets: [{
                                                         label: 'Total Pelaporan',
                                                         data: (reportData.priority_stats || []).map((c: any) => c.total),
-                                                        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981', '#8b5cf6'],
+                                                        backgroundColor: (reportData.priority_stats || []).map((c: any) => {
+                                                            const p = String(c.priority).toLowerCase();
+                                                            if (p === 'low') return '#3b82f6';
+                                                            if (p === 'medium') return '#f59e0b';
+                                                            if (p === 'high') return '#ef4444';
+                                                            return '#8b5cf6';
+                                                        }),
                                                         borderRadius: 6,
                                                     }]
                                                 }}
@@ -1081,7 +1093,13 @@ export default function ReportIndex() {
                                                             datasets: [{
                                                                 label: 'Total Pelaporan',
                                                                 data: (stats.priority_stats || []).map((c: any) => c.total),
-                                                                backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981', '#8b5cf6'],
+                                                                backgroundColor: (stats.priority_stats || []).map((c: any) => {
+                                                                    const p = String(c.priority).toLowerCase();
+                                                                    if (p === 'low') return '#3b82f6';
+                                                                    if (p === 'medium') return '#f59e0b';
+                                                                    if (p === 'high') return '#ef4444';
+                                                                    return '#8b5cf6';
+                                                                }),
                                                                 borderRadius: 6,
                                                             }]
                                                         }}

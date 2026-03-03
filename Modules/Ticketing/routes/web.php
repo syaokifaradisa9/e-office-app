@@ -105,6 +105,13 @@ Route::middleware(['auth', TicketingRoutePermissionCheck::class])->group(functio
             Route::post('/{id}/refinement/finish', [\Modules\Ticketing\Http\Controllers\TicketRefinementController::class, 'finish'])->name('refinement.finish');
         });
 
+        // Ticket Refinement Edit/Update/Delete (by refinement ID)
+        Route::prefix('ticket-refinement')->name('ticket-refinement.')->controller(\Modules\Ticketing\Http\Controllers\TicketRefinementController::class)->group(function () {
+            Route::get('/{id}/edit', 'edit')->name('edit');
+            Route::put('/{id}/update', 'update')->name('update');
+            Route::delete('/{id}/delete', 'delete')->name('delete');
+        });
+
         // Reports
         Route::prefix('reports')->name('reports.')->controller(\Modules\Ticketing\Http\Controllers\TicketingReportController::class)->group(function () {
             Route::get('/', 'index')->name('index');

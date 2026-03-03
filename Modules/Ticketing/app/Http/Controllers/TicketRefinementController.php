@@ -113,4 +113,69 @@ class TicketRefinementController extends Controller
             return back()->with('error', $e->getMessage());
         }
     }
+
+    public function edit(int $id)
+    {
+        abort_unless(auth()->user()->can(TicketingPermission::RepairTicket->value), 403);
+
+        $refinement = $this->ticketService->findRefinementById($id);
+        if (!$refinement || !$refinement->ticket_id) {
+            return back()->with('error', 'Data perbaikan tidak ditemukan.');
+        }
+
+        $ticket = $this->ticketService->findById($refinement->ticket_id);
+        abort_unless($ticket, 404);
+
+        return Inertia::render('Ticketing/Ticket/RefinementUpdate', [
+            'ticket' => [
+                'id' => $ticket->id,
+                'subject' => $ticket->subject,
+                'status' => [
+                    'value' => $ticket->status->value,
+                    'label' => $ticket->status->label(),
+                ],
+                'asset_item' => [
+                    'merk' => $ticket->assetItem->merk,
+                    'model' => $ticket->assetItem->model,
+                ],
+            ],
+            'refinement' => $refinement,
+        ]);
+    }
+
+    public function update(Request $request, int $id)
+    {
+        abort_unless(auth()->user()->can(TicketingPermission::RepairTicket->value), 403);
+
+        $request->validate([
+            'date' => 'required|date',
+            'description' => 'required|string',
+            'result' => 'required|string',
+            'note' => 'nullable|string',
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'file|max:5120',
+        ], [
+            'attachments.*.max' => 'Ukuran maksimal setiap file adalah 5MB.',
+        ]);
+
+        try {
+            $refinement = $this->ticketService->findRefinementById($id);
+            $this->ticketService->updateRefinement($id, $request->all());
+            return to_route('ticketing.tickets.refinement.index', $refinement->ticket_id)->with('success', 'Data perbaikan berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function delete(int $id)
+    {
+        abort_unless(auth()->user()->can(TicketingPermission::RepairTicket->value), 403);
+
+        try {
+            $this->ticketService->deleteRefinement($id);
+            return back()->with('success', 'Data perbaikan berhasil dihapus.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
 }

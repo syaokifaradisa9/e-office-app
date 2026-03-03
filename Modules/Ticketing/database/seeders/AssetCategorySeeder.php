@@ -22,6 +22,7 @@ class AssetCategorySeeder extends Seeder
                 'name' => 'Laptop',
                 'type' => AssetCategoryType::Physic,
                 'division_id' => $itDivision->id,
+                'maintenance_count' => 4, // Kuartal (3 bulan sekali)
                 'checklists' => [
                     'Kondisi Layar',
                     'Fungsi Keyboard',
@@ -35,6 +36,7 @@ class AssetCategorySeeder extends Seeder
                 'name' => 'Printer',
                 'type' => AssetCategoryType::Physic,
                 'division_id' => $itDivision->id,
+                'maintenance_count' => 3, // 4 bulan sekali
                 'checklists' => [
                     'Ketersediaan Tinta/Toner',
                     'Kebersihan Roller & Feed Tray',
@@ -48,6 +50,7 @@ class AssetCategorySeeder extends Seeder
                 'name' => 'Air Conditioner',
                 'type' => AssetCategoryType::Physic,
                 'division_id' => $tuDivision->id,
+                'maintenance_count' => 2, // 6 bulan sekali
                 'checklists' => [
                     'Kebersihan Filter Udara',
                     'Kondisi Unit Outdoor',
@@ -60,6 +63,7 @@ class AssetCategorySeeder extends Seeder
                 'name' => 'Mobil',
                 'type' => AssetCategoryType::Physic,
                 'division_id' => $tuDivision->id,
+                'maintenance_count' => 3, // 4 bulan sekali
                 'checklists' => [
                     'Kondisi Mesin & Cairan (Oli/Air)',
                     'Tekanan Ban & Serep',
@@ -74,12 +78,14 @@ class AssetCategorySeeder extends Seeder
                 'name' => 'Meja',
                 'type' => AssetCategoryType::Physic,
                 'division_id' => $tuDivision->id,
+                'maintenance_count' => 0,
                 'checklists' => []
             ],
             [
                 'name' => 'Kursi',
                 'type' => AssetCategoryType::Physic,
                 'division_id' => $tuDivision->id,
+                'maintenance_count' => 0,
                 'checklists' => []
             ],
 
@@ -88,24 +94,28 @@ class AssetCategorySeeder extends Seeder
                 'name' => 'PC Desktop',
                 'type' => AssetCategoryType::Physic,
                 'division_id' => $itDivision->id,
+                'maintenance_count' => 4, // Kuartal (3 bulan sekali)
                 'checklists' => ['Kondisi CPU', 'Kondisi Monitor', 'Keyboard & Mouse']
             ],
             [
                 'name' => 'Switch Networking',
                 'type' => AssetCategoryType::Physic,
                 'division_id' => $itDivision->id,
+                'maintenance_count' => 2, // 6 bulan sekali
                 'checklists' => ['Power Status', 'Kondisi Port']
             ],
             [
                 'name' => 'Email Account',
                 'type' => AssetCategoryType::Digital,
                 'division_id' => $itDivision->id,
+                'maintenance_count' => 0,
                 'checklists' => []
             ],
             [
                 'name' => 'VPS Server',
                 'type' => AssetCategoryType::Digital,
                 'division_id' => $itDivision->id,
+                'maintenance_count' => 0,
                 'checklists' => []
             ],
         ];
@@ -116,6 +126,7 @@ class AssetCategorySeeder extends Seeder
                 [
                     'type' => $item['type'],
                     'division_id' => $item['division_id'],
+                    'maintenance_count' => $item['maintenance_count'],
                 ]
             );
 
