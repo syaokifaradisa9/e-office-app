@@ -72,101 +72,6 @@ class RoleService
                 'keywords' => ['Ticket'],
             ],
 
-            // Arsiparis (Archieve)
-            'arsip_kategori' => [
-                'module' => 'Arsiparis',
-                'label' => 'Kategori Arsip',
-                'keywords' => ['kategori_arsip'],
-            ],
-            'arsip_klasifikasi' => [
-                'module' => 'Arsiparis',
-                'label' => 'Klasifikasi Arsip',
-                'keywords' => ['klasifikasi_arsip'],
-            ],
-            'arsip_dokumen' => [
-                'module' => 'Arsiparis',
-                'label' => 'Dokumen Arsip',
-                'keywords' => ['arsip_divisi', 'semua_arsip', 'arsip_pribadi'],
-            ],
-            'arsip_penyimpanan' => [
-                'module' => 'Arsiparis',
-                'label' => 'Penyimpanan Divisi',
-                'keywords' => ['penyimpanan_divisi'],
-            ],
-            'arsip_dashboard' => [
-                'module' => 'Arsiparis',
-                'label' => 'Dashboard Arsip',
-                'keywords' => ['dashboard_arsip'],
-            ],
-            'arsip_laporan' => [
-                'module' => 'Arsiparis',
-                'label' => 'Laporan Arsip',
-                'keywords' => ['laporan_arsip'],
-            ],
-            'arsip_pencarian' => [
-                'module' => 'Arsiparis',
-                'label' => 'Pencarian Dokumen',
-                'keywords' => ['pencarian_dokumen'],
-            ],
-
-            // Kunjungan (Visitor Management)
-            'visitor_data' => [
-                'module' => 'Kunjungan',
-                'label' => 'Data Pengunjung',
-                'keywords' => ['data_pengunjung', 'konfirmasi_kunjungan', 'undangan_tamu'],
-            ],
-            'visitor_master' => [
-                'module' => 'Kunjungan',
-                'label' => 'Keperluan Kunjungan',
-                'keywords' => ['master_manajemen_pengunjung'],
-            ],
-            'visitor_feedback' => [
-                'module' => 'Kunjungan',
-                'label' => 'Feedback & Kritik',
-                'keywords' => ['pertanyaan_feedback', 'kritik_saran_pengunjung'],
-            ],
-            'visitor_stats' => [
-                'module' => 'Kunjungan',
-                'label' => 'Statistik & Laporan',
-                'keywords' => ['laporan_pengunjung', 'dashboard_pengunjung'],
-            ],
-
-            // Gudang BHP (Inventory)
-            'inv_category' => [
-                'module' => 'Gudang BHP',
-                'label' => 'Kategori Barang',
-                'keywords' => ['Kategori Barang', 'Data Kategori'],
-            ],
-            'inv_item' => [
-                'module' => 'Gudang BHP',
-                'label' => 'Data Barang',
-                'keywords' => ['Barang Gudang'],
-            ],
-            'inv_order' => [
-                'module' => 'Gudang BHP',
-                'label' => 'Permintaan Barang',
-                'keywords' => ['Permintaan Barang', 'Serah Terima Barang', 'Terima Barang'],
-            ],
-            'inv_opname' => [
-                'module' => 'Gudang BHP',
-                'label' => 'Stock Opname',
-                'keywords' => ['Stock Opname'],
-            ],
-            'inv_monitoring' => [
-                'module' => 'Gudang BHP',
-                'label' => 'Monitoring & Stok',
-                'keywords' => ['Transaksi Barang', 'Stok Divisi', 'Stok Keseluruhan', 'Konversi Stok', 'Pengeluaran Stok'],
-            ],
-            'inv_dashboard' => [
-                'module' => 'Gudang BHP',
-                'label' => 'Dashboard Gudang',
-                'keywords' => ['Dashboard Gudang'],
-            ],
-            'inv_report' => [
-                'module' => 'Gudang BHP',
-                'label' => 'Laporan Gudang',
-                'keywords' => ['Laporan Gudang'],
-            ],
 
             // Data Master (Generic - Checked last)
             'divisi' => [
@@ -284,10 +189,7 @@ class RoleService
         uasort($grouped, function ($a, $b) {
             $moduleOrder = [
                 'Data Master' => 1, 
-                'Gudang BHP' => 2, 
-                'Arsiparis' => 3, 
-                'Kunjungan' => 4, 
-                'Ticketing' => 5, 
+                'Ticketing' => 2, 
                 'Lainnya' => 99
             ];
             $aModuleOrder = $moduleOrder[$a['module']] ?? 50;

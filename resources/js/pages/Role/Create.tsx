@@ -383,11 +383,9 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                                 {availableModules.map((module) => {
                                     const displayLabels: Record<string, string> = {
                                         'Data Master': 'Data Master',
-                                        'Gudang BHP': 'Gudang BHP',
-                                        'Arsiparis': 'Arsiparis',
-                                        'Kunjungan': 'Kunjungan',
                                         'Ticketing': 'Ticketing',
                                     };
+
                                     const label = displayLabels[module] || module;
                                     const count = groupedByModule[module]?.reduce((acc, { group }) => acc + group.permissions.length, 0) || 0;
                                     const isActive = activeTab === module;

@@ -1,12 +1,13 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { PageProps } from '@inertiajs/core';
-import { LogIn, ShieldCheck } from 'lucide-react';
+import { LogIn, ShieldCheck, Users } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 
 import Button from '../../components/buttons/Button';
 import ThemeToggle from '../../components/commons/ThemeToggle';
 import FormInput from '../../components/forms/FormInput';
+import FormSelect from '../../components/forms/FormSelect';
 
 
 interface FlashMessage {
@@ -40,7 +41,9 @@ export default function Login() {
     const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
+        role: '',
     });
+
 
 
     const { flash } = usePage<LoginPageProps>().props;
@@ -62,6 +65,28 @@ export default function Login() {
         const interval = setInterval(nextSlide, 6000);
         return () => clearInterval(interval);
     }, [nextSlide]);
+
+    // Handle auto-fill based on role selection
+    useEffect(() => {
+        if (!data.role) return;
+
+        const credentials: Record<string, { email: string }> = {
+            'Superadmin': { email: 'superadmin@gmail.com' },
+            'Pimpinan': { email: 'pimpinan@gmail.com' },
+            'Admin Divisi': { email: 'admin.it@gmail.com' },
+            'Pegawai': { email: 'pegawai.it.1@gmail.com' },
+        };
+
+        const selected = credentials[data.role];
+        if (selected) {
+            setData((prev) => ({
+                ...prev,
+                email: selected.email,
+                password: 'password'
+            }));
+        }
+    }, [data.role]);
+
 
     const onSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -216,6 +241,22 @@ export default function Login() {
                             error={errors?.password}
                             value={data.password}
                         />
+
+                        <FormSelect
+                            name="role"
+                            label="Login Sebagai"
+                            placeholder="Pilih Role"
+                            icon={<Users className="size-4" />}
+                            options={[
+                                { value: 'Superadmin', label: 'Superadmin' },
+                                { value: 'Pimpinan', label: 'Pimpinan' },
+                                { value: 'Admin Divisi', label: 'Admin Divisi' },
+                                { value: 'Pegawai', label: 'Pegawai' },
+                            ]}
+                            onChange={(e) => setData('role', e.target.value)}
+                            value={data.role}
+                        />
+
 
 
                         <div className="pt-2"></div>

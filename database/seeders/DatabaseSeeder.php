@@ -12,35 +12,35 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            // Core Seeders
+            // Core Seeders (Required for Users/Employees)
             DivisionSeeder::class,
             PositionSeeder::class,
             
-            // Permissions Seeders (App & Modules)
+            // Permissions Seeders (ONLY Data Master & Ticketing)
             AppPermissionSeeder::class,
-            \Modules\Archieve\Database\Seeders\ArchievePermissionSeeder::class,
-            \Modules\Inventory\Database\Seeders\InventoryPermissionSeeder::class,
+            // \Modules\Archieve\Database\Seeders\ArchievePermissionSeeder::class,
+            // \Modules\Inventory\Database\Seeders\InventoryPermissionSeeder::class,
             \Modules\Ticketing\Database\Seeders\TicketingPermissionSeeder::class,
-            \Modules\VisitorManagement\Database\Seeders\VisitorPermissionSeeder::class,
+            // \Modules\VisitorManagement\Database\Seeders\VisitorPermissionSeeder::class,
             
-            // User Seeder (Depends on Roles/Permissions)
+            // Role & User Seeder (Uses our updated UserSeeder)
             UserSeeder::class,
-            EmployeeSeeder::class,
             
-            // Module Specific Seeders
+            // Module Specific Seeders (ONLY Ticketing as requested)
             \Modules\Ticketing\Database\Seeders\AssetCategorySeeder::class,
             \Modules\Ticketing\Database\Seeders\AssetItemSeeder::class,
             \Modules\Ticketing\Database\Seeders\TicketSeeder::class,
             \Modules\Ticketing\Database\Seeders\MaintenanceSeeder::class,
+
+            /* 
+            // Commented out other module data seeders
+            EmployeeSeeder::class,
             \Modules\Archieve\Database\Seeders\ArchieveCategorySeeder::class,
             \Modules\Archieve\Database\Seeders\DocumentClassificationSeeder::class,
             \Modules\Archieve\Database\Seeders\DocumentSeeder::class,
-            
-            // Inventory module data
             \Modules\Inventory\Database\Seeders\InventoryDatabaseSeeder::class,
-            
-            // Visitor management data
             \Modules\VisitorManagement\Database\Seeders\VisitorManagementDatabaseSeeder::class,
+            */
         ]);
     }
 }
