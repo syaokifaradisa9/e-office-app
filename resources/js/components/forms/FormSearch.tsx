@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface FormSearchProps {
     name: string;
@@ -11,6 +11,11 @@ interface FormSearchProps {
 
 export default function FormSearch({ name, type = 'text', placeholder, onChange, className, value }: FormSearchProps) {
     const [localValue, setLocalValue] = useState(value || '');
+    const onChangeRef = useRef(onChange);
+
+    useEffect(() => {
+        onChangeRef.current = onChange;
+    }, [onChange]);
 
     useEffect(() => {
         setLocalValue(value || '');
@@ -19,7 +24,7 @@ export default function FormSearch({ name, type = 'text', placeholder, onChange,
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             if (localValue !== (value || '')) {
-                onChange({
+                onChangeRef.current({
                     preventDefault: () => { },
                     target: {
                         name: name,
@@ -30,7 +35,7 @@ export default function FormSearch({ name, type = 'text', placeholder, onChange,
         }, 500);
 
         return () => clearTimeout(timeoutId);
-    }, [localValue, value, name, onChange]);
+    }, [localValue, value, name]);
 
     return (
         <input
@@ -39,7 +44,7 @@ export default function FormSearch({ name, type = 'text', placeholder, onChange,
             type={type}
             value={localValue}
             placeholder={placeholder}
-            className={`w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-xs text-gray-900 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder-slate-400 ${className}`}
+            className={`w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-xs text-gray-900 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder-slate-400 flex pl-8 ${className}`}
         />
     );
 }

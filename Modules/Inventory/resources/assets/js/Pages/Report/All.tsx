@@ -195,16 +195,17 @@ export default function ReportAll() {
                 }
             >
                 {/* Tabs */}
-                <div className="mb-8 flex gap-6 border-b border-slate-200 dark:border-slate-700">
+                <div className="mb-8 flex overflow-x-auto hide-scrollbar gap-6 border-b border-slate-200 dark:border-slate-700 pb-1">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                            className={`relative pb-3 text-sm font-medium transition-colors ${activeTab === tab.id
+                            className={`relative flex items-center gap-2 whitespace-nowrap pb-3 text-sm font-medium transition-colors ${activeTab === tab.id
                                 ? 'text-slate-900 dark:text-white'
                                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
                                 }`}
                         >
+                            {tab.icon}
                             {tab.label}
                             {activeTab === tab.id && (
                                 <span className="absolute bottom-0 left-0 h-0.5 w-full bg-primary dark:bg-white" />
@@ -644,88 +645,345 @@ export default function ReportAll() {
                 )}
 
                 {/* Tab: Stok Tertimbun */}
-                {activeTab === 'stok_tertimbun' && (
-                    <div className="space-y-8 animate-in fade-in duration-500">
-                        {/* Gudang Utama */}
-                        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 p-6 dark:border-slate-600 dark:bg-slate-900/50">
-                            <h3 className="mb-6 flex items-center gap-2 text-xl font-bold text-slate-800 dark:text-slate-200">
-                                <Warehouse className="size-6 text-slate-500" />
-                                Stok Tertimbun - Gudang Utama
-                                <span className="ml-2 rounded-full bg-slate-200 px-3 py-1 text-xs font-normal text-slate-600 dark:bg-slate-800 dark:text-slate-400">Tidak diminta {'>'} 3 Bulan</span>
-                            </h3>
-                            {global.stock_analysis.stagnant_stock?.length > 0 ? (
-                                <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
-                                    {global.stock_analysis.stagnant_stock.map((item, idx) => (
-                                        <div key={idx} className="rounded-xl bg-white p-4 border border-slate-100 dark:bg-slate-800 dark:border-slate-700 transition-all hover:border-primary/30">
-                                            <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate" title={item.name}>{item.name}</p>
-                                            <div className="mt-3 flex items-center justify-between">
-                                                <p className="text-[10px] text-slate-400 uppercase font-bold">Stok Sisa</p>
-                                                <p className="text-xs font-black text-primary">{item.stock}</p>
-                                            </div>
-                                            <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-2 dark:border-slate-700">
-                                                <p className="text-[10px] text-slate-400 uppercase font-bold">Terakhir Diminta</p>
-                                                <p className="text-[10px] font-medium text-orange-600">
-                                                    {(item as any).last_activity_date
-                                                        ? new Date((item as any).last_activity_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
-                                                        : 'Belum pernah'
-                                                    }
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center py-12 text-center">
-                                    <div className="rounded-full bg-green-100 p-4 dark:bg-green-900/20">
-                                        <Package className="size-8 text-green-500" />
-                                    </div>
-                                    <p className="mt-4 text-sm font-medium text-slate-600 dark:text-slate-400">Tidak ada stok tertimbun di Gudang Utama</p>
-                                    <p className="mt-1 text-xs text-slate-400">Semua barang aktif diminta dalam 3 bulan terakhir</p>
-                                </div>
-                            )}
-                        </div>
+                {activeTab === 'stok_tertimbun' && (() => {
+                    // Calculate summary stats
+                    const globalStagnant = global.stock_analysis.stagnant_stock || [];
+                    const totalGlobalItems = globalStagnant.length;
+                    const totalGlobalStock = globalStagnant.reduce((sum, item) => sum + (item.stock || 0), 0);
+                    const divisionsWithStagnant = per_division.filter(d => (d.stock_analysis.stagnant_stock?.length || 0) > 0).length;
+                    const totalDivisionItems = per_division.reduce((sum, d) => sum + (d.stock_analysis.stagnant_stock?.length || 0), 0);
+                    const totalAllItems = totalGlobalItems + totalDivisionItems;
 
-                        {/* Per Divisi */}
-                        <div>
-                            <h3 className="mb-4 text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                <Layers className="size-4" />
-                                Stok Tertimbun Per Divisi (Tidak Keluar {'>'} 3 Bulan)
-                            </h3>
-                            <div className="grid gap-6 md:grid-cols-2">
-                                {per_division.map((div, idx) => (
-                                    <div key={idx} className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800 shadow-sm">
-                                        <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-700">
-                                            <h4 className="text-lg font-black text-primary uppercase tracking-tight">{div.division_name}</h4>
-                                            <span className="text-xs text-slate-400">{div.stock_analysis.stagnant_stock?.length || 0} item</span>
+                    const getSeverityColor = (dateStr: string | null | undefined) => {
+                        if (!dateStr) return { bg: 'bg-red-50 dark:bg-red-900/20', text: 'text-red-600 dark:text-red-400', border: 'border-red-200 dark:border-red-800', label: 'Belum pernah', dot: 'bg-red-500' };
+                        const months = Math.floor((Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24 * 30));
+                        if (months >= 12) return { bg: 'bg-red-50 dark:bg-red-900/20', text: 'text-red-600 dark:text-red-400', border: 'border-red-200 dark:border-red-800', label: `${months} bln lalu`, dot: 'bg-red-500' };
+                        if (months >= 6) return { bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-600 dark:text-amber-400', border: 'border-amber-200 dark:border-amber-800', label: `${months} bln lalu`, dot: 'bg-amber-500' };
+                        return { bg: 'bg-orange-50 dark:bg-orange-900/20', text: 'text-orange-600 dark:text-orange-400', border: 'border-orange-200 dark:border-orange-800', label: `${months} bln lalu`, dot: 'bg-orange-400' };
+                    };
+
+                    return (
+                        <div className="space-y-8 animate-in fade-in duration-500">
+
+                            {/* Summary Statistics */}
+                            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                                <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800 transition-all hover:shadow-sm">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="flex size-8 items-center justify-center rounded-md bg-orange-50 dark:bg-orange-900/20">
+                                            <Package className="size-4 text-orange-500" />
                                         </div>
-                                        {div.stock_analysis.stagnant_stock?.length > 0 ? (
-                                            <div className="grid gap-3 sm:grid-cols-2">
-                                                {div.stock_analysis.stagnant_stock.slice(0, 6).map((item, i) => (
-                                                    <div key={i} className="rounded-lg bg-slate-50 p-3 dark:bg-slate-700/50">
-                                                        <p className="text-xs font-bold truncate" title={item.name}>{item.name}</p>
-                                                        <div className="mt-2 flex items-center justify-between">
-                                                            <span className="text-[10px] text-slate-400">Stok: {item.stock}</span>
-                                                            <span className="text-[10px] text-orange-500">
-                                                                {(item as any).last_activity_date
-                                                                    ? new Date((item as any).last_activity_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
-                                                                    : '-'
-                                                                }
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center justify-center py-6 text-center">
-                                                <p className="text-xs text-green-600 dark:text-green-400">✓ Tidak ada stok tertimbun</p>
-                                            </div>
-                                        )}
+                                        <div>
+                                            <p className="text-[11px] font-medium text-slate-400">Total Barang</p>
+                                            <p className="text-lg font-bold text-slate-800 dark:text-slate-100">{totalAllItems}</p>
+                                        </div>
                                     </div>
-                                ))}
+                                </div>
+                                <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800 transition-all hover:shadow-sm">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="flex size-8 items-center justify-center rounded-md bg-blue-50 dark:bg-blue-900/20">
+                                            <Warehouse className="size-4 text-blue-500" />
+                                        </div>
+                                        <div>
+                                            <p className="text-[11px] font-medium text-slate-400">Gudang Utama</p>
+                                            <p className="text-lg font-bold text-slate-800 dark:text-slate-100">{totalGlobalItems} <span className="text-xs font-normal text-slate-400">item</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800 transition-all hover:shadow-sm">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="flex size-8 items-center justify-center rounded-md bg-purple-50 dark:bg-purple-900/20">
+                                            <Layers className="size-4 text-purple-500" />
+                                        </div>
+                                        <div>
+                                            <p className="text-[11px] font-medium text-slate-400">Divisi Terdampak</p>
+                                            <p className="text-lg font-bold text-slate-800 dark:text-slate-100">{divisionsWithStagnant} <span className="text-xs font-normal text-slate-400">/ {per_division.length}</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800 transition-all hover:shadow-sm">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="flex size-8 items-center justify-center rounded-md bg-rose-50 dark:bg-rose-900/20">
+                                            <AlertTriangle className="size-4 text-rose-500" />
+                                        </div>
+                                        <div>
+                                            <p className="text-[11px] font-medium text-slate-400">Total Stok Idle</p>
+                                            <p className="text-lg font-bold text-slate-800 dark:text-slate-100">{totalGlobalStock} <span className="text-xs font-normal text-slate-400">unit</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Gudang Utama - Detail Table */}
+                            <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 overflow-hidden">
+                                <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3 dark:border-slate-700">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="flex size-7 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-700">
+                                            <Warehouse className="size-3.5 text-slate-500 dark:text-slate-300" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Gudang Utama</h3>
+                                            <p className="text-[11px] text-slate-400">Barang tidak diminta lebih dari 3 bulan</p>
+                                        </div>
+                                    </div>
+                                    <span className="rounded-full bg-orange-50 px-2.5 py-0.5 text-[11px] font-semibold text-orange-600 dark:bg-orange-900/20 dark:text-orange-400">
+                                        {totalGlobalItems} item
+                                    </span>
+                                </div>
+
+                                {globalStagnant.length > 0 ? (
+                                    <>
+                                        {/* Mobile: Card Layout */}
+                                        <div className="divide-y divide-slate-100 dark:divide-slate-700/50 md:hidden">
+                                            {globalStagnant.map((item: any, idx: number) => {
+                                                const severity = getSeverityColor(item.last_activity_date);
+                                                return (
+                                                    <div key={idx} className="flex items-start justify-between gap-3 px-4 py-3">
+                                                        <div className="flex items-start gap-2.5 min-w-0">
+                                                            <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+                                                                {idx + 1}
+                                                            </span>
+                                                            <div className="min-w-0">
+                                                                <p className="text-[13px] font-medium text-slate-700 dark:text-slate-200">{item.name}</p>
+                                                                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                                                                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                                                                        Stok: <span className="font-bold text-slate-700 dark:text-slate-100">{item.stock}</span> {item.unit_of_measure || ''}
+                                                                    </span>
+                                                                    <span className="text-[11px] text-slate-400">
+                                                                        {item.last_activity_date
+                                                                            ? new Date(item.last_activity_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                                                                            : '-'
+                                                                        }
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <span className={`mt-0.5 shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${severity.bg} ${severity.text}`}>
+                                                            <span className={`size-1.5 rounded-full ${severity.dot}`} />
+                                                            {severity.label}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* Desktop: Table Layout */}
+                                        <div className="hidden md:block overflow-x-auto">
+                                            <table className="w-full">
+                                                <thead>
+                                                    <tr className="border-b border-slate-100 dark:border-slate-700">
+                                                        <th className="px-5 py-2.5 text-left text-[11px] font-medium text-slate-400">No</th>
+                                                        <th className="px-5 py-2.5 text-left text-[11px] font-medium text-slate-400">Nama Barang</th>
+                                                        <th className="px-5 py-2.5 text-center text-[11px] font-medium text-slate-400">Stok</th>
+                                                        <th className="px-5 py-2.5 text-center text-[11px] font-medium text-slate-400">Satuan</th>
+                                                        <th className="px-5 py-2.5 text-center text-[11px] font-medium text-slate-400">Terakhir Diminta</th>
+                                                        <th className="px-5 py-2.5 text-center text-[11px] font-medium text-slate-400">Durasi</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-50 dark:divide-slate-700/50">
+                                                    {globalStagnant.map((item: any, idx: number) => {
+                                                        const severity = getSeverityColor(item.last_activity_date);
+                                                        return (
+                                                            <tr key={idx} className="transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-700/30">
+                                                                <td className="px-5 py-2.5">
+                                                                    <span className="flex size-5 items-center justify-center rounded-full bg-slate-100 text-[10px] font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+                                                                        {idx + 1}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-5 py-2.5">
+                                                                    <p className="text-[13px] font-medium text-slate-700 dark:text-slate-200">{item.name}</p>
+                                                                </td>
+                                                                <td className="px-5 py-2.5 text-center">
+                                                                    <span className="text-[13px] font-bold text-slate-700 dark:text-slate-100">{item.stock}</span>
+                                                                </td>
+                                                                <td className="px-5 py-2.5 text-center">
+                                                                    <span className="text-xs text-slate-500 dark:text-slate-400">{item.unit_of_measure || '-'}</span>
+                                                                </td>
+                                                                <td className="px-5 py-2.5 text-center">
+                                                                    <span className="text-xs text-slate-500 dark:text-slate-300">
+                                                                        {item.last_activity_date
+                                                                            ? new Date(item.last_activity_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                                                                            : '-'
+                                                                        }
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-5 py-2.5 text-center">
+                                                                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${severity.bg} ${severity.text}`}>
+                                                                        <span className={`size-1.5 rounded-full ${severity.dot}`} />
+                                                                        {severity.label}
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-14 text-center">
+                                        <div className="rounded-full bg-emerald-100 p-4 dark:bg-emerald-900/20">
+                                            <Package className="size-8 text-emerald-500" />
+                                        </div>
+                                        <p className="mt-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Tidak ada stok tertimbun</p>
+                                        <p className="mt-1 text-xs text-slate-400">Semua barang aktif diminta dalam 3 bulan terakhir</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Per Divisi - Expandable Cards */}
+                            <div>
+                                <div className="mb-4 flex items-center gap-2.5">
+                                    <div className="flex size-7 items-center justify-center rounded-md bg-purple-50 dark:bg-purple-900/20">
+                                        <Layers className="size-3.5 text-purple-500" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Stok Tertimbun Per Divisi</h3>
+                                        <p className="text-[11px] text-slate-400">Barang tidak keluar lebih dari 3 bulan di masing-masing divisi</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {per_division.map((div, idx) => {
+                                        const divStagnant = div.stock_analysis.stagnant_stock || [];
+                                        const divTotalStock = divStagnant.reduce((sum: number, item: any) => sum + (item.stock || 0), 0);
+                                        const hasStagnant = divStagnant.length > 0;
+
+                                        return (
+                                            <div key={idx} className={`rounded-xl border overflow-hidden transition-all ${hasStagnant ? 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800' : 'border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50'}`}>
+                                                <div className={`flex items-center justify-between px-4 py-3 ${hasStagnant ? 'border-b border-slate-100 dark:border-slate-700' : ''}`}>
+                                                    <div className="flex items-center gap-2.5">
+                                                        <h4 className="text-[13px] font-semibold text-primary">{div.division_name}</h4>
+                                                        {!hasStagnant && (
+                                                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400">
+                                                                <svg className="size-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                                                                Aman
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-2.5">
+                                                        {hasStagnant && (
+                                                            <span className="text-[11px] text-slate-400">
+                                                                {divTotalStock} unit tersimpan
+                                                            </span>
+                                                        )}
+                                                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${hasStagnant ? 'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400' : 'bg-slate-50 text-slate-400 dark:bg-slate-700'}`}>
+                                                            {divStagnant.length} item
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {hasStagnant && (
+                                                    <>
+                                                        {/* Mobile: Card Layout */}
+                                                        <div className="divide-y divide-slate-100 dark:divide-slate-700/50 md:hidden">
+                                                            {divStagnant.map((item: any, i: number) => {
+                                                                const severity = getSeverityColor(item.last_activity_date);
+                                                                return (
+                                                                    <div key={i} className="flex items-start justify-between gap-3 px-4 py-2.5">
+                                                                        <div className="flex items-start gap-2 min-w-0">
+                                                                            <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+                                                                                {i + 1}
+                                                                            </span>
+                                                                            <div className="min-w-0">
+                                                                                <p className="text-[13px] font-medium text-slate-700 dark:text-slate-300">{item.name}</p>
+                                                                                <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                                                                                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                                                                                        Stok: <span className="font-semibold text-slate-700 dark:text-slate-100">{item.stock}</span> {item.unit_of_measure || ''}
+                                                                                    </span>
+                                                                                    <span className="text-[11px] text-slate-400">
+                                                                                        {item.last_activity_date
+                                                                                            ? new Date(item.last_activity_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                                                                                            : '-'
+                                                                                        }
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <span className={`mt-0.5 shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${severity.bg} ${severity.text}`}>
+                                                                            <span className={`size-1.5 rounded-full ${severity.dot}`} />
+                                                                            {severity.label}
+                                                                        </span>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+
+                                                        {/* Desktop: Table Layout */}
+                                                        <div className="hidden md:block overflow-x-auto">
+                                                            <table className="w-full">
+                                                                <thead>
+                                                                    <tr className="border-b border-slate-50 dark:border-slate-700/50">
+                                                                        <th className="px-4 py-2 text-left text-[10px] font-medium text-slate-400">No</th>
+                                                                        <th className="px-4 py-2 text-left text-[10px] font-medium text-slate-400">Nama Barang</th>
+                                                                        <th className="px-4 py-2 text-center text-[10px] font-medium text-slate-400">Stok</th>
+                                                                        <th className="px-4 py-2 text-center text-[10px] font-medium text-slate-400">Terakhir Keluar</th>
+                                                                        <th className="px-4 py-2 text-center text-[10px] font-medium text-slate-400">Status</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody className="divide-y divide-slate-50 dark:divide-slate-700/50">
+                                                                    {divStagnant.map((item: any, i: number) => {
+                                                                        const severity = getSeverityColor(item.last_activity_date);
+                                                                        return (
+                                                                            <tr key={i} className="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-700/20">
+                                                                                <td className="px-4 py-2">
+                                                                                    <span className="flex size-5 items-center justify-center rounded-full bg-slate-100 text-[10px] font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+                                                                                        {i + 1}
+                                                                                    </span>
+                                                                                </td>
+                                                                                <td className="px-4 py-2">
+                                                                                    <p className="text-[13px] font-medium text-slate-700 dark:text-slate-300">{item.name}</p>
+                                                                                </td>
+                                                                                <td className="px-4 py-2 text-center">
+                                                                                    <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-100">{item.stock}</span>
+                                                                                    <span className="ml-1 text-[10px] text-slate-400">{item.unit_of_measure || ''}</span>
+                                                                                </td>
+                                                                                <td className="px-4 py-2 text-center">
+                                                                                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                                                                                        {item.last_activity_date
+                                                                                            ? new Date(item.last_activity_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                                                                                            : '-'
+                                                                                        }
+                                                                                    </span>
+                                                                                </td>
+                                                                                <td className="px-4 py-2 text-center">
+                                                                                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${severity.bg} ${severity.text}`}>
+                                                                                        <span className={`size-1.5 rounded-full ${severity.dot}`} />
+                                                                                        {severity.label}
+                                                                                    </span>
+                                                                                </td>
+                                                                            </tr>
+                                                                        );
+                                                                    })}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Legend */}
+                            <div className="flex flex-wrap items-center justify-center gap-6 rounded-xl bg-slate-50 px-6 py-3 dark:bg-slate-800/50">
+                                <span className="text-[11px] font-medium text-slate-500">Keterangan Durasi:</span>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="size-2.5 rounded-full bg-orange-400" />
+                                    <span className="text-[11px] text-slate-500">3 - 5 Bulan</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="size-2.5 rounded-full bg-amber-500" />
+                                    <span className="text-[11px] text-slate-500">6 - 11 Bulan</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="size-2.5 rounded-full bg-red-500" />
+                                    <span className="text-[11px] text-slate-500">≥ 12 Bulan / Belum Pernah</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
 
 
             </ContentCard>

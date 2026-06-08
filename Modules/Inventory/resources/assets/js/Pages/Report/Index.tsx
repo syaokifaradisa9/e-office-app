@@ -204,16 +204,17 @@ export default function ReportIndex() {
                 }
             >
                 {/* Tabs */}
-                <div className="mb-8 flex gap-6 border-b border-slate-200 dark:border-slate-700">
+                <div className="mb-8 flex overflow-x-auto hide-scrollbar gap-6 border-b border-slate-200 dark:border-slate-700 pb-1">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                            className={`relative pb-3 text-sm font-medium transition-colors ${activeTab === tab.id
+                            className={`relative flex items-center gap-2 whitespace-nowrap pb-3 text-sm font-medium transition-colors ${activeTab === tab.id
                                 ? 'text-slate-900 dark:text-white'
                                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
                                 }`}
                         >
+                            {tab.icon}
                             {tab.label}
                             {activeTab === tab.id && (
                                 <span className="absolute bottom-0 left-0 h-0.5 w-full bg-primary dark:bg-white" />

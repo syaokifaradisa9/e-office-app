@@ -40,34 +40,34 @@ class DashboardController extends Controller
         // ========================================
         // Module: Inventory
         // ========================================
-        // if (File::isDirectory(base_path('Modules/Inventory'))) {
-        //     $inventoryService = app(\Modules\Inventory\Services\InventoryDashboardService::class);
-        //     $dashboardData['inventory'] = $inventoryService->getDashboardTabs();
-        // }
+        if (File::isDirectory(base_path('Modules/Inventory'))) {
+            $inventoryService = app(\Modules\Inventory\Services\InventoryDashboardService::class);
+            $dashboardData['inventory'] = $inventoryService->getDashboardTabs();
+        }
 
         // ========================================
         // Module: Archieve
         // ========================================
-        if (File::isDirectory(base_path('Modules/Archieve'))) {
-            $archieveService = app(\Modules\Archieve\Services\ArchieveDashboardService::class);
-            $dashboardData['archieve'] = $archieveService->getDashboardTabs();
-        }
+        // if (File::isDirectory(base_path('Modules/Archieve'))) {
+        //     $archieveService = app(\Modules\Archieve\Services\ArchieveDashboardService::class);
+        //     $dashboardData['archieve'] = $archieveService->getDashboardTabs();
+        // }
 
         // ========================================
         // Module: VisitorManagement
         // ========================================
-        if (File::isDirectory(base_path('Modules/VisitorManagement'))) {
-            $visitorService = app(\Modules\VisitorManagement\Services\VisitorDashboardService::class);
-            $dashboardData['visitor'] = $visitorService->getDashboardTabs();
-        }
+        // if (File::isDirectory(base_path('Modules/VisitorManagement'))) {
+        //     $visitorService = app(\Modules\VisitorManagement\Services\VisitorDashboardService::class);
+        //     $dashboardData['visitor'] = $visitorService->getDashboardTabs();
+        // }
 
         // ========================================
         // Module: Ticketing
         // ========================================
-        if (File::isDirectory(base_path('Modules/Ticketing'))) {
-            $ticketingService = app(\Modules\Ticketing\Services\TicketingDashboardService::class);
-            $dashboardData['ticketing'] = $ticketingService->getDashboardTabs();
-        }
+        // if (File::isDirectory(base_path('Modules/Ticketing'))) {
+        //     $ticketingService = app(\Modules\Ticketing\Services\TicketingDashboardService::class);
+        //     $dashboardData['ticketing'] = $ticketingService->getDashboardTabs();
+        // }
 
         return Inertia::render('Dashboard', [
             'statistics' => $statistics,

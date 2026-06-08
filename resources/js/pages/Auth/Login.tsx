@@ -218,7 +218,37 @@ export default function Login() {
                         />
 
 
-                        <div className="pt-2"></div>
+                        <div className="pt-2">
+                            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Login Sebagai (Cepat)
+                            </label>
+                            <div className="relative">
+                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+                                </div>
+                                <select 
+                                    className="block w-full appearance-none rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-8 text-sm text-slate-700 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200"
+                                    onChange={(e) => {
+                                        if (e.target.value) {
+                                            const [email, pwd] = e.target.value.split('|');
+                                            setData({ ...data, email, password: pwd });
+                                        } else {
+                                            setData({ ...data, email: '', password: '' });
+                                        }
+                                    }}
+                                    defaultValue=""
+                                >
+                                    <option value="">Pilih Role untuk Auto-fill</option>
+                                    <option value="superadmin@gmail.com|password">Superadmin</option>
+                                    <option value="pimpinan@gmail.com|password">Pimpinan</option>
+                                    <option value="admingudang@gmail.com|password">Admin Gudang</option>
+                                    <option value="admindivisi@gmail.com|password">Admin Divisi</option>
+                                </select>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400"><path d="m6 9 6 6 6-6"/></svg>
+                                </div>
+                            </div>
+                        </div>
 
                         <Button
                             isLoading={processing}

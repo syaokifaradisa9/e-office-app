@@ -15,6 +15,7 @@ class InventoryDatabaseSeeder extends Seeder
             WarehouseOrderSeeder::class,
             ItemTransactionSeeder::class,
             StockOpnameSeeder::class,
+            StokTertimbunSeeder::class,
         ]);
     }
 }

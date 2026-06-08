@@ -10,9 +10,19 @@ export default function TicketingSidebar() {
     return (
         <div className="mb-6 space-y-6">
             <div className="space-y-1">
-                <div className="py-2">
-                    <h3 className={`text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Data Master Asset</h3>
-                </div>
+                <CheckPermissions permissions={[
+                    TicketingPermission.ViewAssetCategoryDivisi,
+                    TicketingPermission.ViewAllAssetCategory,
+                    TicketingPermission.ManageAssetCategory,
+                    TicketingPermission.ViewPersonalAsset,
+                    TicketingPermission.ViewDivisionAsset,
+                    TicketingPermission.ViewAllAsset,
+                    TicketingPermission.ManageAsset,
+                ]}>
+                    <div className="py-2">
+                        <h3 className={`text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Data Master Asset</h3>
+                    </div>
+                </CheckPermissions>
 
                 <CheckPermissions permissions={[
                     TicketingPermission.ViewAssetCategoryDivisi,
@@ -33,9 +43,18 @@ export default function TicketingSidebar() {
             </div>
 
             <div className="space-y-1">
-                <div className="py-2">
-                    <h3 className={`text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Pengolahan Data Asset</h3>
-                </div>
+                <CheckPermissions permissions={[
+                    TicketingPermission.ViewDivisionMaintenance,
+                    TicketingPermission.ViewAllMaintenance,
+                    TicketingPermission.ManageAsset,
+                    TicketingPermission.ViewPersonalTicket,
+                    TicketingPermission.ViewDivisionTicket,
+                    TicketingPermission.ViewAllTicket,
+                ]}>
+                    <div className="py-2">
+                        <h3 className={`text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Pengolahan Data Asset</h3>
+                    </div>
+                </CheckPermissions>
 
                 <CheckPermissions permissions={[
                     TicketingPermission.ViewDivisionMaintenance,
@@ -55,9 +74,14 @@ export default function TicketingSidebar() {
             </div>
 
             <div className="space-y-1">
-                <div className="py-2">
-                    <h3 className={`text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Monitoring & Laporan</h3>
-                </div>
+                <CheckPermissions permissions={[
+                    TicketingPermission.ViewDivisionReport,
+                    TicketingPermission.ViewAllReport,
+                ]}>
+                    <div className="py-2">
+                        <h3 className={`text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400 ${isCollapsed ? 'text-center' : ''}`}>Monitoring & Laporan</h3>
+                    </div>
+                </CheckPermissions>
 
                 <CheckPermissions permissions={[
                     TicketingPermission.ViewDivisionReport,
