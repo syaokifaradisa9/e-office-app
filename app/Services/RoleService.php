@@ -133,37 +133,37 @@ class RoleService
 
             // Gudang BHP (Inventory)
             'inv_category' => [
-                'module' => 'Gudang BHP',
+                'module' => 'Inventory',
                 'label' => 'Kategori Barang',
                 'keywords' => ['Kategori Barang', 'Data Kategori'],
             ],
             'inv_item' => [
-                'module' => 'Gudang BHP',
+                'module' => 'Inventory',
                 'label' => 'Data Barang',
                 'keywords' => ['Barang Gudang'],
             ],
             'inv_order' => [
-                'module' => 'Gudang BHP',
+                'module' => 'Inventory',
                 'label' => 'Permintaan Barang',
                 'keywords' => ['Permintaan Barang', 'Serah Terima Barang', 'Terima Barang'],
             ],
             'inv_opname' => [
-                'module' => 'Gudang BHP',
+                'module' => 'Inventory',
                 'label' => 'Stock Opname',
                 'keywords' => ['Stock Opname'],
             ],
             'inv_monitoring' => [
-                'module' => 'Gudang BHP',
+                'module' => 'Inventory',
                 'label' => 'Monitoring & Stok',
                 'keywords' => ['Transaksi Barang', 'Stok Divisi', 'Stok Keseluruhan', 'Konversi Stok', 'Pengeluaran Stok'],
             ],
             'inv_dashboard' => [
-                'module' => 'Gudang BHP',
+                'module' => 'Inventory',
                 'label' => 'Dashboard Gudang',
                 'keywords' => ['Dashboard Gudang'],
             ],
             'inv_report' => [
-                'module' => 'Gudang BHP',
+                'module' => 'Inventory',
                 'label' => 'Laporan Gudang',
                 'keywords' => ['Laporan Gudang'],
             ],
@@ -284,7 +284,7 @@ class RoleService
         uasort($grouped, function ($a, $b) {
             $moduleOrder = [
                 'Data Master' => 1, 
-                'Gudang BHP' => 2, 
+                'Inventory' => 2, 
                 'Arsiparis' => 3, 
                 'Kunjungan' => 4, 
                 'Ticketing' => 5, 

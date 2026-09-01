@@ -170,6 +170,7 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
             case 'Ticketing':
                 return <Wrench className="size-5" />;
             case 'Gudang BHP':
+            case 'Inventory':
                 return <HardDrive className="size-5" />;
             case 'Kunjungan':
                 return <Users className="size-5" />;
@@ -195,6 +196,7 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
             case 'Ticketing':
                 return 'from-indigo-500 to-indigo-600';
             case 'Gudang BHP':
+            case 'Inventory':
                 return 'from-emerald-500 to-emerald-600';
             case 'Kunjungan':
                 return 'from-rose-500 to-rose-600';
@@ -383,7 +385,8 @@ export default function RoleCreate({ role, permissionsGrouped }: Props) {
                                 {availableModules.map((module) => {
                                     const displayLabels: Record<string, string> = {
                                         'Data Master': 'Data Master',
-                                        'Gudang BHP': 'Gudang BHP',
+                                        'Gudang BHP': 'Inventory',
+                                        'Inventory': 'Inventory',
                                         'Arsiparis': 'Arsiparis',
                                         'Kunjungan': 'Kunjungan',
                                         'Ticketing': 'Ticketing',
